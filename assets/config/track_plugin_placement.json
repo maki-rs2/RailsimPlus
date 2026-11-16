@@ -1,0 +1,8 @@
+{
+  "walkStepM": 1.0,
+  "yev": 3.0,
+  "deflectionScale": 0.3,
+  "defaultMaxIntervalM": 40.0,
+  "defaultMaxDeflectionM": 0.5,
+  "defaultPierIntervalM": 20.0
+}

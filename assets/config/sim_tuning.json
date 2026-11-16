@@ -1,0 +1,34 @@
+{
+  "approach": {
+    "warningTimeS": 20.0,
+    "minDistanceM": 50.0,
+    "stopLimitLineM": 1.0
+  },
+  "signalMargins": {
+    "movingBlockStopMarginM": 3.0,
+    "pointGuardStopMarginM": 3.0,
+    "entryPermitSpeedKmh": 20.0
+  },
+  "deadEndStop": {
+    "marginM": 1.0
+  },
+  "seekAhead": {
+    "marginM": 100.0,
+    "minM": 500.0,
+    "maxM": 2000.0,
+    "stoppedVelocityEpsilonKmh": 0.1,
+    "minGroupDecelerationKmhPerS": 3.0
+  },
+  "dia": {
+    "defaultDwellSeconds": 30.0
+  },
+  "braking": {
+    "plannedDecelerationRatio": 0.9,
+    "jerkKmhPerS2": 1.0,
+    "maxRampTimeS": 3.0,
+    "releaseDecelerationRatio": 0.9,
+    "substepHz": 240.0
+  },
+  "occupancyOverlapToleranceM": 0.05,
+  "occupancyNoseToleranceM": 0.05
+}

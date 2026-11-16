@@ -1,0 +1,9 @@
+{
+  "occludedAlphaScale": 0.25,
+  "aaSmoothingWidthPx": 1.0,
+  "dashDuty": 0.5,
+  "attenuationReferenceDistance": 100.0,
+  "attenuationMinScale": 0.35,
+  "textPixelSize": 14,
+  "atlasInitialSize": 1024
+}

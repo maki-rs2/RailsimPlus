@@ -1,0 +1,26 @@
+<template name="plugin-switch-list">
+<head></head>
+<body>
+    <!-- 開いている個体のスイッチ一覧。コンボは変更で即書き込む(commit_switch_row)。選択肢の無いスイッチは
+         見出し(名前が空白だけなら空き)にする。スイッチが無い・対象が空のときは何も並ばない。
+         値・イベントの結線は src/app/rmlui/RmlUiPluginSettingsView.cpp。ワークスペースのプラグイン設定パネルと
+         ビューアーの「プラグインスイッチ」パネルで共有する。 -->
+    <div data-for="row, rowIndex : pluginSwitchRows">
+        <div data-if="row.kind == 'choice'">
+            <div class="form-row" data-if="row.linked">
+                <div class="form-label">{{ row.name }}</div>
+                <div class="float-window-note">{{ pluginSwitchLinkedText }}</div>
+            </div>
+            <div class="form-row" data-if="!row.linked">
+                <div class="form-label">{{ row.name }}</div>
+                <select class="form-field-fill" data-value="row.valueText"
+                        data-event-change="commit_switch_row(rowIndex)">
+                    <option data-for="entry : row.entries" data-value="it_index">{{ entry }}</option>
+                </select>
+            </div>
+        </div>
+        <div class="tab-title form-section" data-if="row.kind == 'header'">{{ row.name }}</div>
+        <div class="plugin-switch-spacer" data-if="row.kind == 'spacer'"></div>
+    </div>
+</body>
+</template>

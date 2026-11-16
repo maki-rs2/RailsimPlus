@@ -1,0 +1,10 @@
+{
+  "placedSoundReferenceDistanceMeters": 5.0,
+  "placedSoundCullRadiusMeters": 150.0,
+  "listenerTeleportThresholdMeters": 20.0,
+  "dopplerFactor": 1.0,
+  "listenerVelocityEnabled": false,
+  "velocitySmoothingSeconds": 0.08,
+  "masterVolume": 0.5,
+  "wheelSoundMaxTotalVoices": 32
+}

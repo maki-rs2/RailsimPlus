@@ -1,0 +1,6 @@
+{
+  "infoSeconds": 5.0,
+  "warningSeconds": 7.0,
+  "errorSeconds": 9.0,
+  "maxVisible": 4
+}

@@ -1,0 +1,86 @@
+<rml>
+<head>
+    <title>Railsim Plus プラグインビューアー</title>
+    <link type="text/rcss" href="../theme/tokens.rcss" />
+    <link type="text/rcss" href="../theme/widgets.rcss" />
+    <link type="text/rcss" href="../workspace/workspace.rcss" />
+    <link type="text/rcss" href="viewer.rcss" />
+    <link type="text/template" href="../workspace/plugin_switch_list.rml" />
+</head>
+<body data-model="viewer">
+<!-- プラグインビューアー(起動引数にPI定義のtxtを渡したときの画面)。ウィンドウは2枚。
+     値・イベントの結線は src/app/rmlui/RmlUiViewerView.cpp。見た目の部品はワークスペースと共有する
+     (widgets.rcss・workspace.rcss)。 -->
+
+<!-- 1枚目: プラグインスイッチ。ワークスペースのプラグイン設定パネルと同じ部品(plugin_switch_list.rml)。
+     スイッチが無いプラグインでは出さない。 -->
+<div class="float-window float-window-translucent viewer-switches-window" data-if="pluginSwitchRows.size > 0">
+    <handle class="float-window-titlebar" move_target="#parent" edge_margin="0dp">プラグインスイッチ</handle>
+    <div class="float-window-body plugin-switch-list">
+        <template src="plugin-switch-list" />
+    </div>
+    <handle class="float-window-resize-handle" size_target="#parent" edge_margin="0dp"></handle>
+</div>
+
+<!-- 2枚目: それ以外(プラグイン情報・ライト・システムスイッチ)。読込が終わるまでは出さない。 -->
+<div class="float-window float-window-translucent viewer-settings-window" data-if="viewerLoaded">
+    <handle class="float-window-titlebar" move_target="#parent" edge_margin="0dp">ビューアー設定</handle>
+    <div class="float-window-body viewer-settings-body">
+        <div class="form-row">
+            <div class="form-label">プラグイン</div>
+            <div>{{ viewerPluginName }}</div>
+        </div>
+        <div class="form-row">
+            <div class="form-label">種別</div>
+            <div>{{ viewerTypeName }}</div>
+        </div>
+        <div class="form-row">
+            <div class="form-label">作者</div>
+            <div>{{ viewerAuthor }}</div>
+        </div>
+        <div class="form-row">
+            <div class="form-label">パーツ数</div>
+            <div>{{ viewerPartCount }}</div>
+        </div>
+        <div class="form-row">
+            <div class="form-label">欠けたファイル</div>
+            <div>{{ viewerMissingFiles }}</div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-label">ライト</div>
+            <div class="segmented compact">
+                <div class="segment-indicator"></div>
+                <div class="segment" data-class-selected="viewerLightOn" data-event-click="viewer_set_light(1)"><span>ON(昼)</span></div>
+                <div class="segment" data-class-selected="!viewerLightOn" data-event-click="viewer_set_light(0)"><span>OFF(夜)</span></div>
+            </div>
+        </div>
+
+        <div class="tab-title form-section" data-if="viewerSystemRows.size > 0">システムスイッチ ({{ viewerSystemRows.size }})</div>
+        <div data-for="row, rowIndex : viewerSystemRows">
+            <div class="form-row" data-if="row.kind == 'readonly'">
+                <div class="form-label">{{ row.name }}</div>
+                <div>{{ row.value }} (自動計算)</div>
+            </div>
+            <div class="form-row" data-if="row.kind == 'checkbox'">
+                <div class="form-label">{{ row.name }}</div>
+                <input type="checkbox" class="toggle" data-attrif-checked="row.value != 0"
+                       data-event-change="viewer_set_system(rowIndex)" />
+            </div>
+            <div class="form-row" data-if="row.kind == 'slider'">
+                <div class="form-label">{{ row.name }}</div>
+                <input type="range" class="form-field-fill" step="1" data-attr-min="row.minValue"
+                       data-attr-max="row.maxValue" data-attr-value="row.value"
+                       data-event-change="viewer_set_system(rowIndex)" />
+                <div class="form-unit">{{ row.value }}</div>
+            </div>
+            <div class="form-row" data-if="row.kind == 'number'">
+                <div class="form-label">{{ row.name }}</div>
+                <input type="text" class="form-field-fill" data-attr-value="row.valueText" data-edit-commit=""
+                       data-event-blur="viewer_set_system(rowIndex)" />
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</rml>

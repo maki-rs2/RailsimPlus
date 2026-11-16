@@ -1,0 +1,31 @@
+build/
+out/
+.vs/
+*.user
+CMakeUserPresets.json
+
+# 追加のビルドディレクトリ(Release構成用)
+build-release/
+
+# clang-tidy用のコンパイルDB
+build-lint/
+
+# ビルド・スモークテスト・診断実行の出力ログ(調査中に量産される作業ファイル)
+*.log
+
+# ImGuiが実行時に自動保存するUIレイアウト(意味のある差分にならない)
+imgui.ini
+
+# 手元の権限設定(個人のパスが入る)
+.claude/settings.local.json
+
+# 作業ファイル
+crashlog.txt
+*.pdb
+verify_*.obj
+
+# Pythonの実行キャッシュ
+__pycache__/
+
+# MCP の個人設定(絶対パスを含む)
+.mcp.json

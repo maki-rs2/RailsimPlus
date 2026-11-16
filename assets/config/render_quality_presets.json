@@ -1,0 +1,41 @@
+{
+  "low": {
+    "atmosphericPerspective": false,
+    "heightFog": false,
+    "shadowQuality": "none",
+    "shadowDistance": "standard",
+    "sunLensFlare": false,
+    "sunWhiteout": false,
+    "miscLensFlare": false,
+    "bloom": false,
+    "volumetricFog": false,
+    "antiAliasing": "none",
+    "ambientOcclusion": "none"
+  },
+  "medium": {
+    "atmosphericPerspective": true,
+    "heightFog": true,
+    "shadowQuality": "low",
+    "shadowDistance": "standard",
+    "sunLensFlare": true,
+    "sunWhiteout": true,
+    "miscLensFlare": true,
+    "bloom": true,
+    "volumetricFog": false,
+    "antiAliasing": "fxaa",
+    "ambientOcclusion": "medium"
+  },
+  "high": {
+    "atmosphericPerspective": true,
+    "heightFog": true,
+    "shadowQuality": "high",
+    "shadowDistance": "far",
+    "sunLensFlare": true,
+    "sunWhiteout": true,
+    "miscLensFlare": true,
+    "bloom": true,
+    "volumetricFog": true,
+    "antiAliasing": "taa",
+    "ambientOcclusion": "high"
+  }
+}

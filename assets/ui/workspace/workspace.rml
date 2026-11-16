@@ -1,0 +1,1556 @@
+<rml>
+<head>
+    <title>Railsim Plus ワークスペース</title>
+    <link type="text/rcss" href="../theme/tokens.rcss" />
+    <link type="text/rcss" href="../theme/widgets.rcss" />
+    <link type="text/rcss" href="workspace.rcss" />
+    <link type="text/template" href="render_setting_row.rml" />
+    <link type="text/template" href="plugin_switch_list.rml" />
+</head>
+<body data-model="workspace" data-class-is-loading="loadingVisible">
+<!-- U3(固定ワークスペース)の試作。文言はすべて仮(ローカライズ基盤U4.5より前、
+     アイコン素材もU3のスコープ外のため文字で代用)。表示・開閉・選択はRmlUiの
+     データバインディング(`data-model="workspace"`)で結ぶ。値の組み立ては
+     src/app/rmlui/RmlUiWorkspaceView.cpp(FillFromSnapshot/CreateDataModel)、
+     状態そのものの正典はsrc/app/workspace/WorkspaceShell.h。
+     押せる部品は<button>に統一する。形はwidgets.rcssのbutton.flat(文字だけ)・
+     button.icon(余白のない面)で表し、位置・大きさはworkspace.rcssのクラスで決める。 -->
+
+<button class="icon round-icon menu-button ic-menu" title="メニュー" data-if="!loadingVisible" data-class-is-open="mainMenu.visible" data-event-click="toggle_overlay('mainMenu')"></button>
+
+<!-- 見つからないプラグインの警告バッジ(件数は一覧の行数)。0件のときは出さず、押すと一覧ウィンドウを開閉する。 -->
+<button class="icon missing-badge" data-if="missingPluginBadgeCount > 0 && !loadingVisible" data-attr-title="missingPluginText.badgeTitle"
+        data-event-click="toggle_overlay('missingPlugins')">{{ missingPluginBadgeCount }}</button>
+
+<div class="banner" data-if="bannerVisible">
+    <div class="banner-title"><span data-attr-class="'banner-icon ic-' + bannerIcon"></span>{{ bannerTitle }}</div>
+    <!-- 元に戻す・やり直す(全モードで共通)。ヘルプの左に置く。 -->
+    <div class="banner-history">
+        <button class="icon round-icon ic-undo" data-attrif-disabled="!canUndo" data-attr-title="canUndo ? '元に戻す (Ctrl+Z)' : '元に戻せる操作がありません'" data-event-click="edit_history(false)"></button>
+        <button class="icon round-icon ic-redo" data-attrif-disabled="!canRedo" data-attr-title="canRedo ? 'やり直す (Ctrl+Y)' : 'やり直せる操作がありません'" data-event-click="edit_history(true)"></button>
+    </div>
+    <button class="icon round-icon banner-info ic-help" title="ヘルプ" data-event-click="open_overlay('helpWindow')"></button>
+</div>
+
+<!-- 右下の操作説明(鑑賞・シーン設定では空)。文言はsrc/app/workspace/OperationHintCatalog.hの表。 -->
+<div class="operation-hint" data-class-is-camera="camera.active" data-class-is-cabin="cabinView" data-if="operationHint != '' && !loadingVisible"><span class="operation-hint-item" data-for="item : operationHintItems"><span class="keycap">{{ item.key }}</span>{{ item.action }}</span></div>
+
+<div class="bottom-bar" data-if="bottomBarVisible">
+    <div class="bottom-bar-left">
+        <!-- 今のシーン名(入れ物付き)。押すとシーン一覧(シーン画面)を開き、もう一度押すと閉じる。 -->
+        <!-- 前後の切り替えとシーン名を1つのカプセルにまとめる。 -->
+        <div class="scene-capsule">
+            <button class="icon scene-arrow ic-chevron-left" data-if="scene.showArrows" title="前のシーン (Ctrl+↑)" data-event-click="scene_action('previous')"></button>
+            <button class="flat scene-name-box" title="シーン一覧" data-event-click="enter_environment">{{ scene.currentName }}</button>
+            <button class="icon scene-arrow ic-chevron-right" data-if="scene.showArrows" title="次のシーン (Ctrl+↓)" data-event-click="scene_action('next')"></button>
+        </div>
+        <button class="flat bottom-bar-entry" title="カメラ画面を開く" data-event-click="enter_camera"><span class="ui-icon ic-camera"></span></button>
+    </div>
+    <div class="bottom-bar-modes">
+        <div class="bottom-bar-bump"></div>
+        <!-- 各ボタンはアイコンの下に小さい名前を出す。 -->
+        <button class="icon round-icon mode-button" data-for="mode : modeButtons" data-class-is-selected="mode.selected"
+                data-attr-title="mode.tooltip"
+                data-event-click="select_mode(mode.key)"><div data-attr-class="'mode-icon ic-' + mode.icon"></div><div class="mode-name">{{ mode.label }}</div></button>
+    </div>
+    <div class="bottom-bar-right time-control">
+        <!-- 速さの段と倍率を1つのカプセルにまとめる。 -->
+        <div class="time-capsule">
+        <div class="time-steps">
+            <button class="flat time-step" data-for="step, i : timeControl.steps" data-class-is-selected="step.selected" data-class-is-fast="step.arrows >= 2"
+                    data-attr-title="step.pause ? '一時停止' : step.label"
+                    data-event-click="time_ui('step', i)"><span class="time-pause-icon" data-if="step.pause"></span><span data-if="!step.pause" data-attr-class="'time-step-arrows time-step-arrows-' + step.arrows">{{ step.label }}</span></button>
+        </div>
+        <button class="flat time-scale" data-if="!timeControl.editingScale" data-event-click="time_ui('scale')">{{ timeControl.scaleLabel }}</button>
+        <input class="form-field time-scale-input" type="text" data-class-is-editing="timeControl.editingScale" data-value="timeControl.scaleDraft"
+               data-event-change="time_edit" data-event-blur="time_edit" data-event-keydown="time_edit" />
+        </div>
+        <button class="flat time-clock" data-event-click="time_ui('window')">
+            <div class="time-clock-hours">{{ timeControl.timeText }}<span class="time-clock-seconds">{{ timeControl.secondText }}</span></div><div class="time-clock-date">{{ timeControl.dateText }}</div>
+        </button>
+    </div>
+</div>
+
+
+<div class="float-window float-window-translucent time-window" data-if="timeControl.windowOpen && bottomBarVisible" data-event-keydown="time_window_key" data-event-change="time_window_key">
+    <div class="float-window-titlebar">日時を変更
+        <button class="flat float-window-close ic-close" title="閉じる" data-event-click="time_ui('cancel')"></button>
+    </div>
+    <div class="float-window-body">
+        <div class="form-row date-fields">
+            <input class="form-field" type="text" data-value="timeControl.yearDraft" /><span class="form-unit">年</span>
+            <input class="form-field" type="text" data-value="timeControl.monthDraft" /><span class="form-unit">月</span>
+            <input class="form-field" type="text" data-value="timeControl.dayDraft" /><span class="form-unit">日</span>
+        </div>
+        <div class="form-row date-fields">
+            <input class="form-field" type="text" data-value="timeControl.hourDraft" /><span class="form-unit">時</span>
+            <input class="form-field" type="text" data-value="timeControl.minuteDraft" /><span class="form-unit">分</span>
+        </div>
+        <div class="time-window-buttons">
+            <button data-event-click="time_ui('cancel')">キャンセル</button>
+            <button class="primary" data-event-click="time_ui('confirm')">確定</button>
+        </div>
+    </div>
+</div>
+
+            <div class="scene-panel" data-if="scene.active">
+                <button class="icon scene-close-notch ic-chevron-down" title="閉じる" data-event-click="close_screen"></button>
+                <div class="scene-list">
+                    <div class="ui-card scene-card" data-for="row, i : scene.rows" data-class-is-selected="row.current"
+                         data-event-dragstart="scene_ui('drag', i)" data-event-dragend="scene_ui('dragEnd')"
+                         data-event-dragdrop="scene_action('drop', i)">
+                        <div class="scene-row">
+                        <span class="ui-icon drag-grip ic-grip"></span>
+                        <button class="flat scene-name" data-if="!row.editing" data-event-click="scene_action('switch', i)"
+                                data-event-dblclick="scene_ui('rename', i)">{{ row.name }}</button>
+                        <input class="form-field scene-name-input" type="text" data-class-is-editing="row.editing" data-value="row.draft"
+                               data-event-change="scene_edit" data-event-blur="scene_edit" data-event-keydown="scene_edit" />
+                        <button class="icon row-action ic-pencil" data-if="!row.editing" title="名前を変える" data-event-click="scene_ui('rename', i)"></button>
+                        <button class="icon row-action ic-trash" data-if="scene.canDelete" title="シーンを削除" data-event-click="scene_action('delete', i)"></button>
+                        </div>
+                        <div class="scene-card-environment">
+                            <label>環境</label><select class="form-field" data-value="row.env" data-event-change="scene_action('env', i)">
+                                <option data-for="opt, oi : row.envOptions" data-value="oi" data-attrif-disabled="opt.disabled">{{ opt.name }}</option>
+                            </select>
+                            <label>地形</label><div class="scene-surface-name">{{ row.surface }}</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="flat add-row" data-event-click="scene_ui('add')"><span class="ui-icon ic-plus"></span>シーンを追加</button>
+            </div>
+
+<!-- 左右タブは「外枠(edge-frame)1つにノッチとパネル本体を収める」部品にする。動かすのは外枠だけで、
+     is-open/is-absentのクラス付け外しでtransitionを再生する(3状態: 無/閉/開)。
+     中身はdata-ifで切り替える(左タブはモードによりパネルかプラグインブラウザ)。
+     開閉・大きさ・重なり順は中身によらず共通。 -->
+<div class="edge-frame edge-left" data-class-is-open="leftTab.open" data-class-is-absent="leftTab.content == 'none'">
+    <!-- 矢印は押したときにタブが動く向きを指す(開いていれば閉じる向き、閉じていれば開く向き)。 -->
+    <button class="icon edge-notch" title="左のタブを開く・閉じる" data-event-click="toggle_notch('left')"></button>
+    <div class="edge-panel">
+        <!-- タブの中身はどれも共通の入れ物(.tab-content: 余白・縦スクロール)に入れ、見出しは.tab-titleにする。 -->
+        <div class="tab-content" data-if="leftTab.content == 'panel'">
+            <div data-if="!dia.active && !scene.active">左タブ(仮)</div>
+            <div class="dia-panel" data-if="dia.active">
+                <div class="tab-title" data-if="dia.screen == 0">駅・番線</div>
+                <div class="dia-header" data-if="dia.screen != 0">
+                    <button class="icon back ic-chevron-left" title="戻る" data-event-click="dia_ui('back')"></button>
+                    <div class="crumbs dia-crumbs">
+                        <button class="crumb" data-event-click="dia_ui('home')">駅・番線</button>
+                        <span class="ui-icon crumb-sep ic-chevron-right"></span>
+                        <span class="crumb-current">{{ dia.breadcrumb }}</span>
+                    </div>
+                </div>
+                <!-- 駅一覧: シーン > (駅 | 未所属の番線) > 駅の番線。シーンと駅は折りたためる(折りたたみボタンは行の右端。row.visibleが折りたたみの結果)。
+                     字下げはrow.depth、各行の下に区切り線(.dia-list-row)。 -->
+                <div data-if="dia.screen == 0">
+                    <div class="form-line empty-hint" data-if="dia.rows.size == 0">駅・番線がありません。駅を置くとここに出ます</div>
+                    <div data-for="row, i : dia.rows" data-if="row.visible" data-class-dia-gray="row.gray" data-class-dia-highlight="row.highlighted">
+                        <div class="dia-scene dia-list-row" data-if="row.kind == 'scene' && dia.sceneCount > 1"
+                             data-event-dragdrop="dia_action('MovePlatform', i)">
+                            <span>{{ row.name }}</span>
+                            <button class="icon fold-button fold-vertical" title="折りたたむ・広げる" data-class-is-collapsed="row.collapsed" data-event-click="dia_ui('fold', i)"></button>
+                        </div>
+                        <div class="dia-row dia-list-row" data-if="row.kind == 'station'" data-style-padding-left="(row.depth * 16) + 'dp'"
+                             data-event-mouseover="dia_hover('list', i, true)" data-event-mouseout="dia_hover('list', i, false)"
+                             data-event-dragdrop="dia_action('MovePlatform', i)">
+                            <div class="dia-row-label" data-if="!row.editing" title="ダブルクリックでカメラを駅へ動かす" data-event-dblclick="dia_action('FlyToStation', i)">{{ row.name }}</div>
+                            <input class="form-field dia-name-input" type="text" data-if="row.editing" data-class-dia-editing="row.editing" data-value="row.draft"
+                                   data-event-blur="dia_commit('RenameStation', i)" data-event-keydown="dia_commit('RenameStation', i)" />
+                            <button class="icon row-action ic-pencil" data-if="!row.editing" data-class-dia-show="row.hovered" title="名前を変える"
+                                    data-event-click="dia_ui('rename', i)"></button>
+                            <button class="icon row-action ic-trash" data-class-dia-show="row.hovered" title="駅を削除"
+                                    data-event-click="dia_action('DeleteStation', i)"></button>
+                            <button class="icon fold-button fold-vertical" title="折りたたむ・広げる" data-class-is-collapsed="row.collapsed" data-event-click="dia_ui('fold', i)"></button>
+                        </div>
+                        <div class="dia-row dia-platform dia-list-row" data-if="row.kind == 'target'" data-style-padding-left="(row.depth * 16) + 'dp'"
+                             data-attr-title="row.gray ? 'ダイヤが未設定' : ''"
+                             data-class-dia-draggable="row.draggable" data-event-click="dia_ui('target', row.target)"
+                             data-event-dragstart="dia_ui('drag', i, 'platform')" data-event-dragend="dia_ui('dragEnd')"><span class="ui-icon drag-grip ic-grip" data-if="row.draggable"></span><span class="dia-row-label">{{ row.name }}</span><span class="dia-unset" data-if="row.gray">未設定</span></div>
+                    </div>
+                </div>
+                <div data-for="target : dia.targets">
+                    <div data-if="target.selected">
+                        <div data-if="dia.screen >= 1">
+                            <div class="dia-row" data-if="!target.branch">
+                                <span class="dia-field-label">ドア</span>
+                                <label class="dia-door-check"><input type="checkbox" data-attrif-checked="target.doorLeft" data-event-change="dia_action('ToggleDoor', -1, -1, 'left')" /><span class="dia-row-label">左</span></label>
+                                <label class="dia-door-check"><input type="checkbox" data-attrif-checked="target.doorRight" data-event-change="dia_action('ToggleDoor', -1, -1, 'right')" /><span class="dia-row-label">右</span></label>
+                            </div>
+                            <button data-if="target.branch" data-event-click="dia_action('ChangeOpening')">今の開通先: {{ target.opening }}</button>
+                            <div class="dia-guidance">上から順に、当てはまる最初の1つを使う</div>
+                            <div class="dia-layer-card" data-for="layer, li : target.layers" data-class-dia-open="layer.selected" data-class-dia-gray="layer.empty">
+                                <div class="dia-row dia-layer-head" data-class-dia-gray="layer.empty"
+                                     data-class-dia-draggable="layer.reorderable" data-event-click="dia_ui('layer', li)"
+                                     data-event-dragstart="dia_ui('drag', li, 'layer')" data-event-dragend="dia_ui('dragEnd')"
+                                     data-event-dragdrop="dia_action('ReorderLayer', li)"
+                                     data-event-mouseover="dia_hover('layer', li, true)" data-event-mouseout="dia_hover('layer', li, false)">
+                                    <button class="flat dia-layer-link" data-class-dia-draggable="layer.reorderable">
+                                        <span class="ui-icon drag-grip ic-grip" data-if="layer.reorderable"></span>
+                                        <span class="dia-layer-number">{{ li + 1 }}</span>
+                                        <span class="dia-layer-name" data-if="layer.kind != 'タグ'">{{ layer.name }}</span>
+                                        <span class="tag-chip" data-if="layer.kind == 'タグ'"><span class="tag-chip-dot"></span>{{ layer.name }}</span>
+                                        <span class="dia-sequence"></span>
+                                        <span class="ui-icon ic-chevron-right" data-if="!layer.selected"></span><span class="ui-icon ic-chevron-down" data-if="layer.selected"></span>
+                                    </button>
+                                    <!-- 消せない層でも場所は空けておき、右端の矢印の位置をそろえる。 -->
+                                    <button class="icon row-action ic-trash" data-class-dia-show="layer.hovered && layer.deletable"
+                                            data-class-is-placeholder="!layer.deletable" data-attrif-disabled="!layer.deletable"
+                                            title="層を削除" data-event-click="dia_action('DeleteLayer', li)"></button>
+                                </div>
+                                <div class="dia-chips" data-if="!layer.selected" data-event-click="dia_ui('layer', li)">
+                                    <span class="dia-caption" data-if="layer.empty">空 — 次の層へ</span>
+                                    <span class="dia-chip" data-if="!layer.empty" data-for="element, ei : layer.elements" data-class-dia-gray="element.disabled"><span data-if="element.next">▶ </span>{{ element.summary }}</span>
+                                </div>
+                                <div class="dia-layer-body" data-if="layer.selected">
+                                    <div class="dia-conditions" data-if="target.branch">
+                                        <div class="dia-caption">条件</div>
+                                        <div class="dia-condition" data-for="condition, ci : layer.conditions">
+                                            <div class="dia-row" data-event-click="dia_ui('condition', ci)"><span class="dia-row-label">{{ condition.summary }}</span></div>
+                                            <div class="dia-detail" data-if="condition.open">
+                                                <div data-if="condition.kind == 'time'">
+                                                    <label>開始</label><input class="form-field" type="text" data-value="condition.start"
+                                                        data-event-blur="dia_commit('EditCondition', ci, -1, 'start')" data-event-keydown="dia_commit('EditCondition', ci, -1, 'start')" />
+                                                    <label>終了</label><input class="form-field" type="text" data-value="condition.end"
+                                                        data-event-blur="dia_commit('EditCondition', ci, -1, 'end')" data-event-keydown="dia_commit('EditCondition', ci, -1, 'end')" />
+                                                </div>
+                                                <div data-if="condition.kind == 'block'">
+                                                    <label class="dia-row" data-for="block, bi : condition.blocks">
+                                                        <input type="checkbox" data-attrif-checked="block.selected" data-event-change="dia_action('EditCondition', ci, bi, 'block')" /><span class="dia-row-label">{{ block.value }}</span>
+                                                    </label>
+                                                    <div class="segmented compact">
+                                                        <div class="segment-indicator"></div>
+                                                        <div class="segment" data-class-selected="condition.all" data-event-click="dia_action('EditCondition', ci, -1, 'match', 'all')"><span>すべて</span></div>
+                                                        <div class="segment" data-class-selected="!condition.all" data-event-click="dia_action('EditCondition', ci, -1, 'match', 'any')"><span>いずれか</span></div>
+                                                    </div>
+                                                </div>
+                                                <div class="segmented compact">
+                                                    <div class="segment-indicator"></div>
+                                                    <div class="segment" data-class-selected="condition.hand == '左'" data-event-click="dia_action('EditCondition', ci, -1, 'hand', '左')"><span>左</span></div>
+                                                    <div class="segment" data-class-selected="condition.hand == '右'" data-event-click="dia_action('EditCondition', ci, -1, 'hand', '右')"><span>右</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="dia-loop">
+                                        <div class="dia-element" data-for="element, ei : layer.elements" data-class-dia-gray="element.disabled"
+                                             data-event-dragstart="dia_ui('drag', ei, 'element')" data-event-dragend="dia_ui('dragEnd')"
+                                             data-event-dragdrop="dia_action('ReorderElement', ei)"
+                                             data-event-mouseover="dia_hover('element', ei, true)" data-event-mouseout="dia_hover('element', ei, false)">
+                                            <div class="dia-row">
+                                                <button class="flat dia-element-link dia-draggable" data-event-click="dia_ui('element', ei)">
+                                                    <span class="ui-icon drag-grip ic-grip"></span>
+                                                    <span class="dia-element-number"><span data-if="element.next">▶ </span>{{ ei + 1 }}</span>
+                                                    <span class="dia-sequence">{{ element.summary }}</span>
+                                                    <span class="dia-caption" data-if="element.overwrite">書換あり</span>
+                                                </button>
+                                                <button class="icon row-action ic-disable" data-class-dia-show="element.hovered" title="無効化"
+                                                        data-event-click="dia_action('DisableElement', ei)"></button>
+                                                <button class="icon row-action ic-trash" data-class-dia-show="element.hovered" title="要素を削除"
+                                                        data-event-click="dia_action('DeleteElement', ei)"></button>
+                                            </div>
+                                        </div>
+                                        <div class="dia-loop-return" data-if="layer.elements.size > 1"><span class="dia-return-icon ic-repeat"></span><span>1に戻る</span></div>
+                                    </div>
+                                    <button class="flat add-row" data-event-click="dia_action('AddElement')"><span class="ui-icon ic-plus"></span>要素を追加</button>
+                                </div>
+                            </div>
+                            <button class="flat add-row" data-event-click="dia_ui('addLayer')"><span class="ui-icon ic-plus"></span>層を追加</button>
+                            <div class="dia-picker" data-if="dia.addingLayer">
+                                <button class="flat tag-chip" data-for="choice, ci : dia.layerChoices" data-event-click="dia_action('AddLayer', ci)"><span class="tag-chip-dot"></span>{{ choice.value }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- プラグインブラウザ。タブ全体は縦に伸びる入れ物(.tab-content-browser)にし、
+             スクロールするのはカードのグリッド(#browser-grid)だけ。値・イベントの結線は
+             src/app/rmlui/RmlUiPluginBrowserView.cpp。カードは見えている行の前後だけ作り、上下の空き(.browser-space)で
+             全件ぶんの高さを保つ。カードの幅とサムネイルの高さは大きさの表からC++が決めてデータモデルで流し、それ以外の寸法はworkspace.rcssの変数が決める。C++は描かれたカードを測って窓の範囲を出す。 -->
+        <div class="tab-content tab-content-browser" data-if="leftTab.content == 'pluginbrowser'"
+                 data-class-train-list-page="formationSectionVisible && trainTabPage == 'list'"
+                 data-class-train-browser-page="formationSectionVisible && trainTabPage == 'browser'"
+                 data-class-templates-page="templateTabVisible && browserTemplatesOpen">
+            <!-- 最上段: 配置プレビュー中のプラグイン(情景・信号のモード)。選んでいないときも場所は取り、出入りで下を動かさない。同じカードはグリッドでも強調する。 -->
+            <div class="browser-selected" data-if="browserPlacementOptions" data-class-is-empty="browserSelectedName == ''">
+                <span class="browser-selected-label">選択中:</span> {{ browserSelectedName }}
+            </div>
+            <!-- 種別タブ(折り返す)。 -->
+            <div class="browser-header">
+                <!-- 種別タブのクリックは親へ伝わり、編成テンプレートの分類を閉じる(テンプレートのあるモード(レール・情景・列車)だけ、その分類のタブを足す)。
+                     並びは、お気に入り・テンプレート・それ以外の種別。 -->
+                <div class="browser-tabs" data-event-click="browser_templates_close">
+                    <button class="flat browser-tab" data-for="tab : browserTabs" data-if="tab.key == 'favorites'" data-class-is-selected="tab.selected && !browserTemplatesOpen"
+                            data-event-click="select_browser_tab(tab.key)">{{ tab.label }}</button>
+                    <button class="flat browser-tab" data-if="templateTabVisible" data-class-is-selected="browserTemplatesOpen"
+                            data-event-click="browser_templates_open">テンプレート</button>
+                    <button class="flat browser-tab" data-for="tab : browserTabs" data-if="tab.key != 'favorites'" data-class-is-selected="tab.selected && !browserTemplatesOpen"
+                            data-event-click="select_browser_tab(tab.key)">{{ tab.label }}</button>
+                </div>
+            </div>
+            <!-- パンくず(階層を出しているときだけ)。先頭に戻るボタン、最後が今いる階層で押せない。区切りは右向きの矢印。
+                 結線はsrc/app/rmlui/RmlUiBrowserFolder.cpp。 -->
+            <div class="browser-crumbs" data-if="browserCrumbs.size > 0">
+                <!-- 1つ上の階層へ戻る(最上位では出さない)。カードを落とすと、その階層への移動になる。 -->
+                <button class="icon back browser-back ic-chevron-left" title="1つ上の階層へ戻る" data-if="browserBackDepth != -1"
+                        data-event-dragover="browser_drag_over" data-event-dragout="browser_drag_out"
+                        data-event-dragdrop="browser_drop_path(browserBackDepth)"
+                        data-event-click="navigate_browser_path(browserBackDepth)"></button>
+                <div class="browser-crumb-item" data-for="crumb : browserCrumbs">
+                    <span class="browser-crumb-sep ic-chevron-right" data-if="crumb.depth > 0"></span>
+                    <span class="browser-crumb-current" data-if="crumb.current">{{ crumb.label }}</span>
+                    <button class="flat browser-crumb" data-if="!crumb.current"
+                            data-event-dragover="browser_drag_over" data-event-dragout="browser_drag_out"
+                            data-event-dragdrop="browser_drop_path(crumb.depth)"
+                            data-event-click="navigate_browser_path(crumb.depth)">{{ crumb.label }}</button>
+                </div>
+            </div>
+            <!-- 検索欄(入力のたびに絞り込む、browser_search)・漏斗のボタン・カードの大きさのボタンを1列に並べる。漏斗を押すと下に小さなパネルが開き、
+                 並べ替え(何で・向き。src/app/plugin_browser/BrowserSortCatalog.hの表)と絞り込み(項目は
+                 BrowserFilterCatalog.hの表)を選ぶ。選んでも開いたままで、外側を押すかEscで閉じる。
+                 漏斗は、並べ替えが初期値でない・絞り込みを使っているとき(browserFilterActive)と開いている間、色を付ける。 -->
+            <div class="browser-search-row">
+                <div class="search-box">
+                    <input type="text" class="search-input" data-attr-value="browserSearch" data-event-change="browser_search" />
+                    <div class="search-icon ic-search"></div>
+                </div>
+                <button class="flat browser-filter-button" title="並べ替え・絞り込み"
+                        data-class-is-active="browserFilterActive || browserFilterPanelOpen"
+                        data-event-click="toggle_browser_filter_panel">
+                    <div class="browser-filter-icon ic-funnel"></div>
+                </button>
+                <!-- カードの大きさ(大・中・小)。四角の並び(1×1・2×2・3×3)のアイコンボタン。
+                     大きさの表と寸法の出どころはsrc/app/plugin_browser/BrowserCardSizeCatalog.h。 -->
+                <button class="flat browser-size-button size-large" title="カードの大きさ: 大" data-class-is-selected="browserCardSize == 'large'"
+                            data-event-click="select_browser_card_size('large')">
+                        <div class="size-mark"><div class="size-dot"></div></div>
+                    </button>
+                    <button class="flat browser-size-button size-medium" title="カードの大きさ: 中" data-class-is-selected="browserCardSize == 'medium'"
+                            data-event-click="select_browser_card_size('medium')">
+                        <div class="size-mark"><div class="size-dot"></div><div class="size-dot"></div><div class="size-dot"></div><div class="size-dot"></div></div>
+                    </button>
+                    <button class="flat browser-size-button size-small" title="カードの大きさ: 小" data-class-is-selected="browserCardSize == 'small'"
+                            data-event-click="select_browser_card_size('small')">
+                        <div class="size-mark"><div class="size-dot"></div><div class="size-dot"></div><div class="size-dot"></div><div class="size-dot"></div><div class="size-dot"></div><div class="size-dot"></div><div class="size-dot"></div><div class="size-dot"></div><div class="size-dot"></div></div>
+                    </button>
+                <div class="browser-filter-panel" data-if="browserFilterPanelOpen">
+                    <div class="browser-filter-title">並べ替え</div>
+                    <div class="browser-filter-choices">
+                        <button class="flat browser-filter-choice" data-class-is-selected="!browserSortByAuthor"
+                                data-event-click="set_browser_sort_field(0)">名前</button>
+                        <button class="flat browser-filter-choice" data-class-is-selected="browserSortByAuthor"
+                                data-event-click="set_browser_sort_field(1)">作者</button>
+                    </div>
+                    <div class="browser-filter-choices">
+                        <button class="flat browser-filter-choice" data-class-is-selected="!browserSortDescending"
+                                data-event-click="set_browser_sort_direction(0)">昇順</button>
+                        <button class="flat browser-filter-choice" data-class-is-selected="browserSortDescending"
+                                data-event-click="set_browser_sort_direction(1)">降順</button>
+                    </div>
+                    <div class="browser-filter-title">
+                        <span class="browser-filter-title-text">絞り込み</span>
+                        <button class="flat browser-filter-clear" data-event-click="clear_browser_filters">解除</button>
+                    </div>
+                    <div class="browser-filter-options">
+                        <label class="browser-filter-option" data-for="opt : browserFilterOptions" data-if="opt.available">
+                            <input type="checkbox" data-attrif-checked="opt.selected" data-event-change="toggle_browser_filter(opt.key)" /><span class="dia-row-label">{{ opt.label }}</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <!-- 列車モードのブラウザで、編成一覧へ戻るボタン(検索欄とカードの間。結線は src/app/rmlui/RmlUiTrainTabView.cpp)。
+                 一覧のページではこの入れ物の子はformation-sectionだけを残し、ブラウザの部品は隠す(workspace.rcssの.train-list-page)。 -->
+            <div class="train-tab-header" data-if="formationSectionVisible && trainTabPage == 'browser'">
+                <button class="icon back ic-chevron-left" title="編成の一覧へ戻る" data-event-click="train_tab_back"></button>
+            </div>
+            <!-- 重複の詳細(カードの「!」を押すと出る。もう一度押すと消える)。 -->
+            <div class="form-line browser-detail" data-for="line : browserDetail">{{ line.text }}</div>
+            <div class="form-line browser-status" data-if="browserStatus != ''">
+                <span>{{ browserStatus }}</span>
+            </div>
+            <div id="browser-grid" class="browser-grid">
+                <div class="browser-space" data-style-height="browserTopSpace"></div>
+                <!-- フォルダのカード(グリッドの先頭)。押すとその階層へ入る(enter_browser_folder。カードのidとは別のイベント)。
+                     プラグインのカードと同じ.browser-cardで、測定・行の高さに乗せる。DOMの順がグリッドの項目の順。
+                     カードをドラッグして落とすとこのフォルダへの移動(browser_drop_folder)。フォルダのカード自身もドラッグできる。 -->
+                <div class="browser-card browser-folder" data-for="folder : browserFolders" data-style-width="browserCardWidth"
+                     data-attr-data-drag-name="folder.name" data-attr-data-folder-index="folder.index"
+                     data-event-dragover="browser_drag_over" data-event-dragout="browser_drag_out"
+                     data-event-dragdrop="browser_drop_folder(folder.index)"
+                     data-event-click="enter_browser_folder(folder.index)">
+                    <div class="browser-thumb" data-style-height="browserThumbHeight">
+                        <div class="browser-folder-tab"></div>
+                        <div class="browser-folder-body"></div>
+                    </div>
+                    <div class="browser-card-name" data-style-font-size="browserCardNameFontSize">{{ folder.name }}</div>
+                    <div class="browser-card-author" data-style-font-size="browserCardAuthorFontSize">{{ folder.count }}</div>
+                </div>
+                <!-- カード1枚。本体を押すと配置(レールのモードでは何も起きない)。お気に入り・セット・警告の各ボタンは本体へ伝えない。
+                     imageが空の間は無地の箱を出す。 -->
+                <div class="browser-card" tabindex="0" data-for="card : browserCards" data-attr-data-entry-id="card.id" data-attr-data-drag-name="card.name" data-class-is-selected="card.selected" data-style-width="browserCardWidth"
+                     data-event-dragstart="begin_drag_plugin(card.id)" data-event-dragend="end_drag"
+                     data-event-click="place_plugin(card.id)" data-event-mouseover="hover_browser_card(card.id)"
+                     data-event-mouseout="unhover_browser_card">
+                    <div class="browser-thumb" data-style-height="browserThumbHeight">
+                        <img class="browser-thumb-image" data-if="card.image != ''" data-attr-src="card.image" />
+                        <button class="icon browser-card-button browser-card-favorite" title="お気に入り"
+                                data-class-is-on="card.favorite" data-event-click="toggle_favorite(card.id)"></button>
+                        <button class="icon browser-card-button browser-card-set" data-if="browserSetButtons"
+                                title="敷設プラグインセットへ追加・外す" data-class-in-set="card.inSet" data-event-click="toggle_set(card.id)"></button>
+                        <button class="icon browser-card-button browser-card-duplicate ic-status-warning" data-if="card.duplicate"
+                                title="同じプラグインが複数のフォルダにあります" data-event-click="show_duplicate(card.id)"></button>
+                    </div>
+                    <div class="browser-card-name" data-style-font-size="browserCardNameFontSize">{{ card.name }}</div>
+                    <div class="browser-card-author" data-style-font-size="browserCardAuthorFontSize">{{ card.author }}</div>
+                </div>
+                <div class="browser-space" data-style-height="browserBottomSpace"></div>
+            </div>
+            <!-- カードにマウスを乗せている間の詳細(名前の全文と、作者 / 説明文)。グリッドの下に置き、出入りで
+                 グリッドがずれないよう2行ぶんの高さを常に確保する。 -->
+            <div class="browser-hover">
+                <div class="browser-hover-line">{{ browserHoverName }}</div>
+                <div class="browser-hover-line browser-hover-detail">{{ browserHoverDetail }}</div>
+            </div>
+            <!-- 保存済みのテンプレート(レールは敷設、情景は駅・施設、列車は編成)。編成と敷設のカードには、撮れた画像を出す(撮れるまでは無地)。
+                 編成のカードの右上は両数、左下の警告は見つからない車両があること。列車は編成編集パネルの`+`へドラッグすると、その車両をすべて入れる。
+                 レールはカードを押すと敷設プラグインセットへ読み込む。情景は押しても未実装の通知だけ。 -->
+            <div class="browser-template-grid" data-if="templateTabVisible && browserTemplatesOpen">
+                <div class="form-line empty-hint" data-if="browserTemplates.size == 0">テンプレートがありません</div>
+                <div class="browser-card browser-template-card" data-for="card : browserTemplates" data-style-width="browserCardWidth"
+                     data-event-click="template_card_click(card.name)"
+                     data-event-dragstart="begin_drag_template(card.name)" data-event-dragend="end_drag">
+                    <div class="browser-thumb" data-style-height="browserThumbHeight">
+                        <img class="browser-thumb-image" data-if="card.image != ''" data-attr-src="card.image" />
+                        <div class="browser-card-count" data-if="card.count != ''">{{ card.count }}</div>
+                        <button class="icon browser-card-button browser-card-duplicate ic-status-warning" data-if="card.missing"
+                                title="見つからない車両があります"></button>
+                    </div>
+                    <div class="browser-card-name" data-style-font-size="browserCardNameFontSize">{{ card.name }}</div>
+                </div>
+            </div>
+            <!-- 編成一覧(列車モードだけ。結線はsrc/app/rmlui/RmlUiFormationListView.cpp)。一覧のページだけ出す(ブラウザのページでは隠す)。
+                 カードは上段に編成名、下段の右寄せに両数。押すと選び(配置済みも選べる)、未配置のカードのダブルクリックはその編成を選んでブラウザのページへ移る(名前の変更は鉛筆ボタン)。置いた列車がある編成は中身を薄くして中央に「配置中」を重ね、ダブルクリックでカメラをその列車の先頭車へ移す(運転台視点には入らない)。
+                 右上のごみ箱ボタンは削除(確認ダイアログ)、右クリックでメニュー。車両の編集は画面下の編成編集パネル。 -->
+            <div class="formation-section" data-if="formationSectionVisible">
+                <div class="form-section formation-list-header">編成一覧<span class="formation-list-count">{{ formationCards.size }}編成</span></div>
+                <div class="formation-list">
+                    <div class="form-line empty-hint" data-if="formationCards.size == 0">編成がありません。下の「編成を追加」で作ります</div>
+                    <div class="ui-card formation-card" data-for="card : formationCards" data-class-is-selected="card.selected"
+                         data-class-is-placed="card.placed"
+                         data-class-is-editing="formationEditingId == card.id || templateSave.formationId == card.id"
+                         data-class-is-template-saving="templateSave.formationId == card.id"
+                         data-context-menu="formationcard" data-attr-data-context-id="card.id"
+                         data-class-is-drop-target="formationDropCard == card.id && formationDropSlot == card.carCount"
+                         data-event-dragover="drag_over_slot(card.id, card.carCount)" data-event-dragout="drag_out_slot(card.id, card.carCount)"
+                         data-event-dragdrop="drop_on_slot(card.id, card.carCount)"
+                         data-event-click="formation_card_click(card.index)"
+                         data-event-dblclick="formation_card_edit(card.index, card.placed, card.id)">
+                        <div class="formation-card-head">
+                            <!-- 先頭車のアイコン。車両が無い間・画像が届くまでは無地の箱。 -->
+                            <div class="formation-card-icon">
+                                <img class="formation-card-icon-image" data-if="card.icon != ''" data-attr-src="card.icon" />
+                            </div>
+                            <div class="formation-card-titles">
+                                <!-- タグ欄(編成名の上)。番線のタグと同じ部品で、マウスを乗せると右に`×`が出て外せる。 -->
+                                <div class="tag-row" data-if="card.tags.size > 0">
+                                    <span class="tag-chip" data-for="tag : card.tags"><span class="tag-chip-dot"></span>{{ tag.label }}<button class="tag-chip-remove ic-close" title="タグを外す" data-event-click="remove_formation_tag(card.id, tag.id)"></button></span>
+                                </div>
+                                <div class="formation-card-name">{{ card.name }}</div>
+                                <input type="text" class="formation-card-name-input" data-event-click="stop_card_click"
+                                       data-event-change="commit_formation_name" data-event-blur="commit_formation_name"
+                                       data-event-keydown="key_formation_name" />
+                            </div>
+                            <span class="formation-card-count">{{ card.carCount }}両</span>
+                            <span class="formation-card-placed" data-if="card.placed">配置中</span>
+                            <button class="icon row-action ic-pencil" title="名前を変える"
+                                    data-event-click="begin_rename_formation(card.id)"></button>
+                            <button class="icon row-action ic-trash" title="編成を削除"
+                                    data-event-click="remove_formation_card(card.id)"></button>
+                        </div>
+                    </div>
+                    <!-- 新規編成(一覧の末尾)。作った編成を選んで、ブラウザのページへ移る(車両を足すため)。 -->
+                    <button class="flat add-row formation-add" data-event-click="train_tab_add_formation"><span class="ui-icon ic-plus"></span>編成を追加</button>
+                </div>
+            </div>
+            <!-- 列車モードのブラウザの最下段。編成を追加(結線は src/app/rmlui/RmlUiTrainTabView.cpp)。 -->
+            <button class="flat add-row train-tab-add" data-if="formationSectionVisible && trainTabPage == 'browser'"
+                    data-event-click="train_tab_add_formation"><span class="ui-icon ic-plus"></span>編成を追加</button>
+            <!-- 情景の配置設定(情景・信号のモードだけ)。 -->
+            <div class="browser-placement-options" data-if="browserPlacementOptions">
+                <div class="form-row">
+                    <div class="form-label browser-option-label">連続配置</div>
+                    <input type="checkbox" class="toggle" data-attrif-checked="sceneryContinuous"
+                           data-event-change="toggle_scenery_continuous" />
+                </div>
+                <div class="form-row">
+                    <div class="form-label browser-option-label">レールに合わせる</div>
+                    <input type="checkbox" class="toggle" data-attrif-checked="scenerySnapToRail"
+                           data-event-change="toggle_scenery_snap_to_rail" />
+                </div>
+                <div class="dia-caption">オフのとき、駅のレールも一緒に置きます</div>
+                <div class="form-row">
+                    <div class="form-label browser-option-label">矢印キーの回転刻み</div>
+                    <input type="text" class="form-field" data-attr-value="sceneryYawStepDeg"
+                           data-event-focus="focus_scenery_yaw_step"
+                           data-event-change="commit_scenery_yaw_step"
+                           data-event-blur="commit_scenery_yaw_step"
+                           data-event-keydown="key_scenery_yaw_step" />
+                    <div class="form-unit">°</div>
+                </div>
+            </div>
+            <div class="browser-placement-options" data-if="sceneryTransformShown">
+                <div class="form-row">
+                    <div class="form-label browser-option-label">位置 X</div>
+                    <input type="text" class="form-field" data-attr-value="sceneryX"
+                           data-edit-commit="" data-event-focus="focus_scenery_transform" data-event-blur="commit_scenery_transform('x')" />
+                </div>
+                <div class="form-row">
+                    <div class="form-label browser-option-label">位置 Y</div>
+                    <input type="text" class="form-field" data-attr-value="sceneryY"
+                           data-edit-commit="" data-event-focus="focus_scenery_transform" data-event-blur="commit_scenery_transform('y')" />
+                </div>
+                <div class="form-row">
+                    <div class="form-label browser-option-label">位置 Z</div>
+                    <input type="text" class="form-field" data-attr-value="sceneryZ"
+                           data-edit-commit="" data-event-focus="focus_scenery_transform" data-event-blur="commit_scenery_transform('z')" />
+                </div>
+                <div class="form-row">
+                    <div class="form-label browser-option-label">左右の向き</div>
+                    <input type="text" class="form-field" data-attr-value="sceneryYaw"
+                           data-edit-commit="" data-event-focus="focus_scenery_transform" data-event-blur="commit_scenery_transform('yaw')" />
+                </div>
+                <div class="form-row">
+                    <div class="form-label browser-option-label">上下の向き</div>
+                    <input type="text" class="form-field" data-attr-value="sceneryPitch"
+                           data-edit-commit="" data-event-focus="focus_scenery_transform" data-event-blur="commit_scenery_transform('pitch')" />
+                </div>
+                <div class="form-row">
+                    <div class="form-label browser-option-label">傾き</div>
+                    <input type="text" class="form-field" data-attr-value="sceneryRoll"
+                           data-edit-commit="" data-event-focus="focus_scenery_transform" data-event-blur="commit_scenery_transform('roll')" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ダイヤの要素の編集。左タブの右隣に出し、左タブの層・要素の一覧は開いたまま残す。閉じると一覧へ戻る(dia_ui('back'))。 -->
+<div class="dia-inspector" data-if="dia.active && dia.screen == 2 && leftTab.open">
+    <div class="dia-inspector-head">
+        <span class="dia-inspector-title">{{ dia.inspectorTitle }}</span>
+        <button class="icon row-action dia-inspector-close ic-close" title="閉じる" data-event-click="dia_ui('back')"></button>
+    </div>
+    <div class="dia-inspector-body">
+    <div data-for="target : dia.targets">
+        <div data-if="target.selected">
+        <div data-for="layer : target.layers">
+            <div data-if="layer.selected">
+                <div data-for="element, ei : layer.elements">
+                    <div class="dia-editor" data-if="element.open">
+                        <div class="dia-field-row" data-if="target.branch">
+                            <span class="dia-field-label">動作</span>
+                            <div class="segmented compact dia-field-value">
+                                <div class="segment-indicator"></div>
+                                <div class="segment" data-class-selected="element.hand == '左'" data-event-click="dia_action('ChangeBranchHand', ei, -1, '', '左')"><span>左</span></div>
+                                <div class="segment" data-class-selected="element.hand == '右'" data-event-click="dia_action('ChangeBranchHand', ei, -1, '', '右')"><span>右</span></div>
+                                <div class="segment" data-class-selected="element.hand == 'ランダム'" data-event-click="dia_action('ChangeBranchHand', ei, -1, '', 'ランダム')"><span>ランダム</span></div>
+                            </div>
+                        </div>
+                        <div data-if="!target.branch">
+                            <div class="dia-field-row">
+                                <span class="dia-field-label">動作</span>
+                                <div class="segmented compact dia-field-value">
+                                    <div class="segment-indicator"></div>
+                                    <div class="segment" data-class-selected="element.operation == 'stop'" data-event-click="dia_action('ChangeOperation', ei, -1, '', 'stop')"><span>停車</span></div>
+                                    <div class="segment" data-class-selected="element.operation == 'reverse'" data-event-click="dia_action('ChangeOperation', ei, -1, '', 'reverse')"><span>折返</span></div>
+                                    <div class="segment" data-class-selected="element.operation == 'pass'" data-event-click="dia_action('ChangeOperation', ei, -1, '', 'pass')"><span>通過</span></div>
+                                </div>
+                            </div>
+                            <div data-if="element.operation != 'pass'">
+                                <div class="dia-field-row">
+                                    <span class="dia-field-label">発車</span>
+                                    <div class="dia-field-value">
+                                        <div class="segmented compact">
+                                            <div class="segment-indicator"></div>
+                                            <div class="segment" data-class-selected="element.departure == 'seconds'" data-event-click="dia_action('ChangeDepartureType', ei, -1, '', 'seconds')"><span>秒数</span></div>
+                                            <div class="segment" data-class-selected="element.departure == 'time'" data-event-click="dia_action('ChangeDepartureType', ei, -1, '', 'time')"><span>時刻</span></div>
+                                        </div>
+                                        <div class="dia-row" data-if="element.departure == 'seconds'">
+                                            <input class="form-field dia-row-label" type="text" data-value="element.seconds"
+                                                data-event-blur="dia_commit('ChangeDepartureTime', ei, -1, 'seconds')" data-event-keydown="dia_commit('ChangeDepartureTime', ei, -1, 'seconds')" />
+                                            <span>秒</span>
+                                        </div>
+                                        <div data-if="element.departure == 'time'">
+                                            <button class="flat link" data-event-click="dia_ui('times', ei)">発車時刻 {{ element.times.size }}件</button>
+                                            <div data-if="element.timesOpen">
+                                                <div class="dia-row" data-for="time, ti : element.times"
+                                                     data-event-mouseover="dia_hover('time', ei, true, ti)" data-event-mouseout="dia_hover('time', ei, false, ti)">
+                                                    <input class="form-field dia-row-label" type="text" data-value="time.draft"
+                                                        data-event-blur="dia_commit('ChangeDepartureTime', ei, ti)" data-event-keydown="dia_commit('ChangeDepartureTime', ei, ti)" />
+                                                    <button class="icon row-action ic-trash" data-class-dia-show="time.hovered" title="時刻を削除" data-event-click="dia_action('DeleteDepartureTime', ei, ti)"></button>
+                                                </div>
+                                                <button class="flat add-row" data-event-click="dia_action('AddDepartureTime', ei)"><span class="ui-icon ic-plus"></span>発車時刻を追加</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="dia-field-row">
+                                    <span class="dia-field-label">接続待ち</span>
+                                    <div class="dia-field-value"><input type="checkbox" class="toggle" data-attrif-checked="element.connection"
+                                        data-event-change="dia_action('ChangeConnectionWait', ei, -1, 'enabled')" /></div>
+                                </div>
+                                <div data-if="element.connection">
+                                    <div class="dia-field-row">
+                                        <span class="dia-field-label">相手の番線</span>
+                                        <select class="form-field dia-field-value" data-event-change="dia_action('ChangeConnectionWait', ei, -1, 'platform')">
+                                            <option data-for="platform : element.platforms" data-attr-value="platform.value" data-attrif-selected="platform.selected">{{ platform.value }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="dia-field-row">
+                                        <span class="dia-field-label">最大</span><input class="form-field dia-field-value" type="text" data-value="element.maximum"
+                                            data-event-blur="dia_commit('ChangeConnectionWait', ei, -1, 'maximum')" data-event-keydown="dia_commit('ChangeConnectionWait', ei, -1, 'maximum')" /><span class="form-unit">秒</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dia-field-row">
+                                <span class="dia-field-label">停止位置</span>
+                                <div class="dia-field-value">
+                                    <div>{{ element.stopPosition }}</div>
+                                    <button class="flat link" data-event-click="dia_action('ResetStopPosition', ei)">番線の既定に戻す</button>
+                                </div>
+                            </div>
+                            <div class="dia-section-title">運行情報の書換</div>
+                            <div class="dia-field-row" data-for="field, fi : element.overwrites">
+                                <span class="dia-field-label">{{ field.label }}</span>
+                                <div class="dia-field-value dia-row">
+                                    <input class="form-field dia-row-label" type="text" data-value="field.draft"
+                                        data-event-blur="dia_commit('ChangeRunInfo', ei, fi)" data-event-keydown="dia_commit('ChangeRunInfo', ei, fi)" />
+                                    <button class="icon row-action ic-trash" title="書換の項目を削除" data-event-click="dia_action('DeleteRunInfo', ei, fi)"></button>
+                                </div>
+                            </div>
+                            <button class="flat add-row" data-event-click="dia_ui('addOverwrite')"><span class="ui-icon ic-plus"></span>書換える項目を追加</button>
+                            <div class="dia-picker" data-if="dia.addingOverwrite">
+                                <button data-for="choice, ci : dia.overwriteChoices" data-event-click="dia_action('AddRunInfo', ei, ci)">{{ choice.value }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+<!-- 編成編集パネル(列車モードで、プラグインブラウザのページを出している間だけ。結線はRmlUiFormationListView.cpp・RmlUiFormationCarsView.cpp)。選択中の編成の車両を
+     先頭車が左で横に並べ、折り返す。`+`は先頭の前・車両の間(各車両の前=スロットi)・末尾の後ろ(スロットcarCount)。0両のときは1つだけ。 -->
+<div class="formation-panel" data-if="formationPanelVisible && formationCards.size > 0" data-class-is-dragging="formationDragging">
+    <div data-for="card : formationCards">
+        <div data-if="card.selected && trainTabPage == 'browser'">
+            <div class="formation-panel-head">
+                <span class="formation-panel-name">{{ card.name }}</span>
+                <span class="formation-panel-count">{{ card.carCount }}両</span>
+            </div>
+            <div class="formation-panel-cars">
+                <div class="formation-panel-unit" data-for="car, i : card.cars">
+                    <div class="formation-panel-slot" data-class-is-drop-target="formationDropCard == card.id && formationDropSlot == i"
+                         data-event-dragover="drag_over_slot(card.id, i)" data-event-dragout="drag_out_slot(card.id, i)"
+                         data-event-dragdrop="drop_on_slot(card.id, i)"><div class="formation-panel-slot-mark ic-plus"></div></div>
+                    <div class="formation-panel-car" tabindex="0" data-class-is-reversed="car.reversed" data-class-is-focused="car.focused" data-event-click="focus_formation_car(i)"
+                         data-attr-title="car.label" data-event-dragstart="begin_drag_car(card.id, i)" data-event-dragend="end_drag">
+                        <div class="formation-panel-car-picture" data-if="car.image != ''">
+                            <img class="formation-panel-car-image" data-attr-src="car.image" />
+                        </div>
+                        <div class="formation-panel-car-footer">
+                            <div class="formation-panel-car-name">{{ car.label }}</div>
+                            <div class="formation-panel-car-buttons">
+                                <button class="icon icon-round formation-panel-car-button formation-panel-car-flip" title="向きを反転"
+                                        data-event-click="toggle_formation_car_reversed(card.id, i)"></button>
+                                <button class="icon icon-round formation-panel-car-button formation-panel-car-trash" title="この車両を外す"
+                                        data-event-click="remove_formation_car(card.id, i)"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="formation-panel-slot formation-panel-slot-end" data-class-is-empty="card.carCount == 0"
+                     data-class-is-drop-target="formationDropCard == card.id && formationDropSlot == card.carCount"
+                     data-event-dragover="drag_over_slot(card.id, card.carCount)" data-event-dragout="drag_out_slot(card.id, card.carCount)"
+                     data-event-click="train_tab_open_browser" data-event-dragdrop="drop_on_slot(card.id, card.carCount)"><div class="formation-panel-slot-mark ic-plus" data-if="card.carCount > 0"></div><div class="formation-panel-slot-mark" data-if="card.carCount == 0">ここに車両をドラッグ</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 信号カード(信号モードだけ。結線はRmlUiSignalPanelView.cpp)。信号ごとに、その信号の画面上へ1枚。
+     位置はdata-style-left/top(コンテキストのpx。画面端へ寄せた値)。押すと選び、選んだカードだけ編集を広げる。
+     値は仮で、変える操作は「この操作は使えない」の通知を出す。 -->
+<!-- 閉塞を作るボタン(信号モードだけ。結線はRmlUiSignalPanelView.cpp)。レールを選んでいる間、選んだレールの中ほどの
+     画面上へ出す。押すと、選んでいるレールを範囲とする閉塞を作る。 -->
+<button class="primary signal-block-button" data-block-id="block"
+        data-if="signalPanel.visible && signalPanel.canCreateBlock && signalPanel.blockButtonShown"
+        data-style-left="signalPanel.blockButtonLeft" data-style-top="signalPanel.blockButtonTop"
+        title="選んでいるレールを範囲とする閉塞を作る" data-event-click="signal_create_block"><span class="ui-icon ic-plus"></span>閉塞にする</button>
+
+<div data-for="sig, si : signalPanel.signals">
+    <div class="signal-card" data-if="signalPanel.visible && sig.shown" data-attr-data-signal-id="sig.id"
+         data-class-is-selected="sig.selected" data-style-left="sig.left" data-style-top="sig.top">
+        <button class="flat signal-card-name" data-event-click="signal_panel_ui('select', si)">{{ sig.name }}</button>
+        <div class="signal-editor" data-if="sig.selected">
+            <div class="form-row">
+                <div class="form-label">向き</div>
+                <div class="segmented compact">
+                    <div class="segment-indicator"></div>
+                    <div class="segment" data-class-selected="sig.direction == 'forward'" data-event-click="signal_panel_action('direction', si, 'forward')"><span>順</span></div>
+                    <div class="segment" data-class-selected="sig.direction == 'reverse'" data-event-click="signal_panel_action('direction', si, 'reverse')"><span>逆</span></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-label">現示</div>
+                <div class="float-window-note">{{ sig.aspectText }}</div>
+            </div>
+            <div class="form-row">
+                <div class="form-label">強制的に停止信号</div>
+                <input type="checkbox" class="toggle" data-attrif-checked="sig.forcedRed" data-event-change="signal_panel_action('forceRed', si)" />
+            </div>
+            <div class="form-section">段</div>
+            <div class="form-row ui-row" data-for="stage, ti : sig.stages">
+                <div class="form-label">{{ stage.speed }} km/h</div>
+                <button class="icon row-action ic-trash" data-if="stage.removable" title="段を外す" data-event-click="signal_panel_action('removeStage', si, ti)"></button>
+            </div>
+            <div class="form-row" data-if="sig.addableSpeeds.size > 0">
+                <div class="form-label">段を追加</div>
+                <select class="form-field-fill">
+                    <option data-for="speed : sig.addableSpeeds" data-value="speed">{{ speed }} km/h</option>
+                </select>
+                <button class="icon row-action is-shown ic-plus" title="選んだ段を追加" data-event-click="signal_panel_action('addStage', si)"></button>
+            </div>
+            <button class="flat link" data-event-click="signal_panel_action('delete', si)">信号を削除</button>
+        </div>
+    </div>
+</div>
+
+<!-- 閉塞ラベルは信号モードだけ。同じアンカーの閉塞は一覧の順で縦に並べる。 -->
+<div data-for="label : railLabels">
+    <div class="rail-label" data-if="label.shown" data-attr-data-block-id="label.id"
+         data-class-is-selected="label.selected" data-class-is-warning="label.colorClass == 'danger'"
+         data-class-is-editing="label.id == railLabelEditingId"
+         data-style-left="label.left" data-style-top="label.top">
+        <button class="flat rail-label-name" data-class-is-disabled="label.disabled" data-attr-title="label.title"
+                data-event-click="select_rail_label(label.id)"
+                data-event-dblclick="begin_rename_rail_label(label.id)"><span class="ui-icon rail-label-warning ic-status-warning" data-if="label.warning"></span><span>{{ label.name }}</span></button>
+        <button class="icon row-action rail-label-rename ic-pencil" title="名前を変える" data-event-click="begin_rename_rail_label(label.id)"></button>
+        <input type="text" class="rail-label-name-input" data-event-change="commit_rail_label_name"
+               data-event-blur="commit_rail_label_name" data-event-keydown="key_rail_label_name" />
+    </div>
+</div>
+
+<!-- 運転台視点中の左上の戻るボタンと右上のパネル(結線はRmlUiCabinHudView.cpp。固定UIを消す切り替えはWorkspaceShell)。
+     パネルは上から、種別・行先、前駅→次駅、次駅の番線、現在速度。値が空の段は出さない。 -->
+<button class="flat cabin-back" data-if="cabinView && !loadingVisible" title="運転台視点をやめる (Esc)" data-event-click="leave_cabin_view"><span class="ui-icon ic-chevron-left"></span>戻る</button>
+<div class="cabin-hud" data-if="cabinView && cabinHud.shown && !loadingVisible">
+    <div class="cabin-hud-run" data-if="cabinHud.trainType != '' || cabinHud.destination != ''">
+        <span class="train-card-run-item" data-if="cabinHud.trainType != ''">{{ cabinHud.trainType }}</span>
+        <span class="train-card-run-item" data-if="cabinHud.destination != ''">{{ cabinHud.destination }}</span>
+    </div>
+    <div class="cabin-hud-next" data-if="cabinHud.previousStation != '' || cabinHud.nextStation != ''">{{ cabinHud.previousStation != '' ? cabinHud.previousStation : '--' }} → {{ cabinHud.nextStation != '' ? cabinHud.nextStation : '--' }}</div>
+    <div class="cabin-hud-platform" data-if="cabinHud.nextPlatform != ''">{{ cabinHud.nextPlatform }}</div>
+    <div class="cabin-hud-speed"><span class="train-card-speed-value">{{ cabinHud.speedKmh }}</span><span class="train-card-speed-unit">km/h</span></div>
+</div>
+
+<!-- 編成情報カード(列車モードだけ。結線はRmlUiTrainInfoCardView.cpp)。配置済みの編成ごとに先頭車の画面上へ1枚。
+     位置はdata-style-left/top(コンテキストのpx。画面端へ寄せた値)。全体を覆う親は置かず、ポインタを受けるのは
+     カードの矩形だけ(.train-info-card)。上から種別・行先・運用番号、先頭車アイコン・編成名・両数・運転席視点、
+     右上の角のゴミ箱(列車の撤去、確認あり)、折りたたみボタン(押すとアイコンと編成名だけを残す)、速度ボタン(後退・停止・前進)、現在速度(運行状態は色)、目標速度と微調整(丸い−/+、押している間は連続)。 -->
+<div data-for="card : trainInfoCards">
+    <div class="train-info-card" data-event-dblclick="follow_train(card.id)" data-if="card.shown" data-attr-data-train-id="card.id"
+         data-style-left="card.left" data-style-top="card.top">
+        <button class="icon icon-round train-card-remove" title="この列車を撤去"
+                data-event-click="remove_train_card(card.id)"></button>
+        <div class="train-card-run" data-if="!card.collapsed && (card.trainType != '' || card.destination != '' || card.trainNumber != '')">
+            <span class="train-card-run-item" data-if="card.trainType != ''">{{ card.trainType }}</span>
+            <span class="train-card-run-item" data-if="card.destination != ''">{{ card.destination }}</span>
+            <span class="train-card-run-item" data-if="card.trainNumber != ''">{{ card.trainNumber }}</span>
+        </div>
+        <div class="train-card-main">
+            <!-- 配置元の編成の定義が無い列車(定義を削除した後など)は、アイコン・編成名・両数を隠す。 -->
+            <div class="formation-card-icon" data-if="card.name != ''">
+                <img class="formation-card-icon-image" data-if="card.icon != ''" data-attr-src="card.icon" />
+            </div>
+            <div class="train-card-titles" data-if="card.name != ''">
+                <div class="train-card-name">{{ card.name }}</div>
+                <div class="formation-card-count" data-if="!card.collapsed">{{ card.carCount }}両</div>
+            </div>
+            <button class="train-card-cabin" data-if="!card.collapsed" title="この列車の運転席から見る" data-event-click="begin_train_cabin_view(card.id)"></button>
+            <button class="icon fold-button fold-vertical train-card-fold" title="折りたたみ・展開" data-class-is-collapsed="card.collapsed" data-event-click="toggle_train_card_fold(card.id)"></button>
+        </div>
+        <div class="segmented compact train-card-speed-select" data-if="!card.collapsed">
+            <div class="segment-indicator"></div>
+            <div class="segment" data-class-selected="card.speedDirection == 'reverse'" data-event-click="set_train_speed(card.id, 'reverse')"><span>後退</span></div>
+            <div class="segment" data-class-selected="card.speedDirection == 'stop'" data-event-click="set_train_speed(card.id, 'stop')"><span>停止</span></div>
+            <div class="segment" data-class-selected="card.speedDirection == 'forward'" data-event-click="set_train_speed(card.id, 'forward')"><span>前進</span></div>
+        </div>
+        <div data-if="!card.collapsed" data-attr-class="'train-card-speed ' + card.speedClass"><span class="train-card-speed-value">{{ card.speedKmh }}</span><span class="train-card-speed-unit">km/h</span></div>
+        <div class="train-card-step-row" data-if="!card.collapsed">
+            <button class="train-card-step ic-minus" data-step="-1" data-attr-data-train-id="card.id"
+                    data-event-mousedown="begin_train_speed_step(card.id, -1)"></button>
+            <div class="train-card-target"><span class="train-card-target-value">{{ card.targetKmh }}</span><span class="train-card-target-unit">km/h</span></div>
+            <button class="train-card-step ic-plus" data-step="1" data-attr-data-train-id="card.id"
+                    data-event-mousedown="begin_train_speed_step(card.id, 1)"></button>
+        </div>
+    </div>
+</div>
+
+<div class="edge-frame edge-right" data-class-is-open="rightTab.open" data-class-is-absent="rightTab.content == 'none'">
+    <button class="icon edge-notch" title="右のタブを開く・閉じる" data-event-click="toggle_notch('right')"></button>
+    <div class="edge-panel"><div class="tab-content">右タブ(仮)</div></div>
+</div>
+
+<div class="camera-screen" data-if="camera.active">
+    <div class="camera-mask" data-for="mask : camera.masks"
+         data-style-left="mask.left + 'px'" data-style-top="mask.top + 'px'"
+         data-style-width="mask.width + 'px'" data-style-height="mask.height + 'px'"></div>
+    <div class="camera-finder" data-style-left="camera.finder.left + 'px'" data-style-top="camera.finder.top + 'px'"
+         data-style-width="camera.finder.width + 'px'" data-style-height="camera.finder.height + 'px'">
+        <!-- 三分割の線(縦2本・横2本)と、中央の水平線。 -->
+        <div class="finder-grid" data-if="camera.finderGrid">
+            <div class="finder-line finder-v1"></div><div class="finder-line finder-v2"></div>
+            <div class="finder-line finder-h1"></div><div class="finder-line finder-h2"></div>
+        </div>
+        <div class="finder-horizon" data-if="camera.finderHorizon && camera.rolling"
+             data-style-transform="'rotate(' + camera.rollDegrees + 'deg)'"></div>
+        <div class="camera-photo-flash" data-class-is-started="cameraPhoto.phase == 1"></div>
+    </div>
+    <!-- ファインダーの中をクリックしてフォーカスを合わせた点の印(中心がその点)。 -->
+    <div class="camera-focus-mark" data-if="camera.focusShown" data-style-left="camera.focusX + 'px'" data-style-top="camera.focusY + 'px'"></div>
+    <div class="camera-photo-target"></div>
+    <div class="camera-photo-preview-host" data-if="cameraPhoto.phase > 0"
+         data-style---photo-start-left="cameraPhoto.origin.left + 'px'" data-style---photo-start-top="cameraPhoto.origin.top + 'px'"
+         data-style---photo-start-width="cameraPhoto.origin.width + 'px'" data-style---photo-start-height="cameraPhoto.origin.height + 'px'"
+         data-style---photo-end-left="cameraPhoto.target.left + 'px'" data-style---photo-end-top="cameraPhoto.target.top + 'px'"
+         data-style---photo-end-width="cameraPhoto.target.width + 'px'" data-style---photo-end-height="cameraPhoto.target.height + 'px'">
+        <img class="camera-photo-preview" data-attr-src="cameraPhoto.source"
+             data-class-is-moving="cameraPhoto.phase >= 3" data-class-is-fading="cameraPhoto.phase == 5" />
+    </div>
+    <button class="icon round-icon camera-back ic-chevron-left" title="カメラ画面を閉じる (Esc)" data-event-click="close_screen"></button>
+    <div class="camera-settings">
+        <div class="tab-title">カメラ設定 (仮の値)</div>
+        <div class="camera-setting" data-for="field, fi : camera.fields">
+            <label>{{ field.label }}</label>
+            <div class="form-row">
+                <input class="form-field" type="text" data-value="field.draft" data-event-focus="camera_field(fi)"
+                       data-event-change="camera_field(fi)" data-event-blur="camera_field(fi)" data-event-keydown="camera_field(fi)" />
+                <div class="form-unit" data-if="field.unit != ''">{{ field.unit }}</div>
+                <div class="form-unit" data-if="field.text == 'AUTO'">AUTO</div>
+            </div>
+        </div>
+        <div class="form-section">ブックマーク</div>
+        <div class="camera-bookmarks">
+            <div class="form-line empty-hint" data-if="camera.bookmarks.rows.size == 0">ブックマークはありません。今のカメラを追加できます</div>
+            <div class="ui-row camera-bookmark-row" data-for="row, bi : camera.bookmarks.rows">
+                <button class="flat camera-bookmark-name" data-if="!row.editing" data-event-click="camera_action('goto', bi)"
+                        data-event-dblclick="camera_action('rename', bi)">{{ row.name }}</button>
+                <input class="form-field camera-bookmark-input" type="text" data-class-is-editing="row.editing" data-value="row.draft"
+                       data-event-change="camera_bookmark_edit" data-event-blur="camera_bookmark_edit" data-event-keydown="camera_bookmark_edit" />
+                <button class="icon row-action ic-pencil" data-if="!row.editing" title="名前を変える" data-event-click="camera_action('rename', bi)"></button>
+                <button class="icon row-action ic-trash" title="ブックマークを削除" data-event-click="camera_action('delete', bi)"></button>
+            </div>
+        </div>
+        <button class="flat add-row" title="今のカメラをブックマークに追加" data-event-click="camera_action('add')"><span class="ui-icon ic-plus"></span>ブックマークを追加</button>
+        <div class="form-section">ファインダー</div>
+        <div class="form-row">
+            <div class="form-label">三分割の線</div>
+            <input type="checkbox" class="toggle" data-attrif-checked="camera.finderGrid" data-event-change="camera_action('grid')" />
+        </div>
+        <div class="form-row">
+            <div class="form-label">水平線</div>
+            <input type="checkbox" class="toggle" data-attrif-checked="camera.finderHorizon" data-event-change="camera_action('horizon')" />
+        </div>
+        <div class="form-section">出力解像度</div>
+        <select class="form-field" data-value="camera.resolution" data-event-change="camera_action('resolution')">
+            <option data-for="resolution, ri : camera.resolutions" data-value="ri">{{ resolution.label }}</option>
+        </select>
+    </div>
+        <button class="primary camera-photo" title="撮影 (Enter)" data-event-click="camera_action('photo')">撮影</button>
+    <div class="camera-stage">
+        <div class="camera-finder-space"></div>
+        <div data-for="field, fi : camera.fields" data-attr-class="'camera-readout ' + field.placement"
+             data-event-mousescroll="camera_action('wheel', fi)" data-attr-title="field.label + '：' + field.text + ' (ホイールで変更)'">
+            <div class="camera-readout-label">{{ field.label }}</div>
+            <div class="camera-digits">
+                <button class="icon camera-step ic-chevron-left" title="下げる" data-event-click="camera_action('step', fi, -1)"></button>
+                <div class="camera-digit" data-for="digit : field.digits" data-class-is-narrow="digit.narrow">
+                    <div data-for="segment : digit.segments" data-attr-class="'camera-segment segment-' + segment.index"
+                         data-class-is-on="segment.on"></div>
+                </div>
+                <button class="icon camera-step ic-chevron-right" title="上げる" data-event-click="camera_action('step', fi, 1)"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 重ね表示層。敷設エディタ・プラグイン設定パネルを置く(主メニュー・ゲーム設定は下の
+     モーダル層に置く。重なり順の値はどちらも同じ仕組みで決める)。z-indexは
+     WorkspaceShellが開いた順から導いた値をそのまま使う(見た目の重なり順とEscで
+     閉じる順を同じ情報から決める)。層自体の重なり
+     (左右タブ・バナーより上、主メニューボタンより下)は--z-overlays(workspace.rcss)。
+     表示はすべてdata-ifで、displayを切り替えるだけで要素は残る(動かしたウィンドウの
+     位置は、閉じても保たれる)。 -->
+<div class="overlay-layer">
+    <!-- 敷設エディタ(§2.3): タイトルバーをドラッグして動かせるウィンドウ。タイトルバー
+         (handle)のmove_targetに"#parent"(handleの親=ウィンドウ本体)を指定するので、
+         タイトルバーをドラッグしたときだけ動き、本体のボタンでは動かない。開閉は作業
+         モードの遷移でWorkspaceShellが行い、イベントからは開閉しない(閉じるボタンも持たない)。
+         選択のハイライトはdata-class-selectedが書き、位置合わせ(SyncSegmentIndicators)は
+         RmlUiSegmented.cppが行う。 -->
+    <div class="float-window float-window-translucent float-window-laying" data-if="layingEditor.visible"
+         data-style-z-index="layingEditor.z">
+        <handle class="float-window-titlebar" move_target="#parent" edge_margin="0dp">敷設エディタ
+            <!-- 最小化(本体を畳んでタイトルバーだけにする。もう一度押すと戻る。ウィンドウは閉じない)。 -->
+            <button class="icon fold-button fold-vertical float-window-close" title="最小化・元に戻す" data-class-is-collapsed="layingMinimized" data-event-click="toggle_laying_minimized"></button>
+        </handle>
+        <div class="float-window-body" data-if="!layingMinimized">
+            <div class="segmented rail-tabs">
+                <div class="segment-indicator"></div>
+                <div class="segment" data-class-selected="railTab == 'lay'" data-event-click="select_rail_tab('lay')"><span>敷設</span></div>
+                <div class="segment" data-class-selected="railTab == 'edit'" data-event-click="select_rail_tab('edit')"><span>編集</span></div>
+            </div>
+            <!-- 敷設設定(§2.3)。入力欄はEnterかフォーカスが離れたときだけ反映する(commit_laying_field)。
+                 Escは入力を取り消してフォーカスを外す(key_laying_field)。値・イベントの結線は
+                 src/app/rmlui/RmlUiLayingEditorView.cpp、入力欄ごとの違いはRmlUiLayingFields.cppの表。 -->
+            <div class="laying-settings" data-if="railTab == 'lay'">
+                <div class="form-row">
+                    <div class="form-label">角度スナップ(常時)</div>
+                    <input type="checkbox" class="toggle" data-attrif-checked="layingAngleSnapEnabled"
+                           data-event-change="commit_laying_field('layingAngleSnapEnabled')" />
+                    <input type="text" class="form-field" data-attr-value="layingAngleSnapDegrees"
+                           data-event-focus="focus_laying_field('layingAngleSnapDegrees')"
+                           data-event-change="commit_laying_field('layingAngleSnapDegrees')"
+                           data-event-blur="commit_laying_field('layingAngleSnapDegrees')"
+                           data-event-keydown="key_laying_field('layingAngleSnapDegrees')" />
+                    <div class="form-unit">°</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-label">敷設本数</div>
+                    <input type="text" class="form-field" data-attr-value="layingTrackCount"
+                           data-event-focus="focus_laying_field('layingTrackCount')"
+                           data-event-change="commit_laying_field('layingTrackCount')"
+                           data-event-blur="commit_laying_field('layingTrackCount')"
+                           data-event-keydown="key_laying_field('layingTrackCount')" />
+                </div>
+                <div class="form-row">
+                    <div class="form-label" data-class-text-disabled="layingTrackSpacingDisabled">線路間隔</div>
+                    <input type="text" class="form-field" data-attr-value="layingTrackSpacing"
+                           data-attrif-disabled="layingTrackSpacingDisabled"
+                           data-event-focus="focus_laying_field('layingTrackSpacing')"
+                           data-event-change="commit_laying_field('layingTrackSpacing')"
+                           data-event-blur="commit_laying_field('layingTrackSpacing')"
+                           data-event-keydown="key_laying_field('layingTrackSpacing')" />
+                    <div class="form-unit">m</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-label">緩和曲線</div>
+                    <select class="form-field-fill" data-value="layingTransition"
+                            data-event-change="commit_laying_field('layingTransition')">
+                        <option data-for="label : layingTransitionLabels" data-value="it_index">{{ label }}</option>
+                    </select>
+                </div>
+                <div class="form-row" data-if="layingTransitionEnabled">
+                    <div class="form-label">長さ</div>
+                    <input type="text" class="form-field" data-attr-value="layingTransitionLength"
+                           data-event-focus="focus_laying_field('layingTransitionLength')"
+                           data-event-change="commit_laying_field('layingTransitionLength')"
+                           data-event-blur="commit_laying_field('layingTransitionLength')"
+                           data-event-keydown="key_laying_field('layingTransitionLength')" />
+                    <div class="form-unit">m</div>
+                </div>
+                <div class="form-line" data-for="line : layingNoticeLines"
+                     data-class-text-warning="line.severity == 'warning'" data-class-text-danger="line.severity == 'error'">{{ line.text }}</div>
+                <div class="form-line" data-for="line : layingStatusLines"
+                     data-class-text-warning="line.severity == 'warning'" data-class-text-danger="line.severity == 'error'">{{ line.text }}</div>
+            </div>
+            <div class="laying-settings" data-if="railTab == 'edit' && edgeEdit.visible">
+                <div data-if="edgeEdit.hasEdge">
+                <div class="tab-title">{{ edgeEdit.heading }}<span data-if="edgeEdit.multi"> {{ edgeEdit.count }}本</span></div>
+                <div class="form-row">
+                    <div class="form-label">区間</div><div class="float-window-note">{{ edgeEdit.sectionRange }}</div>
+                    <button class="flat link" data-class-selected="edgeEdit.splitMode"
+                            data-event-click="edge_edit_action('split_toggle')">区間を分割</button>
+                </div>
+                <div class="form-row ui-row" data-if="edgeEdit.sectionHasBoundary">
+                    <div class="form-label">境界の位置</div>
+                    <input type="text" data-edit-commit="" class="form-field" data-attr-value="edgeEdit.boundaryS"
+                           data-event-blur="edge_edit_action('boundary')" />
+                    <div class="form-unit">m</div>
+                    <button class="icon row-action ic-trash" title="境界を削除" data-event-click="edge_edit_action('remove_boundary')"></button>
+                </div>
+                <div class="form-row" data-if="!edgeEdit.centerline">
+                    <div class="form-label">速度制限</div>
+                    <input type="checkbox" class="toggle" data-attrif-checked="edgeEdit.speedEnabled"
+                           data-event-change="edge_edit_action('speed_toggle')" />
+                    <input type="text" data-edit-commit="" class="form-field" data-attr-value="edgeEdit.speed"
+                           data-attr-placeholder="edgeEdit.speedPlaceholder"
+                           data-attrif-disabled="!edgeEdit.speedEnabled" data-event-blur="edge_edit_action('speed')" />
+                    <div class="form-unit">km/h</div>
+                </div>
+                <div class="form-row" data-if="!edgeEdit.multi && !edgeEdit.centerline">
+                    <div class="form-label">始点のカント</div>
+                    <input type="text" data-edit-commit="" class="form-field" data-attr-value="edgeEdit.cantA"
+                           data-attrif-disabled="edgeEdit.cantAuto"
+                           data-event-blur="edge_edit_action('cant_a')" />
+                    <div class="form-unit">mm</div>
+                </div>
+                <div class="form-row" data-if="!edgeEdit.multi && !edgeEdit.centerline">
+                    <div class="form-label">終点のカント</div>
+                    <input type="text" data-edit-commit="" class="form-field" data-attr-value="edgeEdit.cantB"
+                           data-attrif-disabled="edgeEdit.cantAuto"
+                           data-event-blur="edge_edit_action('cant_b')" />
+                    <div class="form-unit">mm</div>
+                </div>
+                <div class="form-row" data-if="!edgeEdit.centerline">
+                    <div class="form-label">カント自動</div>
+                    <input type="checkbox" class="toggle" data-attrif-checked="edgeEdit.cantAuto"
+                           data-event-change="edge_edit_action('cant_auto')" />
+                    <span data-if="edgeEdit.mixedCantAuto">(複数の値)</span>
+                </div>
+                <div class="form-row" data-if="edgeEdit.showCantAutoMax">
+                    <div class="form-label">最大カント</div>
+                    <input type="text" data-edit-commit="" class="form-field" data-attr-value="edgeEdit.cantMax"
+                           data-attrif-disabled="edgeEdit.cantAutoDisabled"
+                           data-attr-placeholder="edgeEdit.cantMaxPlaceholder" data-event-blur="edge_edit_action('cant_max')" />
+                    <div class="form-unit">mm</div>
+                </div>
+                <div class="form-row" data-if="!edgeEdit.multi && !edgeEdit.cantAuto && edgeEdit.hasCantMid">
+                    <div class="form-label">曲線部のカント</div>
+                    <input type="text" data-edit-commit="" class="form-field" data-attr-value="edgeEdit.cantMid" data-event-blur="edge_edit_action('cant_mid')" />
+                    <div class="form-unit">mm</div>
+                </div>
+                <div class="form-row" data-if="!edgeEdit.multi && !edgeEdit.cantAuto">
+                    <div class="form-label">カント逓減率 1/N</div>
+                    <input type="text" data-edit-commit="" class="form-field" data-attr-value="edgeEdit.cantRatio" data-event-blur="edge_edit_action('cant_ratio')" />
+                </div>
+                <!-- 緩和曲線の種類は敷設タブと同じ選択肢のコンボ、長さは次の行に分ける。 -->
+                <div class="form-row" data-if="edgeEdit.hasTransition && !edgeEdit.multi">
+                    <div class="form-label">緩和曲線</div>
+                    <select class="form-field-fill" data-value="edgeEdit.transition" data-event-change="edge_edit_action('transition')">
+                        <option data-for="label : layingTransitionLabels" data-value="it_index">{{ label }}</option>
+                    </select>
+                </div>
+                <div class="form-row" data-if="edgeEdit.hasTransition && !edgeEdit.multi">
+                    <div class="form-label">緩和曲線の長さ</div>
+                    <input type="text" data-edit-commit="" class="form-field" data-attr-value="edgeEdit.transitionLength" data-event-blur="edge_edit_action('transition_length')" />
+                    <div class="form-unit">m</div>
+                </div>
+                <button class="button" data-event-click="edge_edit_action('delete')">選択中のレールを削除</button>
+                </div>
+                <div data-if="edgeEdit.hasNode">
+                    <div class="tab-title form-section">ノード</div>
+                    <div class="form-row">
+                        <div class="form-label">標高</div>
+                        <input type="text" data-edit-commit="" class="form-field" data-attr-value="edgeEdit.elevation"
+                               data-event-focus="focus_edge_elevation" data-event-blur="edge_edit_action('elevation')" />
+                        <div class="form-unit">m</div>
+                        <div class="form-unit">{{ edgeEdit.nodeConnections }}接続</div>
+                    </div>
+                    <div class="form-row ui-row" data-if="edgeEdit.hasWarp">
+                        <div class="form-label">ワープ先 Scene {{ edgeEdit.warpPartner }}</div>
+                        <button class="icon row-action ic-trash" title="ワープを削除" data-event-click="edge_edit_action('warp_remove')"></button>
+                    </div>
+                    <div class="form-row" data-if="edgeEdit.warpPending">
+                        <div class="form-label">ワープ端点を保留中</div>
+                        <button class="flat link" data-event-click="edge_edit_action('warp_cancel')">キャンセル</button>
+                    </div>
+                    <div class="form-row">
+                        <button class="flat link" data-event-click="edge_edit_action('warp_begin')">ワープを設定</button>
+                        <button class="flat link" data-attrif-disabled="!edgeEdit.mergeAllowed"
+                                data-event-click="edge_edit_action('merge')">レールを結合</button>
+                    </div>
+                </div>
+            </div>
+            <!-- 敷設プラグインセット(§2.2): 敷設・編集の両タブで表示する。敷設タブでは次に敷設するテンプレート、
+                 編集タブでは選択中の区間のセットを出す。左に合成プレビュー(固定)、右に一覧(長いときだけ縦にスクロール)を並べる。 -->
+            <div class="laying-plugin-set" data-context-menu="layingset" data-context-id="layingSet"
+                 data-class-is-editing="templateSave.layingEditing"
+                 data-event-dragover="laying_set_drag_over" data-event-dragout="laying_set_drag_out"
+                 data-event-dragdrop="laying_set_drop">
+                <div class="tab-title">敷設プラグインセット</div>
+                <div class="laying-set-body">
+                    <img class="laying-set-preview" data-if="layingSetImageVisible" data-attr-src="layingSetImage" />
+                    <div class="laying-set-rows">
+                        <div class="form-row ui-row" data-for="item : layingSetItems">
+                            <div class="form-label">{{ item.name }}</div>
+                            <button class="icon row-action ic-trash" title="セットから外す" data-event-click="laying_set_remove(item.folder)"></button>
+                        </div>
+                    </div>
+                </div>
+                <!-- テンプレート名の入力欄。テンプレートとして保存するとき(.is-editing)だけ出す。 -->
+                <input type="text" class="formation-card-name-input" title="テンプレート名"
+                       data-event-change="template_save_edit" data-event-blur="template_save_edit"
+                       data-event-keydown="template_save_edit" />
+            </div>
+        </div>
+    </div>
+
+    <!-- プラグイン設定パネル(§3.1)。開く要求(WorkspaceShell::OpenPluginSettings)で開く。
+         鑑賞でビューポートの個体をクリックすると、WorkspaceEditorBridgeがこの要求を出す。 -->
+    <div class="float-window float-window-translucent float-window-pluginsettings"
+         data-class-plugin-settings-hidden="!pluginSettings.visible"
+         data-style-z-index="pluginSettings.z">
+        <handle class="float-window-titlebar" move_target="#parent" edge_margin="0dp">プラグイン設定(仮)
+            <button class="flat float-window-close ic-close" title="閉じる" data-event-click="close_overlay('pluginSettings')"></button>
+        </handle>
+        <!-- 開いている個体のスイッチ一覧。部品は plugin_switch_list.rml(ビューアーと共有)。
+             スイッチが無い・対象が空のときは何も並ばない。 -->
+        <div class="float-window-body plugin-switch-list">
+            <template src="plugin-switch-list" />
+        </div>
+        <handle class="float-window-resize-handle" size_target="#parent" edge_margin="0dp"></handle>
+    </div>
+
+    <!-- 見つからないプラグインの一覧(右上の警告バッジで開く)。値・イベントの結線は
+         src/app/rmlui/RmlUiMissingPluginsView.cpp、文言は翻訳キー(missing_plugin.*)からC++が入れる。
+         「ルートを追加」はルート管理ウィンドウと同じroot_addイベント。 -->
+    <div class="float-window float-window-translucent float-window-missingplugins" data-if="missingPlugins.visible"
+         data-style-z-index="missingPlugins.z">
+        <handle class="float-window-titlebar" move_target="#parent" edge_margin="0dp">{{ missingPluginText.title }}
+            <button class="flat float-window-close ic-close" title="閉じる" data-event-click="close_overlay('missingPlugins')"></button>
+        </handle>
+        <div class="float-window-body">
+            <div class="form-row">
+                <button data-attrif-disabled="pluginRootPicking || missingPluginPicking" data-event-click="root_add">{{ missingPluginText.addRoot }}</button>
+                <button data-event-click="missing_rescan">{{ missingPluginText.rescan }}</button>
+            </div>
+            <div class="missing-list">
+                <div class="form-row" data-for="row, index : missingPluginRows">
+                    <div class="missing-name" data-attr-title="row.path">{{ row.name }}</div>
+                    <div class="missing-meta">{{ row.kind }}</div>
+                    <div class="missing-meta">{{ row.usage }}</div>
+                    <button data-attrif-disabled="pluginRootPicking || missingPluginPicking" data-event-click="missing_replace(index)">{{ missingPluginText.replace }}</button>
+                    <button data-if="row.deletable" data-event-click="missing_delete(index)">{{ missingPluginText.remove }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- モーダル層(主メニュー・ゲーム設定、§5.1)。どちらかが見えている間だけ出す。メニューボタンより
+     手前(--z-modal)に置き、画面全体を覆う幕(.modal-scrim)がクリックを受け止めて、メニュー以外を
+     押せなくする。幕は半透明の黒で背後を暗くする。Escは入力Action層で処理するので、この間も閉じられる。 -->
+<div class="modal-layer" data-if="modalVisible || pluginRoots.visible || helpWindow.visible">
+    <div class="modal-scrim" data-if="modalVisible"></div>
+
+    <div class="float-window float-window-translucent float-window-help" data-if="helpWindow.visible"
+         data-style-z-index="helpWindow.z">
+        <handle class="float-window-titlebar" move_target="#parent" edge_margin="0dp">操作ガイド
+            <button class="flat float-window-close ic-close" title="閉じる" data-event-click="close_overlay('helpWindow')"></button>
+        </handle>
+        <div class="float-window-body help-window-body">
+            <div class="form-line">{{ helpTable.modeName }}</div>
+            <div class="help-table">
+                <div class="help-table-row help-table-header"><div>操作</div><div>マウス</div><div>キー</div></div>
+                <div class="help-table-row" data-for="row : helpTable.rows">
+                    <div>{{ row.operation }}</div><div>{{ row.mouse }}</div><div>{{ row.key }}</div>
+                </div>
+            </div>
+            <div class="form-row">
+                <button data-event-click="help_tutorial">チュートリアル</button>
+                <button data-event-click="help_open">ヘルプを開く</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ルート管理ウィンドウは、ブラウザの歯車とゲーム設定の「ルートを管理…」のどちらからも開くため、
+         モーダル層に置く(層の番号がゲーム設定より手前で、幕の上に出る)。幕はモーダルが見えている間だけ出す。 -->
+    <!-- プラグインフォルダ(ルート)の管理。ブラウザの歯車ボタンで開く。
+         値・イベントの結線は src/app/rmlui/RmlUiPluginRootsView.cpp。行の配列は、重ね表示の名前
+         (pluginRoots)と区別するためpluginRootRowsという名前にしている。 -->
+    <div class="float-window float-window-translucent float-window-pluginroots" data-if="pluginRoots.visible"
+         data-style-z-index="pluginRoots.z">
+        <handle class="float-window-titlebar" move_target="#parent" edge_margin="0dp">プラグインフォルダ(仮)
+            <button class="flat float-window-close ic-close" title="閉じる" data-event-click="close_overlay('pluginRoots')"></button>
+        </handle>
+        <div class="float-window-body">
+            <div class="form-line">上ほど優先。同じプラグインが複数のフォルダにあるときは、上のものを使う(仮)</div>
+            <div class="form-line float-window-note" data-if="pluginRootRows.size == 0">プラグインフォルダが未登録です。「追加…」で選んでください(仮)</div>
+            <div class="form-row" data-for="root, index : pluginRootRows">
+                <div class="root-path" data-attr-title="root.path">{{ root.path }}</div>
+                <button class="icon root-button ic-move-up" title="上へ" data-attrif-disabled="!root.canUp"
+                        data-event-click="root_move(index, -1)"></button>
+                <button class="icon root-button ic-move-down" title="下へ" data-attrif-disabled="!root.canDown"
+                        data-event-click="root_move(index, 1)"></button>
+                <button class="icon root-button ic-trash" title="削除" data-event-click="root_remove(index)"></button>
+            </div>
+            <div class="form-row">
+                <button data-attrif-disabled="pluginRootPicking || missingPluginPicking" data-event-click="root_add">追加…</button>
+                <button data-event-click="root_rescan">再走査</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主メニューとゲーム設定は、移動できるウィンドウと同じ見た目の固定位置のウィンドウ
+         (.main-menu、右上のメニューボタンのすぐ下に出す)。タイトルバーは持たず、
+         ドラッグでは動かさない。z-indexは重ね表示と同じ値(幕より手前、モーダル同士は開いた順)。 -->
+    <div class="float-window main-menu" data-if="mainMenu.visible"
+         data-style-z-index="mainMenu.z">
+        <div class="float-window-body">
+            <button class="flat menu-item" data-event-click="menu_save"><span class="menu-item-icon ic-save"></span>保存</button>
+            <button class="flat menu-item" data-event-click="menu_save_as"><span class="menu-item-icon ic-pencil"></span>名前を付けて保存</button>
+            <button class="flat menu-item" data-event-click="menu_load"><span class="menu-item-icon ic-upload"></span>ロード</button>
+            <button class="flat menu-item" data-event-click="open_overlay('gameSettings')"><span class="menu-item-icon ic-gear"></span>ゲーム設定</button>
+            <div class="menu-separator"></div>
+            <button class="flat menu-item" data-event-click="menu_quit"><span class="menu-item-icon ic-power"></span>ゲーム終了</button>
+        </div>
+    </div>
+
+    <!-- 異常終了のあとの復元の画面。選ぶまで閉じない。結線は src/app/rmlui/RmlUiRecoveryView.cpp。 -->
+    <div class="float-window recovery-window" data-if="recovery.visible" data-style-z-index="recovery.z">
+        <div class="float-window-titlebar">レイアウトの復元</div>
+        <div class="float-window-body layout-files-body">
+            <div class="layout-files-scroll">
+                <div class="layout-files-grid">
+                    <div class="layout-file-card" data-for="card, i : recoveryCards">
+                        <div class="layout-file-text">
+                            <div class="layout-file-name">{{ card.name }}</div>
+                            <div class="layout-file-date">{{ card.date }}</div>
+                        </div>
+                        <div class="recovery-card-buttons">
+                            <button class="primary" data-event-click="recovery_restore(i)">復元</button>
+                            <button class="flat recovery-discard ic-trash" title="復元データを消す" data-event-click="recovery_discard(i)"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="recovery-choices">
+                <div class="recovery-choice">
+                    <button data-event-click="recovery_normal">通常起動</button>
+                    <span class="form-line recovery-choice-note">復元せずに、いつもの設定で起動します</span>
+                </div>
+                <div class="recovery-choice">
+                    <button data-event-click="recovery_safe">セーフモード</button>
+                    <span class="form-line recovery-choice-note">復元せずに、描画の設定を軽くして新しいレイアウトで起動します</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- レイアウトの一覧の画面(ロードと名前を付けて保存)。結線は src/app/rmlui/RmlUiLayoutFilesView.cpp。 -->
+    <div class="float-window float-window-fixed-center layout-files-window" data-if="layoutFiles.visible"
+         data-style-z-index="layoutFiles.z">
+        <div class="float-window-titlebar">{{ layoutFilesTitle }}
+            <button class="flat float-window-close ic-close" title="閉じる" data-event-click="close_overlay('layoutFiles')"></button>
+        </div>
+        <div class="float-window-body layout-files-body">
+            <!-- ロードでは、保存したレイアウトと RailSim2 のレイアウト(.rs2)を別の画面として切り替える。 -->
+            <div class="segmented layout-files-tabs" data-if="layoutRs2Available">
+                <div class="segment-indicator"></div>
+                <div class="segment" data-class-selected="layoutFilesTab == 'own'"
+                     data-event-click="select_layout_files_tab('own')"><span>保存したレイアウト</span></div>
+                <div class="segment" data-class-selected="layoutFilesTab == 'rs2'"
+                     data-event-click="select_layout_files_tab('rs2')"><span>RailSim2 のレイアウト</span></div>
+            </div>
+            <div class="layout-files-scroll">
+                <div data-if="layoutFilesTab == 'own'">
+                <div class="layout-files-heading" data-if="layoutRecentCards.size > 0">最近使ったファイル</div>
+                <div class="layout-files-grid" data-if="layoutRecentCards.size > 0">
+                    <div class="layout-file-card" data-for="card, i : layoutRecentCards"
+                         data-event-click="layout_recent_click(i)">
+                        <div class="layout-file-picture">
+                            <img class="layout-file-image" data-if="card.image != ''" data-attr-src="card.image" />
+                        </div>
+                        <div class="layout-file-text">
+                            <div class="layout-file-name">{{ card.name }}</div>
+                            <div class="layout-file-date">{{ card.date }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layout-files-heading" data-if="layoutRecentCards.size > 0">保存先のフォルダ</div>
+                <div class="layout-files-grid">
+                    <div class="layout-file-card" data-for="card, i : layoutFolderCards"
+                         data-event-click="layout_folder_click(i)">
+                        <div class="layout-file-picture">
+                            <img class="layout-file-image" data-if="card.image != ''" data-attr-src="card.image" />
+                        </div>
+                        <div class="layout-file-text">
+                            <div class="layout-file-name">{{ card.name }}</div>
+                            <div class="layout-file-date">{{ card.date }}</div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <!-- RailSim2 のレイアウト(.rs2)。サムネイルがないので低い1行で出し、検索欄で絞り込む。 -->
+                <div data-if="layoutRs2Available && layoutFilesTab == 'rs2'">
+                <div class="layout-files-grid">
+                    <div class="layout-file-row" data-for="card, i : layoutRs2Cards"
+                         data-event-click="layout_rs2_click(i)">
+                        <div class="layout-file-row-name">{{ card.name }}</div>
+                        <div class="layout-file-row-date">{{ card.date }}</div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <!-- 下の行。RailSim2 のレイアウトの画面では、検索欄を ほかの場所から開く の左に並べる。 -->
+            <div class="layout-files-footer recovery-footer" data-if="!layoutFilesSaveMode">
+                <div class="search-box layout-rs2-search" data-if="layoutRs2Available && layoutFilesTab == 'rs2'">
+                    <input type="text" class="search-input"
+                           data-attr-value="layoutRs2Search" data-event-change="layout_rs2_search"
+                           data-event-keydown="layout_name_key" />
+                    <div class="search-icon ic-search"></div>
+                </div>
+                <button data-attrif-disabled="layoutFilesPicking" data-event-click="layout_open_other">ほかの場所から開く</button>
+            </div>
+            <div class="layout-files-footer" data-if="layoutFilesSaveMode">
+                <input id="layout-file-name-input" type="text" class="layout-file-name-input"
+                       data-attr-value="layoutFileName" data-event-change="layout_name_change"
+                       data-event-keydown="layout_name_key" />
+                <button class="primary" data-attrif-disabled="!layoutFileNameValid"
+                        data-event-click="layout_name_submit">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ゲーム設定(一般・時間・描画のタブ)。値・イベントの結線は
+         src/app/rmlui/RmlUiGameSettingsView.cpp、文言は翻訳キー(game_settings.*)からC++が入れる。
+         変数名は重ね表示の名前(gameSettings)と区別するためgsを付けている。 -->
+    <div class="float-window float-window-fixed-center game-settings" data-if="gameSettings.visible"
+         data-style-z-index="gameSettings.z">
+        <div class="float-window-titlebar">{{ gsText.title }}
+            <button class="flat float-window-close ic-close" title="閉じる" data-event-click="close_overlay('gameSettings')"></button>
+        </div>
+        <div class="float-window-body game-settings-body">
+            <!-- タブは左の縦の列、内容は右に出す。 -->
+            <div class="game-settings-tabs">
+                <button class="flat game-settings-tab" data-for="tab : gsTabs" data-class-is-selected="gsTab == tab.key"
+                        data-event-click="gs_select_tab(tab.key)">{{ tab.label }}</button>
+            </div>
+            <div class="game-settings-content">
+
+            <!-- 一般タブ。FPS上限・VSyncは描画設定の表(RenderSettingsRows.cpp)の行で、tabが一般の行を並べる。 -->
+            <div class="game-settings-scroll" data-if="gsTab == 'general'">
+                <div class="form-row">
+                    <div class="form-label">{{ gsFullscreenLabel }}</div>
+                    <input class="toggle" type="checkbox" data-attrif-checked="gsFullscreen == 'on'" data-event-change="gs_fullscreen" />
+                </div>
+                <div class="float-window-note">{{ gsFullscreenNote }}</div>
+                <div data-for="row : renderSettingRows" data-if="row.tab == 'general'">
+                    <template src="render-setting-row" />
+                </div>
+                <div class="form-row">
+                    <div class="form-label">{{ gsText.theme }}</div>
+                    <div class="segmented compact">
+                        <div class="segment-indicator"></div>
+                        <div class="segment" data-for="choice : gsThemes" data-class-selected="gsTheme == choice.key"
+                             data-event-click="gs_set_theme(choice.key)"><span>{{ choice.label }}</span></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-label">{{ gsText.language }}</div>
+                    <select class="form-field-fill" data-value="gsLanguage" data-event-change="gs_set_language">
+                        <option data-for="choice : gsLanguages" data-value="choice.key">{{ choice.label }}</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-label">{{ gsText.layoutSaveDirectory }}</div>
+                    <div class="root-path" data-class-is-default="gsLayoutSaveDirectoryIsDefault"
+                         data-attr-title="gsLayoutSaveDirectory">{{ gsLayoutSaveDirectory }}</div>
+                    <button data-attrif-disabled="gsPicking" data-event-click="gs_browse_layout_directory">{{ gsText.browse }}</button>
+                    <button data-attrif-disabled="gsLayoutSaveDirectoryIsDefault"
+                            data-event-click="gs_reset_layout_directory">{{ gsText.resetToDefault }}</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-label">{{ gsText.pluginRoots }}</div>
+                    <div class="root-path" data-attr-title="gsPluginRoots">{{ gsPluginRoots }}</div>
+                    <button data-event-click="open_overlay('pluginRoots')">{{ gsText.manageRoots }}</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-label">{{ gsText.fpsDisplay }}</div>
+                    <div>{{ gsFramerate }}</div>
+                </div>
+            </div>
+
+            <!-- サウンドタブ。音量は、動かしている間のchangeは反映だけ、離したとき(dragend・mouseup・blur・keyup)に保存する。 -->
+            <div class="game-settings-scroll" data-if="gsTab == 'sound'">
+                <div class="form-row">
+                    <div class="form-label">{{ gsText.outputDevice }}</div>
+                    <select class="form-field-fill" data-value="gsAudioDevice" data-event-change="gs_audio_device_change">
+                        <option data-for="label : gsAudioDeviceLabels" data-value="it_index">{{ label }}</option>
+                    </select>
+                    <button data-event-click="gs_refresh_devices">{{ gsText.refreshDevices }}</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-label">{{ gsText.masterVolume }}</div>
+                    <input type="range" class="form-field-fill" data-attr-min="gsVolumeMinPercent" data-attr-max="gsVolumeMaxPercent" step="1" data-attr-value="gsVolumePercent"
+                           data-event-change="gs_volume_change('overall')" data-event-dragend="gs_volume_commit"
+                           data-event-mouseup="gs_volume_commit" data-event-blur="gs_volume_commit"
+                           data-event-keyup="gs_volume_commit" />
+                    <div class="form-unit">{{ gsVolumePercent }} %</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-label">{{ gsText.trainVolume }}</div>
+                    <input type="range" class="form-field-fill" data-attr-min="gsVolumeMinPercent" data-attr-max="gsVolumeMaxPercent" step="1" data-attr-value="gsTrainVolumePercent"
+                           data-event-change="gs_volume_change('train')" data-event-dragend="gs_volume_commit"
+                           data-event-mouseup="gs_volume_commit" data-event-blur="gs_volume_commit"
+                           data-event-keyup="gs_volume_commit" />
+                    <div class="form-unit">{{ gsTrainVolumePercent }} %</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-label">{{ gsText.environmentVolume }}</div>
+                    <input type="range" class="form-field-fill" data-attr-min="gsVolumeMinPercent" data-attr-max="gsVolumeMaxPercent" step="1" data-attr-value="gsEnvironmentVolumePercent"
+                           data-event-change="gs_volume_change('environment')" data-event-dragend="gs_volume_commit"
+                           data-event-mouseup="gs_volume_commit" data-event-blur="gs_volume_commit"
+                           data-event-keyup="gs_volume_commit" />
+                    <div class="form-unit">{{ gsEnvironmentVolumePercent }} %</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-label">{{ gsText.effectsVolume }}</div>
+                    <input type="range" class="form-field-fill" min="0" max="100" step="1" data-attr-value="gsEffectsVolume"
+                           data-event-change="gs_effects_volume" />
+                    <div class="form-unit">{{ gsEffectsVolume }} %</div>
+                </div>
+            </div>
+
+            <div class="game-settings-scroll" data-if="gsTab == 'time'">
+                <div class="form-row">
+                    <div class="form-label">{{ gsText.dateTime }}</div>
+                    <div>{{ gsDateTime }}</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-label">{{ gsText.timeScale }}</div>
+                    <input type="text" class="form-field" data-attr-value="gsTimeScale"
+                           data-event-focus="gs_time_scale_focus" data-event-change="gs_time_scale_commit"
+                           data-event-blur="gs_time_scale_commit" data-event-keydown="gs_time_scale_key" />
+                </div>
+                <div class="form-row">
+                    <div class="form-label">{{ gsText.earthRotation }}</div>
+                    <div class="segmented compact">
+                        <div class="segment-indicator"></div>
+                        <div class="segment" data-for="choice : gsEarthRotations" data-class-selected="gsEarthRotation == choice.key"
+                             data-event-click="gs_set_earth_rotation(choice.key)"><span>{{ choice.label }}</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-settings-scroll" data-if="gsTab == 'input'">
+                <div class="form-row">
+                    <div class="form-label">{{ gsInput.mouseLabel }}</div>
+                    <div class="segmented compact">
+                        <div class="segment-indicator"></div>
+                        <div class="segment" data-for="choice : gsInput.mouseChoices" data-class-selected="gsInput.mouseMode == choice.key"
+                             data-event-click="gs_mouse_mode(choice.key)"><span>{{ choice.label }}</span></div>
+                    </div>
+                    <div class="float-window-note">{{ gsInput.note }}</div>
+                </div>
+                <div class="tab-title form-section">{{ gsInput.keysLabel }}</div>
+                <div data-for="row, ri : gsInput.rows">
+                    <div class="form-section" data-if="row.section != ''">{{ row.section }}</div>
+                    <div class="form-row input-settings-row" data-class-is-warning="row.warning">
+                        <div class="form-label">{{ row.operation }}</div>
+                        <button class="input-settings-binding" data-event-click="gs_input_begin(ri)">
+                            <span data-if="row.waiting">{{ gsInput.waitingLabel }}</span>
+                            <span data-if="!row.waiting && row.binding != ''">{{ row.binding }}</span>
+                            <span data-if="!row.waiting && row.binding == ''">{{ gsInput.unassignedLabel }}</span>
+                        </button>
+                        <button data-event-click="gs_input_reset(ri)">{{ gsInput.resetLabel }}</button>
+                    </div>
+                    <div class="float-window-note input-settings-warning" data-if="row.warning">{{ gsInput.warningLabel }}</div>
+                </div>
+                <button data-event-click="gs_input_reset_all">{{ gsInput.resetAllLabel }}</button>
+            </div>
+
+            <!-- 描画タブ。行は表(src/app/action/RenderSettingsRows.cpp)から作った配列renderSettingRowsを、
+                 種類(toggle・choice・slider)ごとの部品に展開するだけで、項目を足してもここは変わらない。
+                 値・イベントの結線は src/app/rmlui/RmlUiRenderSettingsView.cpp。 -->
+            <div class="game-settings-scroll" data-if="gsTab == 'render'">
+                <div class="form-row">
+                    <div class="form-label">{{ gsQualityLabel }}</div>
+                    <select class="form-field-fill" data-value="gsQualityPreset" data-event-change="gs_quality_preset">
+                        <option data-for="choice : gsQualityChoices" data-value="choice.key">{{ choice.label }}</option>
+                    </select>
+                </div>
+                <div class="float-window-note">{{ gsQualityNote }}</div>
+                <div data-for="row : renderSettingRows" data-if="row.tab == 'render'">
+                    <template src="render-setting-row" />
+                </div>
+            </div>
+            <div class="game-settings-scroll" data-if="gsTab == 'about'">
+                <img class="about-logo" src="../about/logo.png" />
+                <div class="form-row">
+                    <div class="form-label">{{ gsText.version }}</div>
+                    <div>{{ gsAppVersion }}</div>
+                </div>
+                <div class="about-copyright">{{ gsText.copyright }}</div>
+                <div class="form-row">{{ gsUpdateStatus }}</div>
+                <div class="form-row" data-if="gsUpdateAvailable">
+                    <button data-event-click="gs_open_download_page">{{ gsText.openDownloadPage }}</button>
+                </div>
+                <label class="form-row">
+                    <span class="form-field-fill">{{ gsText.updateCheckEnabled }}</span>
+                    <input class="toggle" type="checkbox" data-attrif-checked="gsUpdateCheckEnabled" data-event-change="gs_update_check_enabled" />
+                </label>
+                <div class="form-row">
+                    <button data-attrif-disabled="!gsCanCheckUpdate" data-event-click="gs_check_update">{{ gsText.checkNow }}</button>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- レイアウトの読込中の表示。画面全体を覆う幕がクリックを受け止め、中央の箱に文言・進捗バー・件数を出す。
+     値はsrc/app/rmlui/RmlUiLoadingView.cpp、出し入れはLayoutDocumentController::UpdateLoadingDisplay。 -->
+<div class="loading-layer" data-if="loadingVisible">
+    <div class="loading-scrim"></div>
+    <div class="loading-box">
+        <div class="loading-label">{{ loadingLabel }}</div>
+        <progress class="loading-progress" data-attr-value="loadingFraction" max="1"></progress>
+        <div class="loading-count">{{ loadingCount }}</div>
+    </div>
+</div>
+
+<!-- 共通トースト。配列の順に、古い通知を上・新しい通知を下に並べる。 -->
+<div class="toast-stack">
+    <div class="toast-item" data-for="toast, i : toasts" data-class-info="toast.severity == 'info'"
+         data-class-warning="toast.severity == 'warning'" data-class-error="toast.severity == 'error'">
+        <!-- 種類は左の帯とアイコンで表し、文字は通常の色にする。 -->
+        <span class="ui-icon toast-icon ic-help" data-if="toast.severity == 'info'"></span>
+        <span class="ui-icon toast-icon ic-status-warning" data-if="toast.severity != 'info'"></span>
+        {{ toast.text }}
+        <button class="flat toast-action" data-if="toast.action != ''" data-event-click="toast_action(i)">{{ toast.action }}</button>
+    </div>
+</div>
+
+<!-- 確認ダイアログ(RmlUiConfirmDialogが本文と確定ボタンの文言を入れる)。文書に1つだけ置く。 -->
+<div id="confirm-dialog" class="confirm-dialog">
+    <div class="confirm-dialog-scrim"></div>
+    <div class="confirm-dialog-box">
+        <div id="confirm-dialog-message" class="confirm-dialog-message"></div>
+        <div class="confirm-dialog-buttons">
+            <button id="confirm-dialog-cancel">キャンセル</button>
+            <button id="confirm-dialog-secondary" class="is-hidden"></button>
+            <button id="confirm-dialog-ok" class="primary">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- シーン追加のポップアップ(地形を選ぶ)。確認ダイアログと同じ重ね表示の見た目で、開閉と選択は
+     src/app/rmlui/RmlUiScenePanelView.cpp。Escは、シーン画面のEsc(CloseTransient)で閉じる。 -->
+<div class="confirm-dialog open" data-if="scene.adding">
+    <div class="confirm-dialog-scrim"></div>
+    <div class="confirm-dialog-box">
+        <div class="confirm-dialog-message">地形を選んでください</div>
+        <div class="scene-add-list">
+            <button class="flat scene-environment-card" data-for="choice, ci : scene.surfaceChoices"
+                    data-class-is-selected="ci == scene.addSelection"
+                    data-event-click="scene_ui('addSelect', ci)">{{ choice.name }}</button>
+        </div>
+        <div class="float-window-note" data-if="!scene.canAdd">使える地形がありません</div>
+        <div class="confirm-dialog-buttons">
+            <button data-event-click="scene_ui('addCancel')">キャンセル</button>
+            <button class="primary" data-attrif-disabled="!scene.canAdd" data-event-click="scene_action('addConfirm')">追加</button>
+        </div>
+    </div>
+</div>
+
+<!-- 右クリックのメニュー(RmlUiContextMenuが項目を入れる)。文書に1つだけ置く。 -->
+<div id="context-menu" class="context-menu"></div>
+
+</body>
+</rml>

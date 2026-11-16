@@ -1,0 +1,13 @@
+{
+  "railThumbnailLengthM": 9.0,
+  "girderThumbnailLengthM": 40.0,
+  "lineThumbnailLengthM": 8.0,
+  "viewerTrackLengthM": 200.0,
+  "viewerCameraFocusScale": 1.5,
+  "thumbnailFovYDeg": 15,
+  "thumbnailBoxFitMargin": 1.04,
+  "thumbnailMinBoundingRadiusM": 0.01,
+  "thumbnailFarClipRadiusMultiplier": 2,
+  "thumbnailEndFaceSectionScale": 1,
+  "thumbnailSampleSpacingM": 1
+}

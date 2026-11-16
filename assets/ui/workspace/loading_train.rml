@@ -1,0 +1,14 @@
+<template name="loading-train">
+<head></head>
+<body>
+    <div class="loading-train">
+        <div class="loading-train-car"></div>
+        <div class="loading-train-rail"></div>
+        <div class="loading-train-track">
+            <div class="loading-train-sleepers">
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+        </div>
+    </div>
+</body>
+</template>

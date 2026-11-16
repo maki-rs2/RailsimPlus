@@ -1,0 +1,26 @@
+<template name="render-setting-row">
+<head></head>
+<body>
+    <!-- 描画設定の1行(data-forの変数row)。種類(toggle・choice・slider)ごとの部品に展開する。
+         ゲーム設定の一般タブと描画タブで共有する。値・イベントの結線は src/app/rmlui/RmlUiRenderSettingsView.cpp。 -->
+    <div class="form-row" data-if="row.kind == 'toggle'">
+        <div class="form-label">{{ row.label }}</div>
+        <input type="checkbox" class="toggle" data-attrif-checked="row.checked"
+               data-attrif-disabled="row.disabled" data-event-change="rs_toggle(row.key)" />
+    </div>
+    <div class="form-row" data-if="row.kind == 'choice'">
+        <div class="form-label">{{ row.label }}</div>
+        <select class="form-field-fill" data-attrif-disabled="row.disabled" data-value="row.valueText"
+                data-event-change="rs_choice(row.key)">
+            <option data-for="option : row.options" data-value="it_index">{{ option }}</option>
+        </select>
+    </div>
+    <div class="form-row" data-if="row.kind == 'slider'">
+        <div class="form-label">{{ row.label }}</div>
+        <input type="range" class="form-field-fill" min="0" max="1000" step="1"
+               data-attr-value="row.sliderPosition" data-event-change="rs_slider(row.key)" />
+        <div class="form-unit">{{ row.valueLabel }}</div>
+    </div>
+    <div class="float-window-note" data-if="row.note != ''">{{ row.note }}</div>
+</body>
+</template>

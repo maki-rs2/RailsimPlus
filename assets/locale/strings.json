@@ -1,0 +1,760 @@
+{
+  "camera.photo.directory_failed": {"ja": "写真の保存先フォルダを作れませんでした", "en": "Could not create the photo folder"},
+  "camera.photo.readback_failed": {"ja": "カメラの画像を読み戻せませんでした", "en": "Could not capture the camera image"},
+  "camera.photo.write_failed": {"ja": "写真をPNGで保存できませんでした", "en": "Could not save the photo as PNG"},
+  "layout.document.untitled": {"ja": "無題のレイアウト", "en": "Untitled layout"},
+  "layout.document.close": {"ja": "閉じる", "en": "Close"},
+  "layout.document.cancel": {"ja": "キャンセル", "en": "Cancel"},
+  "layout.document.delete": {"ja": "消す", "en": "Delete"},
+  "layout.document.save": {"ja": "保存する", "en": "Save"},
+  "layout.document.dont_save": {"ja": "保存しない", "en": "Don't save"},
+  "layout.document.overwrite": {"ja": "上書き", "en": "Overwrite"},
+  "layout.document.quit": {"ja": "終了", "en": "Quit"},
+  "layout.document.discard_recovery": {"ja": "「{}」の復元データを消しますか?", "en": "Delete the recovery data for \"{}\"?"},
+  "layout.document.save_changes": {"ja": "「{}」の変更を保存しますか?", "en": "Save changes to \"{}\"?"},
+  "layout.document.confirm_overwrite": {"ja": "「{}」はすでにあります。上書きしますか?", "en": "\"{}\" already exists. Overwrite it?"},
+  "layout.document.confirm_quit": {"ja": "ゲームを終了しますか?", "en": "Quit the game?"},
+  "layout.load.warnings": {"ja": "警告が{}件あります(読込ログで確認できます)", "en": "{} warning(s) while loading (see the load log)"},
+  "layout.loading.pending": {"ja": "レイアウトを読み込んでいます...", "en": "Loading the layout..."},
+  "layout.loading.prefetch": {"ja": "アセットを読込中...", "en": "Loading assets..."},
+  "layout.loading.checking": {"ja": "配置物を確認中...", "en": "Checking placements..."},
+  "layout.loading.applying": {"ja": "レイアウトを読込中...", "en": "Loading the layout..."},
+  "layout.loading.entities": {"ja": "{} / {} エンティティ", "en": "{} / {} entities"},
+  "action.layout.file_not_found": {
+    "ja": "ファイルを開けませんでした",
+    "en": "Could not open the file"
+  },
+  "action.layout.file_write_failed": {
+    "ja": "ファイルへ書き込めませんでした",
+    "en": "Could not write to the file"
+  },
+  "action.layout.invalid_format": {
+    "ja": "レイアウトファイルの内容が不正です",
+    "en": "The layout file is invalid"
+  },
+  "action.layout.import_failed": {
+    "ja": "レイアウトの読込に失敗しました",
+    "en": "Failed to load the layout"
+  },
+  "action.layout.classifier_missing": {
+    "ja": "プラグイン種別の判定を利用できません",
+    "en": "The plugin type classifier is unavailable"
+  },
+  "action.layout.busy": {
+    "ja": "レイアウトを読込中です。完了までお待ちください",
+    "en": "A layout is currently loading. Please wait until it finishes"
+  },
+  "action.layout.unexpected": {
+    "ja": "予期しないエラーが発生しました",
+    "en": "An unexpected error occurred"
+  },
+  "missing_plugin.title": {
+    "ja": "見つからないプラグイン",
+    "en": "Missing plugins"
+  },
+  "missing_plugin.badge_title": {
+    "ja": "見つからないプラグインがあります",
+    "en": "Some plugins are missing"
+  },
+  "missing_plugin.add_root": {
+    "ja": "ルートを追加",
+    "en": "Add plugin folder"
+  },
+  "missing_plugin.rescan": {
+    "ja": "再走査",
+    "en": "Rescan"
+  },
+  "missing_plugin.replace": {
+    "ja": "差し替え",
+    "en": "Replace"
+  },
+  "missing_plugin.delete": {
+    "ja": "削除",
+    "en": "Delete"
+  },
+  "missing_plugin.delete_confirm": {
+    "ja": "「{detail}」を使っている{count}件を削除します。よろしいですか？",
+    "en": "Delete {count} item(s) that use \"{detail}\". Are you sure?"
+  },
+  "missing_plugin.usage": {
+    "ja": "{count}件で使用",
+    "en": "Used {count}x"
+  },
+  "missing_plugin.picker_title": {
+    "ja": "差し替え先のフォルダを選択",
+    "en": "Choose the replacement folder"
+  },
+  "missing_plugin.site.scenery": {
+    "ja": "Struct",
+    "en": "Struct"
+  },
+  "missing_plugin.site.car": {
+    "ja": "Train",
+    "en": "Train"
+  },
+  "missing_plugin.site.track_section": {
+    "ja": "Rail",
+    "en": "Rail"
+  },
+  "missing_plugin.site.signal": {
+    "ja": "Station",
+    "en": "Station"
+  },
+  "missing_plugin.site.placed_individual": {
+    "ja": "Pole / Pier",
+    "en": "Pole / Pier"
+  },
+  "missing_plugin.site.wire_line": {
+    "ja": "Line",
+    "en": "Line"
+  },
+  "missing_plugin.site.formation_car": {
+    "ja": "Train",
+    "en": "Train"
+  },
+  "missing_plugin.site.environment": {
+    "ja": "Env",
+    "en": "Env"
+  },
+  "missing_plugin.notice.replaced": {
+    "ja": "{count}件を差し替えました",
+    "en": "Replaced {count} reference(s)"
+  },
+  "missing_plugin.notice.deleted": {
+    "ja": "{count}件を削除しました",
+    "en": "Deleted {count} reference(s)"
+  },
+  "missing_plugin.notice.nothing_to_replace": {
+    "ja": "対象の参照がもう無いので、一覧を更新しました",
+    "en": "That reference no longer exists, so the list was refreshed"
+  },
+  "missing_plugin.notice.same_as_source": {
+    "ja": "元と同じフォルダです。別のフォルダを選んでください",
+    "en": "That is the same folder. Choose a different one"
+  },
+  "missing_plugin.notice.load_failed": {
+    "ja": "プラグインとして読み込めませんでした",
+    "en": "Could not load it as a plugin"
+  },
+  "missing_plugin.notice.type_mismatch": {
+    "ja": "ここには使えない種類のプラグインです({detail})",
+    "en": "This kind of plugin cannot be used here ({detail})"
+  },
+  "missing_plugin.notice.env_outside_roots": {
+    "ja": "環境プラグインは、プラグインルートの Env フォルダの中にあるものだけ選べます",
+    "en": "Environment plugins must be inside an Env folder of a plugin root"
+  },
+  "missing_plugin.notice.not_deletable": {
+    "ja": "環境プラグインは削除できません",
+    "en": "Environment plugins cannot be deleted"
+  },
+  "game_settings.title": {
+    "ja": "ゲーム設定",
+    "en": "Game settings"
+  },
+  "game_settings.tab.general": {
+    "ja": "一般",
+    "en": "General"
+  },
+  "game_settings.tab.time": {
+    "ja": "時間",
+    "en": "Time"
+  },
+  "game_settings.tab.render": {
+    "ja": "描画",
+    "en": "Graphics"
+  },
+  "game_settings.language": {
+    "ja": "言語",
+    "en": "Language"
+  },
+  "game_settings.language.japanese": {
+    "ja": "日本語",
+    "en": "日本語"
+  },
+  "game_settings.language.english": {
+    "ja": "English",
+    "en": "English"
+  },
+  "game_settings.theme": {
+    "ja": "テーマ",
+    "en": "Theme"
+  },
+  "game_settings.theme.light": {
+    "ja": "ライト",
+    "en": "Light"
+  },
+  "game_settings.theme.dark": {
+    "ja": "ダーク",
+    "en": "Dark"
+  },
+  "game_settings.theme.high_contrast": {
+    "ja": "ハイコントラスト",
+    "en": "High contrast"
+  },
+  "game_settings.master_volume": {
+    "ja": "全体",
+    "en": "Overall"
+  },
+  "game_settings.train_volume": {
+    "ja": "列車",
+    "en": "Trains"
+  },
+  "game_settings.environment_volume": {
+    "ja": "環境",
+    "en": "Environment"
+  },
+  "game_settings.output_device": {
+    "ja": "出力デバイス",
+    "en": "Output device"
+  },
+  "game_settings.system_default_device": {
+    "ja": "システム既定",
+    "en": "System default"
+  },
+  "game_settings.refresh_devices": {
+    "ja": "更新",
+    "en": "Refresh"
+  },
+  "game_settings.plugin_roots": {
+    "ja": "プラグインルート",
+    "en": "Plugin roots"
+  },
+  "game_settings.plugin_roots_count": {
+    "ja": "{count} 件を登録",
+    "en": "{count} registered"
+  },
+  "game_settings.manage_roots": {
+    "ja": "ルートを管理…",
+    "en": "Manage roots..."
+  },
+  "game_settings.layout_save_directory": {
+    "ja": "レイアウト保存先",
+    "en": "Layout save folder"
+  },
+  "game_settings.layout_save_picker_title": {
+    "ja": "レイアウトの保存先を選択",
+    "en": "Choose the layout save folder"
+  },
+  "game_settings.browse": {
+    "ja": "参照…",
+    "en": "Browse..."
+  },
+  "game_settings.reset_to_default": {
+    "ja": "既定に戻す",
+    "en": "Reset to default"
+  },
+  "game_settings.default_path": {
+    "ja": "既定: {detail}",
+    "en": "Default: {detail}"
+  },
+  "game_settings.camera": {
+    "ja": "カメラ",
+    "en": "Camera"
+  },
+  "game_settings.reset_camera": {
+    "ja": "原点へ",
+    "en": "To origin"
+  },
+  "game_settings.date_time": {
+    "ja": "日時",
+    "en": "Date and time"
+  },
+  "game_settings.time_scale": {
+    "ja": "TimeScale",
+    "en": "TimeScale"
+  },
+  "game_settings.earth_rotation": {
+    "ja": "自転",
+    "en": "Earth rotation"
+  },
+  "game_settings.earth_rotation.auto": {
+    "ja": "時刻連動",
+    "en": "Follow time"
+  },
+  "game_settings.earth_rotation.day": {
+    "ja": "常に昼",
+    "en": "Always day"
+  },
+  "game_settings.earth_rotation.night": {
+    "ja": "常に夜",
+    "en": "Always night"
+  },
+  "game_settings.weekday.0": {
+    "ja": "日",
+    "en": "Sun"
+  },
+  "game_settings.weekday.1": {
+    "ja": "月",
+    "en": "Mon"
+  },
+  "game_settings.weekday.2": {
+    "ja": "火",
+    "en": "Tue"
+  },
+  "game_settings.weekday.3": {
+    "ja": "水",
+    "en": "Wed"
+  },
+  "game_settings.weekday.4": {
+    "ja": "木",
+    "en": "Thu"
+  },
+  "game_settings.weekday.5": {
+    "ja": "金",
+    "en": "Fri"
+  },
+  "game_settings.weekday.6": {
+    "ja": "土",
+    "en": "Sat"
+  },
+  "render_settings.section.display": {
+    "ja": "表示",
+    "en": "Display"
+  },
+  "render_settings.section.sky": {
+    "ja": "空と光",
+    "en": "Sky and lighting"
+  },
+  "render_settings.section.post": {
+    "ja": "ポストプロセス",
+    "en": "Post-processing"
+  },
+  "render_settings.section.shadow": {
+    "ja": "影",
+    "en": "Shadows"
+  },
+  "render_settings.section.lens_flare": {
+    "ja": "レンズフレア",
+    "en": "Lens flare"
+  },
+  "render_settings.render_distance": {
+    "ja": "描画距離",
+    "en": "Render distance"
+  },
+  "render_settings.vsync": {
+    "ja": "VSync",
+    "en": "VSync"
+  },
+  "render_settings.fps_limit": {
+    "ja": "FPS 上限",
+    "en": "FPS limit"
+  },
+  "render_settings.fps_limit.unlimited": {
+    "ja": "無制限",
+    "en": "Unlimited"
+  },
+  "render_settings.fps_limit.vsync_note": {
+    "ja": "VSync オンのときは画面の更新に合わせます",
+    "en": "With VSync on, the frame rate follows the display refresh"
+  },
+  "render_settings.atmospheric_perspective": {
+    "ja": "大気遠近(遠くが空の色にかすむ)",
+    "en": "Atmospheric perspective (distant objects fade into the sky color)"
+  },
+  "render_settings.height_fog": {
+    "ja": "高さフォグ(低い所に溜まる霧)",
+    "en": "Height fog (mist that settles in low places)"
+  },
+  "render_settings.tonemap": {
+    "ja": "トーンマップ",
+    "en": "Tone mapping"
+  },
+  "render_settings.tonemap.note": {
+    "ja": "標準の空のときに使います(プラグインの空は通りません)",
+    "en": "Used with the standard sky (the plugin sky bypasses it)"
+  },
+  "render_settings.anti_aliasing": {
+    "ja": "アンチエイリアス",
+    "en": "Anti-aliasing"
+  },
+  "render_settings.anti_aliasing.none": {
+    "ja": "なし",
+    "en": "Off"
+  },
+  "render_settings.anti_aliasing.fxaa": {
+    "ja": "FXAA",
+    "en": "FXAA"
+  },
+  "render_settings.anti_aliasing.taa": {
+    "ja": "TAA",
+    "en": "TAA"
+  },
+  "render_settings.anti_aliasing.note": {
+    "ja": "輪郭のギザギザをならします。細い線は少し甘くなることがあります",
+    "en": "Smooths jagged edges. Thin lines may look slightly soft"
+  },
+  "render_settings.ambient_occlusion": {
+    "ja": "アンビエントオクルージョン",
+    "en": "Ambient occlusion"
+  },
+  "render_settings.ambient_occlusion.note": {
+    "ja": "物の隙間や接する所の暗がりを足します。品質を上げるほど重くなります",
+    "en": "Adds darkness in crevices and where objects meet. Higher quality is heavier"
+  },
+  "render_settings.ao_quality.none": {
+    "ja": "なし",
+    "en": "Off"
+  },
+  "render_settings.ao_quality.low": {
+    "ja": "低",
+    "en": "Low"
+  },
+  "render_settings.ao_quality.medium": {
+    "ja": "中",
+    "en": "Medium"
+  },
+  "render_settings.ao_quality.high": {
+    "ja": "高",
+    "en": "High"
+  },
+  "render_settings.bloom": {
+    "ja": "ブルーム(明るい光のまわりの滲み)",
+    "en": "Bloom (glow around bright lights)"
+  },
+  "render_settings.motion_blur": {
+    "ja": "モーションブラー(動くものの流れる滲み)",
+    "en": "Motion blur (streaks on moving objects)"
+  },
+  "render_settings.volumetric_fog": {
+    "ja": "ボリュメトリックフォグ(霧に差し込む光の筋)",
+    "en": "Volumetric fog (light shafts in mist)"
+  },
+  "render_settings.volumetric_fog.note": {
+    "ja": "標準の空のときに使います(プラグインの空では掛かりません)",
+    "en": "Used with the standard sky (not applied with the plugin sky)"
+  },
+  "render_settings.shadow_quality": {
+    "ja": "シャドウ品質",
+    "en": "Shadow quality"
+  },
+  "render_settings.shadow_quality.none": {
+    "ja": "なし",
+    "en": "Off"
+  },
+  "render_settings.shadow_quality.low": {
+    "ja": "低",
+    "en": "Low"
+  },
+  "render_settings.shadow_quality.medium": {
+    "ja": "中",
+    "en": "Medium"
+  },
+  "render_settings.shadow_quality.high": {
+    "ja": "高",
+    "en": "High"
+  },
+  "render_settings.shadow_distance": {
+    "ja": "シャドウ距離",
+    "en": "Shadow distance"
+  },
+  "render_settings.shadow_distance.near": {
+    "ja": "近い",
+    "en": "Near"
+  },
+  "render_settings.shadow_distance.standard": {
+    "ja": "標準",
+    "en": "Standard"
+  },
+  "render_settings.shadow_distance.far": {
+    "ja": "遠い",
+    "en": "Far"
+  },
+  "render_settings.sun_lens_flare": {
+    "ja": "太陽のフレア",
+    "en": "Sun flare"
+  },
+  "render_settings.sun_whiteout": {
+    "ja": "太陽の白飛び",
+    "en": "Sun whiteout"
+  },
+  "render_settings.misc_lens_flare": {
+    "ja": "灯具のフレア",
+    "en": "Light flare"
+  },
+  "game_settings.tab.input": {
+    "ja": "操作",
+    "en": "Controls"
+  },
+  "game_settings.fullscreen": {
+    "ja": "全画面表示",
+    "en": "Fullscreen"
+  },
+  "game_settings.off": {
+    "ja": "オフ",
+    "en": "Off"
+  },
+  "game_settings.on": {
+    "ja": "オン",
+    "en": "On"
+  },
+  "game_settings.placeholder": {
+    "ja": "仮の値",
+    "en": "Placeholder values"
+  },
+  "game_settings.quality_preset": {
+    "ja": "画質プリセット",
+    "en": "Quality preset"
+  },
+  "game_settings.quality_preset.low": {
+    "ja": "低",
+    "en": "Low"
+  },
+  "game_settings.quality_preset.medium": {
+    "ja": "中",
+    "en": "Medium"
+  },
+  "game_settings.quality_preset.high": {
+    "ja": "高",
+    "en": "High"
+  },
+  "game_settings.quality_preset.custom": {
+    "ja": "カスタム",
+    "en": "Custom"
+  },
+  "game_settings.mouse_operation": {
+    "ja": "視点操作",
+    "en": "View controls"
+  },
+  "game_settings.mouse_operation.wasd": {
+    "ja": "WASD",
+    "en": "WASD"
+  },
+  "game_settings.mouse_operation.drag": {
+    "ja": "ドラッグ",
+    "en": "Drag"
+  },
+  "game_settings.key_operations": {
+    "ja": "キー操作",
+    "en": "Key bindings"
+  },
+  "game_settings.input_waiting": {
+    "ja": "入力待ち… (Escで取り消し)",
+    "en": "Waiting for input… (Esc to cancel)"
+  },
+  "game_settings.reset_all_bindings": {
+    "ja": "すべて既定に戻す",
+    "en": "Reset all to defaults"
+  },
+  "game_settings.input_warning": {
+    "ja": "割り当てが重複、または未割り当てです",
+    "en": "Conflicting or unassigned binding"
+  },
+  "game_settings.input_unassigned": {
+    "ja": "未割り当て",
+    "en": "Unassigned"
+  },
+  "game_settings.input_conflict_message": {
+    "ja": "同時に使う操作に同じ入力が割り当てられています。相手の操作を未割り当てにして変更しますか？",
+    "en": "This input is assigned to another simultaneous operation. Unassign it and continue?"
+  },
+  "game_settings.input_confirm": {
+    "ja": "割り当てる",
+    "en": "Assign"
+  },
+  "game_settings.input_cancel": {
+    "ja": "キャンセル",
+    "en": "Cancel"
+  },
+  "game_settings.input_reset_all_message": {
+    "ja": "キー操作の割り当てをすべて既定に戻しますか？",
+    "en": "Reset all key bindings to their defaults?"
+  },
+  "game_settings.input_reserved_key": {
+    "ja": "このキーは別の操作に使われているので割り当てられません。",
+    "en": "This key is used by another operation and cannot be assigned."
+  },
+  "game_settings.input_unassignable_key": {
+    "ja": "割り当てられないキーです。",
+    "en": "This key cannot be assigned."
+  },
+  "app.gpu_init_failed.title": {
+    "ja": "グラフィックスの初期化に失敗しました",
+    "en": "Graphics initialization failed"
+  },
+  "app.gpu_init_failed.body": {
+    "ja": "このPCのGPUでは、RailsimPlus を起動できませんでした。\n\nGPU: {}\n理由: {}\n\nGPUドライバの更新で直ることがあります。",
+    "en": "RailsimPlus could not start on this PC's GPU.\n\nGPU: {}\nReason: {}\n\nUpdating the GPU driver may fix this."
+  },
+  "app.gpu_init_failed.gpu_none": {
+    "ja": "見つかりません",
+    "en": "Not found"
+  },
+  "app.gpu_init_failed.reason_shader_model": {
+    "ja": "Shader Model 6.6 に対応していません(検出: {})",
+    "en": "Shader Model 6.6 is not supported (detected: {})"
+  },
+  "app.gpu_init_failed.reason_no_device": {
+    "ja": "Direct3D 12 に対応するGPUが見つかりません",
+    "en": "No GPU that supports Direct3D 12 was found"
+  },
+  "app.gpu_init_failed.reason_other": {
+    "ja": "初期化に失敗しました(HRESULT {})",
+    "en": "Initialization failed (HRESULT {})"
+  },
+  "app.gpu_init_failed.reason_unknown": {
+    "ja": "初期化に失敗しました",
+    "en": "Initialization failed"
+  },
+  "app.device_lost.title": {
+    "ja": "グラフィックスデバイスのエラー",
+    "en": "Graphics device error"
+  },
+  "app.device_lost.body": {
+    "ja": "グラフィックスデバイスが失われたため、アプリを終了します。ドライバの更新や再起動で直ることがあります。",
+    "en": "The graphics device was lost, so the app will close. Updating the driver or restarting the PC may fix this."
+  },
+  "app.device_lost.backup_saved": {
+    "ja": "未保存のレイアウトはバックアップに保存しました。次に起動したときに復元できます。",
+    "en": "Your unsaved layout was saved as a backup. You can restore it the next time you start the app."
+  },
+  "app.device_lost.backup_failed": {
+    "ja": "未保存のレイアウトをバックアップに保存できませんでした。",
+    "en": "Your unsaved layout could not be saved as a backup."
+  },
+  "game_settings.tab.sound": {
+    "ja": "サウンド",
+    "en": "Sound"
+  },
+  "game_settings.input.camera": {
+    "ja": "カメラ",
+    "en": "Camera"
+  },
+  "game_settings.input.forward": {
+    "ja": "前へ移動",
+    "en": "Move forward"
+  },
+  "game_settings.input.back": {
+    "ja": "後ろへ移動",
+    "en": "Move back"
+  },
+  "game_settings.input.left": {
+    "ja": "左へ移動",
+    "en": "Move left"
+  },
+  "game_settings.input.right": {
+    "ja": "右へ移動",
+    "en": "Move right"
+  },
+  "game_settings.input.roll_left": {
+    "ja": "反時計回りに傾ける (カメラ画面)",
+    "en": "Roll counterclockwise (camera screen)"
+  },
+  "game_settings.input.roll_right": {
+    "ja": "時計回りに傾ける (カメラ画面)",
+    "en": "Roll clockwise (camera screen)"
+  },
+  "game_settings.input.roll_reset": {
+    "ja": "傾きを戻す (カメラ画面)",
+    "en": "Reset roll (camera screen)"
+  },
+  "game_settings.input.edit": {
+    "ja": "編集",
+    "en": "Editing"
+  },
+  "game_settings.input.undo": {
+    "ja": "元に戻す",
+    "en": "Undo"
+  },
+  "game_settings.input.redo": {
+    "ja": "やり直す",
+    "en": "Redo"
+  },
+  "game_settings.input.delete": {
+    "ja": "削除",
+    "en": "Delete"
+  },
+  "game_settings.input.select": {
+    "ja": "選択",
+    "en": "Select"
+  },
+  "game_settings.input.menu": {
+    "ja": "メニュー選択",
+    "en": "Mode selection"
+  },
+  "game_settings.input.rail": {
+    "ja": "レール",
+    "en": "Rail"
+  },
+  "game_settings.input.train": {
+    "ja": "列車",
+    "en": "Train"
+  },
+  "game_settings.input.signal": {
+    "ja": "信号",
+    "en": "Signal"
+  },
+  "game_settings.input.dia": {
+    "ja": "ダイヤ",
+    "en": "Dia"
+  },
+  "game_settings.input.scenery": {
+    "ja": "情景",
+    "en": "Scenery"
+  },
+  "game_settings.fps_display": {
+    "ja": "FPS",
+    "en": "FPS"
+  },
+  "game_settings.effects_volume": {
+    "ja": "効果音",
+    "en": "Sound effects"
+  },
+  "game_settings.tab.about": {
+    "ja": "バージョン情報",
+    "en": "About"
+  },
+  "game_settings.about.version": {
+    "ja": "バージョン",
+    "en": "Version"
+  },
+  "game_settings.about.copyright": {
+    "ja": "© 2026 @maki",
+    "en": "© 2026 @maki"
+  },
+  "game_settings.about.unchecked": {
+    "ja": "確認していません",
+    "en": "Not checked"
+  },
+  "game_settings.about.checking": {
+    "ja": "確認中…",
+    "en": "Checking…"
+  },
+  "game_settings.about.current": {
+    "ja": "最新の版です",
+    "en": "You are up to date"
+  },
+  "game_settings.about.available": {
+    "ja": "新しい版 {} があります",
+    "en": "Version {} is available"
+  },
+  "game_settings.about.failed": {
+    "ja": "確認できませんでした",
+    "en": "Could not check for updates"
+  },
+  "game_settings.about.open_download_page": {
+    "ja": "ダウンロードページを開く",
+    "en": "Open download page"
+  },
+  "game_settings.about.update_check_enabled": {
+    "ja": "起動時に更新を確認する",
+    "en": "Check for updates on startup"
+  },
+  "game_settings.about.check_now": {
+    "ja": "今すぐ確認",
+    "en": "Check now"
+  },
+  "game_settings.about.update_toast": {
+    "ja": "新しい版 {} があります。設定の『バージョン情報』から開けます。",
+    "en": "Version {} is available. Open Settings > About to visit the download page."
+  },
+  "scene.delete.confirm": {"ja": "「{}」を削除します。", "en": "Delete \"{}\"."},
+  "scene.delete.contents": {"ja": "ワープ {} 本と列車 {} 編成も一緒に消えます。", "en": "{} warp(s) and {} train(s) in it will also be removed."},
+  "scene.delete.confirm_button": {"ja": "削除", "en": "Delete"},
+  "scene.delete.done": {"ja": "シーン『{}』を削除しました", "en": "Deleted scene \"{}\""},
+  "scene.delete.undo": {"ja": "元に戻す", "en": "Undo"},
+  "scene.delete.last_scene": {"ja": "シーンが1つしか無いので削除できません", "en": "The last scene cannot be deleted"},
+  "scene.delete.failed": {"ja": "シーンを削除できませんでした", "en": "Could not delete the scene"},
+  "scene.restore.done": {"ja": "シーン『{}』を元に戻しました", "en": "Restored scene \"{}\""},
+  "scene.restore.failed": {"ja": "シーンを元に戻せませんでした", "en": "Could not restore the scene"}
+}

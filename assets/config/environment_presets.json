@@ -1,0 +1,14 @@
+{
+    "default": "default",
+    "presets": [
+        {
+            "name": "default",
+            "latitudeDeg": 35.5,
+            "axialInclinationDeg": 23.44,
+            "initialYear": 2026,
+            "initialMonth": 4,
+            "initialDay": 1,
+            "initialSecondsOfDay": 43200.0
+        }
+    ]
+}

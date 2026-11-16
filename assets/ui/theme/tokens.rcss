@@ -1,0 +1,78 @@
+/* tokens.rcss - 寸法トークン。
+   色は含めない(色の正典はassets/config/ui_theme.json、RmlUiTheme.hが生成するRCSSに
+   `--*`変数として出る)。UIスケール可変のため単位は`dp`で書く。 */
+
+body {
+    --font-size: 16dp;
+    --font-size-small: 13dp;
+    --font-size-heading: 20dp;
+    --row-height: 48dp;
+    /* 押せる部品の大きさの3段(小・中・大)。フォームの行に置く部品は中以下にする。 */
+    --control-small: 32dp;
+    --control-medium: 40dp;
+    --control-large: 48dp;
+    /* ボタン・セグメントの高さ。呼び出し側が style="--control-height: 32dp" のように要素ごとに変えられる
+       (その要素と子孫にだけ反映される)。既定は中(--control-medium)。 */
+    --control-height: 40dp;
+    --field-height: 40dp;
+    --pad-widget-x: 20dp;
+    --pad-underline-x: 4dp;
+    --pad-box-x: 12dp;
+    --select-arrow-width: 40dp;
+    --pad-widget-y: 4dp;
+    --pad-window: 12dp;
+    --gap-y: 6dp;
+    --gap-x: 8dp;
+    --titlebar-height: 32dp;
+    --scrollbar-width: 4dp;
+    --check-size: 18dp;
+    --toggle-width: 40dp;
+    --toggle-height: 24dp;
+    --toggle-radius: 12dp;            /* = --toggle-height(24dp) / 2 */
+    --toggle-inset: 3dp;
+    --toggle-on-inset: 19dp;          /* = --toggle-width(40dp) - --toggle-inset(3dp) - つまみ(--toggle-height - 2 × --toggle-inset = 18dp) */
+    /* 押している間に、つまみ・ハイライトを押した向きへずらす量(トグル・セグメントで共通)。 */
+    --press-shift: 3dp;
+    --toggle-press-inset: 6dp;        /* = --toggle-inset(3dp) + --press-shift(3dp) */
+    --toggle-on-press-inset: 16dp;    /* = --toggle-on-inset(19dp) - --press-shift(3dp) */
+    --segment-inset: 3dp;
+    --radius: 6dp;
+    --radius-small: 4dp;
+    /* カプセル形の角丸。RmlUiは隣り合う角丸の和が辺を超えると縮めるので、十分大きい値でどの高さでも半円になる。 */
+    --radius-pill: 9999dp;
+    --radius-row: 24dp;               /* = --row-height(48dp) / 2 */
+    --radius-box: 10dp;
+    --button-round-size: 20dp;        /* 角に置く小さい丸ボタン(button.icon-round)の直径 */
+    --radius-round: 10dp;             /* = --button-round-size(20dp) / 2 */
+    --button-round-half: 10dp;        /* = --button-round-size(20dp) / 2。縁からはみ出させる量 */
+    --button-round-half-neg: -10dp;   /* = -(--button-round-size(20dp) / 2) */
+    --border-width: 1dp;
+    --focus-width: 2dp;
+    /* 無効状態で全体を薄くする割合(文字色を変えられない部品: チェック類・主操作ボタン・選択中のセグメント)。 */
+    --disabled-opacity: 0.4;
+    /* アニメーションの時間。速い=押している間の手応え、普通=開閉・切り替え、スライド=パネルやハイライトの移動。
+       C++側で同じ時間を使う定数(src/app/rmlui/RmlUiSegmented.cpp)は、対応するトークン名をコメントに書いてそろえる。 */
+    --anim-fast: 0.05s;
+    --anim-normal: 0.12s;
+    --anim-slide: 0.15s;
+    /* ドラッグ中の複製(`:drag`)の不透明度と縮小率。ブラウザのカード・編成の車両・確認画面で共通。 */
+    --drag-clone-opacity: 0.6;
+    --drag-clone-scale: 0.85;
+    /* コンテキストメニューの重なり順。モーダル層(workspace.rcssの--z-modal: 110)より手前に出す。 */
+    --z-context-menu: 200;
+    /* 確認ダイアログの重なり順。モーダル層(--z-modal: 110)より手前、コンテキストメニューより奥。 */
+    --z-confirm-dialog: 150;
+    /* レイアウト読込中の表示の重なり順。モーダル層(--z-modal: 110)より手前、確認ダイアログより奥。 */
+    --z-loading: 140;
+    --loading-box-width: 440dp;
+    --confirm-dialog-width: 440dp;
+}
+
+/* ハイコントラストでは1dpの枠の縁のざらつきが目立つため、枠を太くする。フォーカス枠は
+   通常の枠と太さで区別できるよう、もう1dp太くする。入力欄・コンボの文字はこの分だけずれる。 */
+@media (theme: high-contrast) {
+    body {
+        --border-width: 2dp;
+        --focus-width: 3dp;
+    }
+}

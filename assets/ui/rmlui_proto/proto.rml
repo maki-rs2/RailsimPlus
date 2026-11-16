@@ -1,0 +1,309 @@
+<rml>
+<head>
+    <title>RmlUi ウィジェット・配色ギャラリー</title>
+    <link type="text/rcss" href="../theme/tokens.rcss" />
+    <link type="text/rcss" href="../theme/widgets.rcss" />
+    <link type="text/rcss" href="proto.rcss" />
+</head>
+<body data-model="proto">
+<!-- テーマ切替の帯と、状態見本の先頭のセグメントだけデータバインディングで動かす
+     (データモデル"proto"、値の組み立ては src/app/rmlui/RmlUiProtoView.cpp)。
+     ほかの状態見本は固定表示で、クリックしても動かない。 -->
+<div class="gallery-scroll">
+
+    <div class="gallery-toolbar">
+        <div class="segmented"><div class="segment-indicator"></div>
+            <div class="segment" data-class-selected="theme == 'light'" data-event-click="select_theme('light')"><span>ライト</span></div>
+            <div class="segment" data-class-selected="theme == 'dark'" data-event-click="select_theme('dark')"><span>ダーク</span></div>
+            <div class="segment" data-class-selected="theme == 'high-contrast'" data-event-click="select_theme('high-contrast')"><span>ハイコントラスト</span></div>
+        </div>
+    </div>
+
+    <div class="gallery-head">
+        <div class="gallery-head-label">ウィジェット</div>
+        <div class="gallery-head-cell">通常</div>
+        <div class="gallery-head-cell">hover</div>
+        <div class="gallery-head-cell">active</div>
+        <div class="gallery-head-cell">focus</div>
+        <div class="gallery-head-cell">無効</div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">ボタン</div>
+        <div class="gallery-cell"><button type="button">ボタン</button></div>
+        <div class="gallery-cell"><button type="button" class="state-hover">ボタン</button></div>
+        <div class="gallery-cell"><button type="button" class="state-active">ボタン</button></div>
+        <div class="gallery-cell"><button type="button" class="state-focus">ボタン</button></div>
+        <div class="gallery-cell"><button type="button" disabled>ボタン</button></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">一覧の部品(主操作・文字だけ・追加の行)</div>
+        <div class="gallery-cell"><button type="button" class="primary">撮影</button></div>
+        <div class="gallery-cell"><button type="button" class="flat link">番線の既定に戻す</button></div>
+        <div class="gallery-cell"><button type="button" class="flat add-row"><span class="ui-icon ic-plus"></span>層を追加</button></div>
+        <div class="gallery-cell"><div class="crumbs"><button type="button" class="icon back ic-chevron-left"></button><button type="button" class="crumb">駅・番線</button><span class="ui-icon crumb-sep ic-chevron-right"></span><span class="crumb-current">仮1番線</span></div></div>
+        <div class="gallery-cell"><div class="tab-title">見出し</div></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">一覧の行・カード(通常・選択中)</div>
+        <div class="gallery-cell"><div class="ui-row"><span style="flex: 1 1 0dp;">仮駅A</span><button type="button" class="icon row-action ic-pencil"></button><button type="button" class="icon row-action ic-trash"></button></div></div>
+        <div class="gallery-cell"><div class="ui-row is-selected"><span style="flex: 1 1 0dp;">仮駅A</span><button type="button" class="icon row-action ic-pencil"></button><button type="button" class="icon row-action ic-trash"></button></div></div>
+        <div class="gallery-cell"><div class="ui-card">カード</div></div>
+        <div class="gallery-cell"><div class="ui-card is-selected">選択中のカード</div></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">ボタン(主操作)</div>
+        <div class="gallery-cell"><button type="button" class="primary">OK</button></div>
+        <div class="gallery-cell"><button type="button" class="primary state-hover">OK</button></div>
+        <div class="gallery-cell"><button type="button" class="primary state-active">OK</button></div>
+        <div class="gallery-cell"><button type="button" class="primary state-focus">OK</button></div>
+        <div class="gallery-cell"><button type="button" class="primary" disabled>OK</button></div>
+    </div>
+
+    <!-- 高さの確認。--control-height を要素の style で変えるだけで、角丸・文字の縦中央・リングが追従する。 -->
+    <div class="gallery-row">
+        <div class="gallery-label">ボタン(高さ違い)</div>
+        <div class="gallery-cell"><button type="button" style="--control-height: 32dp">32dp</button></div>
+        <div class="gallery-cell"><button type="button" style="--control-height: 40dp">40dp</button></div>
+        <div class="gallery-cell"><button type="button" style="--control-height: 48dp">48dp</button></div>
+        <div class="gallery-cell"><button type="button" style="--control-height: 64dp">64dp</button></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">セグメント(高さ違い)</div>
+        <div class="gallery-cell"><div class="segmented" style="--control-height: 32dp"><div class="segment-indicator"></div><div class="segment selected"><span>前</span></div><div class="segment"><span>中</span></div><div class="segment"><span>後</span></div></div></div>
+        <div class="gallery-cell"><div class="segmented" style="--control-height: 40dp"><div class="segment-indicator"></div><div class="segment selected"><span>前</span></div><div class="segment"><span>中</span></div><div class="segment"><span>後</span></div></div></div>
+        <div class="gallery-cell"><div class="segmented" style="--control-height: 64dp"><div class="segment-indicator"></div><div class="segment selected"><span>前</span></div><div class="segment"><span>中</span></div><div class="segment"><span>後</span></div></div></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">テキスト入力</div>
+        <div class="gallery-cell"><input type="text" value="テキスト" /></div>
+        <div class="gallery-cell"><input type="text" value="テキスト" class="state-hover" /></div>
+        <div class="gallery-cell"><input type="text" value="テキスト" class="state-active" /></div>
+        <div class="gallery-cell"><input type="text" value="テキスト" class="state-focus" /></div>
+        <div class="gallery-cell"><input type="text" value="テキスト" disabled /></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">コンボ</div>
+        <div class="gallery-cell"><select><option>選択肢A</option><option>選択肢B</option></select></div>
+        <div class="gallery-cell"><select class="state-hover"><option>選択肢A</option><option>選択肢B</option></select></div>
+        <div class="gallery-cell"><select class="state-active"><option>選択肢A</option><option>選択肢B</option></select></div>
+        <div class="gallery-cell"><select class="state-focus"><option>選択肢A</option><option>選択肢B</option></select></div>
+        <div class="gallery-cell"><select disabled><option>選択肢A</option><option>選択肢B</option></select></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">チェックボックス(未チェック)</div>
+        <div class="gallery-cell"><input type="checkbox" /></div>
+        <div class="gallery-cell"><input type="checkbox" class="state-hover" /></div>
+        <div class="gallery-cell"><input type="checkbox" class="state-active" /></div>
+        <div class="gallery-cell"><input type="checkbox" class="state-focus" /></div>
+        <div class="gallery-cell"><input type="checkbox" disabled /></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">チェックボックス(チェック)</div>
+        <div class="gallery-cell"><input type="checkbox" checked /></div>
+        <div class="gallery-cell"><input type="checkbox" checked class="state-hover" /></div>
+        <div class="gallery-cell"><input type="checkbox" checked class="state-active" /></div>
+        <div class="gallery-cell"><input type="checkbox" checked class="state-focus" /></div>
+        <div class="gallery-cell"><input type="checkbox" checked disabled /></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">トグル(OFF)</div>
+        <div class="gallery-cell"><input type="checkbox" class="toggle" /></div>
+        <div class="gallery-cell"><input type="checkbox" class="toggle state-hover" /></div>
+        <div class="gallery-cell"><input type="checkbox" class="toggle state-active" /></div>
+        <div class="gallery-cell"><input type="checkbox" class="toggle state-focus" /></div>
+        <div class="gallery-cell"><input type="checkbox" class="toggle" disabled /></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">トグル(ON)</div>
+        <div class="gallery-cell"><input type="checkbox" class="toggle" checked /></div>
+        <div class="gallery-cell"><input type="checkbox" class="toggle state-hover" checked /></div>
+        <div class="gallery-cell"><input type="checkbox" class="toggle state-active" checked /></div>
+        <div class="gallery-cell"><input type="checkbox" class="toggle state-focus" checked /></div>
+        <div class="gallery-cell"><input type="checkbox" class="toggle" checked disabled /></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">ラジオ(未選択)</div>
+        <div class="gallery-cell"><input type="radio" name="gallery-radio-off-normal" /></div>
+        <div class="gallery-cell"><input type="radio" name="gallery-radio-off-hover" class="state-hover" /></div>
+        <div class="gallery-cell"><input type="radio" name="gallery-radio-off-active" class="state-active" /></div>
+        <div class="gallery-cell"><input type="radio" name="gallery-radio-off-focus" class="state-focus" /></div>
+        <div class="gallery-cell"><input type="radio" name="gallery-radio-off-disabled" disabled /></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">ラジオ(選択)</div>
+        <div class="gallery-cell"><input type="radio" name="gallery-radio-on-normal" checked /></div>
+        <div class="gallery-cell"><input type="radio" name="gallery-radio-on-hover" checked class="state-hover" /></div>
+        <div class="gallery-cell"><input type="radio" name="gallery-radio-on-active" checked class="state-active" /></div>
+        <div class="gallery-cell"><input type="radio" name="gallery-radio-on-focus" checked class="state-focus" /></div>
+        <div class="gallery-cell"><input type="radio" name="gallery-radio-on-disabled" checked disabled /></div>
+    </div>
+
+    <!-- セグメントボタン: hover/activeの状態クラスは左端(未選択)と中央(選択中)の両方、focusは左端だけに付く。
+         先頭(通常)だけクリックで選択を切り替えられる(データバインディング)。 -->
+    <div class="gallery-row">
+        <div class="gallery-label">セグメント</div>
+        <div class="gallery-cell"><div class="segmented"><div class="segment-indicator"></div><div class="segment" data-class-selected="gallerySegment == 0" data-event-click="select_gallery_segment(0)"><span>前</span></div><div class="segment" data-class-selected="gallerySegment == 1" data-event-click="select_gallery_segment(1)"><span>中</span></div><div class="segment" data-class-selected="gallerySegment == 2" data-event-click="select_gallery_segment(2)"><span>後</span></div></div></div>
+        <div class="gallery-cell"><div class="segmented"><div class="segment-indicator"></div><div class="segment state-hover"><span>前</span></div><div class="segment selected state-hover"><span>中</span></div><div class="segment"><span>後</span></div></div></div>
+        <div class="gallery-cell"><div class="segmented"><div class="segment-indicator"></div><div class="segment state-active"><span>前</span></div><div class="segment selected state-active"><span>中</span></div><div class="segment"><span>後</span></div></div></div>
+        <div class="gallery-cell"><div class="segmented"><div class="segment-indicator"></div><div class="segment state-focus"><span>前</span></div><div class="segment selected"><span>中</span></div><div class="segment"><span>後</span></div></div></div>
+        <div class="gallery-cell"><div class="segmented" disabled><div class="segment-indicator"></div><div class="segment"><span>前</span></div><div class="segment selected"><span>中</span></div><div class="segment"><span>後</span></div></div></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">スライダ</div>
+        <div class="gallery-cell"><input type="range" min="0" max="100" value="50" /></div>
+        <div class="gallery-cell"><input type="range" min="0" max="100" value="50" class="state-hover" /></div>
+        <div class="gallery-cell"><input type="range" min="0" max="100" value="50" class="state-active" /></div>
+        <div class="gallery-cell"><input type="range" min="0" max="100" value="50" class="state-focus" /></div>
+        <div class="gallery-cell"><input type="range" min="0" max="100" value="50" disabled /></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">進捗バー(60%)</div>
+        <div class="gallery-cell"><progress value="0.6" max="1" /></div>
+        <div class="gallery-cell"><progress value="0.6" max="1" /></div>
+        <div class="gallery-cell"><progress value="0.6" max="1" /></div>
+        <div class="gallery-cell"><progress value="0.6" max="1" /></div>
+        <div class="gallery-cell"><progress value="0.6" max="1" disabled /></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">子領域＋スクロールバー</div>
+        <div class="gallery-cell">
+            <div class="child gallery-scroll-demo">
+                <p>行1</p><p>行2</p><p>行3</p><p>行4</p><p>行5</p><p>行6</p><p>行7</p><p>行8</p>
+            </div>
+        </div>
+        <div class="gallery-cell">
+            <div class="child gallery-scroll-demo state-hover">
+                <p>行1</p><p>行2</p><p>行3</p><p>行4</p><p>行5</p><p>行6</p><p>行7</p><p>行8</p>
+            </div>
+        </div>
+        <div class="gallery-cell">
+            <div class="child gallery-scroll-demo">
+                <p>行1</p><p>行2</p><p>行3</p><p>行4</p><p>行5</p><p>行6</p><p>行7</p><p>行8</p>
+            </div>
+        </div>
+        <div class="gallery-cell">
+            <div class="child gallery-scroll-demo">
+                <p>行1</p><p>行2</p><p>行3</p><p>行4</p><p>行5</p><p>行6</p><p>行7</p><p>行8</p>
+            </div>
+        </div>
+        <div class="gallery-cell">
+            <div class="child gallery-scroll-demo" disabled>
+                <p>行1</p><p>行2</p><p>行3</p><p>行4</p><p>行5</p><p>行6</p><p>行7</p><p>行8</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">区切り線</div>
+        <div class="gallery-cell"><div class="separator"></div></div>
+        <div class="gallery-cell"><div class="separator"></div></div>
+        <div class="gallery-cell"><div class="separator"></div></div>
+        <div class="gallery-cell"><div class="separator"></div></div>
+        <div class="gallery-cell"><div class="separator"></div></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">警告文字(danger)</div>
+        <div class="gallery-cell"><span class="text-danger">エラー文言</span></div>
+        <div class="gallery-cell"><span class="text-danger">エラー文言</span></div>
+        <div class="gallery-cell"><span class="text-danger">エラー文言</span></div>
+        <div class="gallery-cell"><span class="text-danger">エラー文言</span></div>
+        <div class="gallery-cell"><span class="text-danger">エラー文言</span></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">警告文字(warning)</div>
+        <div class="gallery-cell"><span class="text-warning">注意文言</span></div>
+        <div class="gallery-cell"><span class="text-warning">注意文言</span></div>
+        <div class="gallery-cell"><span class="text-warning">注意文言</span></div>
+        <div class="gallery-cell"><span class="text-warning">注意文言</span></div>
+        <div class="gallery-cell"><span class="text-warning">注意文言</span></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">警告文字(ok)</div>
+        <div class="gallery-cell"><span class="text-ok">正常文言</span></div>
+        <div class="gallery-cell"><span class="text-ok">正常文言</span></div>
+        <div class="gallery-cell"><span class="text-ok">正常文言</span></div>
+        <div class="gallery-cell"><span class="text-ok">正常文言</span></div>
+        <div class="gallery-cell"><span class="text-ok">正常文言</span></div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">ドラッグ&amp;ドロップ確認</div>
+        <div class="gallery-cell drag-demo">
+            <div class="drag-list">
+                <div class="drag-card" data-for="card : dragCards" data-attr-card-id="card">カード{{card}}</div>
+            </div>
+            <div class="drag-side">
+                <div class="drag-drop" data-event-dragdrop="drop_card()">ここへ落とす</div>
+                <button type="button" data-event-click="rebuild_drag_cards()">リスト再構築</button>
+                <div class="drag-log">{{dropLog}}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">コンテキストメニュー確認(カードを右クリック)</div>
+        <div class="gallery-cell context-demo">
+            <div class="context-card" data-for="card : contextCards" data-context-menu="protodemo"
+                 data-attr-data-context-id="card">カード{{card}}</div>
+            <div class="context-demo-side">
+                <button type="button" data-event-click="remove_context_card()">対象を消す(最後の1枚)</button>
+                <button type="button" data-event-click="toggle_context_item_b()">項目B: {{contextItemBEnabled ? '有効' : '無効'}}</button>
+                <div class="drag-log">{{contextLog}}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">確認ダイアログ確認(Enterで実行、Escでキャンセル)</div>
+        <div class="gallery-cell context-demo">
+            <button type="button" data-event-click="open_confirm_demo()">確認ダイアログを開く</button>
+            <div class="drag-log">{{confirmLog}}</div>
+        </div>
+    </div>
+
+    <div class="gallery-row">
+        <div class="gallery-label">画面背景(読み込み中等)</div>
+        <div class="screen gallery-screen-demo">
+            <p>読み込み中</p>
+            <progress value="0.6" max="1"></progress>
+        </div>
+    </div>
+
+</div>
+
+<!-- 確認ダイアログ(RmlUiConfirmDialogが本文と確定ボタンの文言を入れる)。文書に1つだけ置く。 -->
+<div id="confirm-dialog" class="confirm-dialog">
+    <div class="confirm-dialog-scrim"></div>
+    <div class="confirm-dialog-box">
+        <div id="confirm-dialog-message" class="confirm-dialog-message"></div>
+        <div class="confirm-dialog-buttons">
+            <button id="confirm-dialog-cancel">キャンセル</button>
+            <button id="confirm-dialog-secondary" class="is-hidden"></button>
+            <button id="confirm-dialog-ok" class="primary">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- 右クリックのメニュー(RmlUiContextMenuが項目を入れる)。文書に1つだけ置く。 -->
+<div id="context-menu" class="context-menu"></div>
+</body>
+</rml>

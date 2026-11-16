@@ -1,0 +1,3610 @@
+/* workspace.rcss - 固定ワークスペースの文書レイアウト。寸法トークンは
+   ../theme/tokens.rcss、共通ウィジェット(セグメント等)は../theme/widgets.rcssを使う。
+   表示・開閉・選択はsrc/app/rmlui/RmlUiWorkspaceView.cppのデータモデル("workspace")
+   から data-if / data-class-* / data-style-* で反映する(手書きのid検索・クラス付け
+   外しはしない)。RCSSにはcalc()が無いため、中央寄せは left:50% と幅の半分の負のmarginで
+   表す(.float-window-laying)。 */
+
+body {
+    --loading-train-card-size: 48dp;
+    --loading-train-layout-size: 64dp;
+    --loading-train-cycle: 0.6s;
+    /* 枕木は見える幅の1/4間隔。5本で125%、1周期の移動量は全幅の -1/5。 */
+    --loading-train-sleepers-width: 125%;
+    --loading-train-sleepers-shift: -20%;
+    --help-window-width: 640dp;
+    --help-window-max-width: 90vw;
+    --help-window-max-height: 70vh;
+    /* 設定幅は共通の左タブ、数字を置く範囲の左端は22% + 間隔4%。 */
+    --camera-stage-left: 26%;
+    --camera-photo-flash-time: 0.1s;
+    --camera-photo-flight-time: 0.4s;
+    --camera-photo-hold-time: 3s;
+    --camera-photo-fade-time: 0.3s;
+    --camera-photo-size: 180dp;
+    --camera-photo-margin: 12dp;
+    /* 操作説明の下端54dp + 高さ26dp + 余白10dp。RCSSにはcalc()が無い。 */
+    --camera-photo-bottom: 90dp;
+    /* ファインダーから除く範囲 = 数字36dp + 見出し16dp + --gap-y(6dp) × 2。 */
+    --camera-readout-height: 64dp;
+    /* ファインダーの枠の下端(数値の行の高さ + --gap-y = 64dp + 6dp)。RCSSにcalc()は無い。 */
+    --camera-finder-space-bottom: 70dp;
+    /* 左の設定パネルの下端(撮影ボタンの高さ--control-height(48dp) + --pad-window(12dp) × 2)。撮影ボタンはその下に置く。 */
+    --camera-settings-bottom: 72dp;
+    /* カメラ画面の7セグの行の下端。操作説明を画面の下端へ置くので、その上に出す。
+       = --pad-window(12dp) + 操作説明の高さ(≒26dp) + --gap-y(6dp)。 */
+    --camera-stage-bottom: 44dp;
+    /* 右下の操作説明の下端(--bottom-bar-height(48dp) + --gap-y(6dp))。 */
+    --operation-hint-bottom: 54dp;
+    /* 操作説明の項目の間隔。 */
+    --operation-hint-item-gap: 16dp;
+    /* = ceil(--font-size-small(13dp) × 1.2)。 */
+    --camera-label-height: 16dp;
+    /* フォーカスの印の大きさと、中心へ寄せる負のマージン(= -大きさ / 2)、枠の太さ。 */
+    --camera-focus-mark-size: 48dp;
+    --camera-focus-mark-offset: -24dp;
+    --camera-focus-mark-border: 2dp;
+    --camera-digit-width: 20dp;
+    --camera-digit-height: 36dp;
+    /* 小数点と斜線の幅 = --camera-digit-width / 2。 */
+    --camera-digit-narrow-width: 10dp;
+    --camera-segment-thickness: 3dp;
+    width: 100%;
+    height: 100%;
+    /* widgets.rcssのbodyは既定でbg-window(不透明、ライトは白)を塗るため、
+       ここで打ち消さないと3Dビューポートが全面隠れてしまう(確認画面(proto)は
+       ギャラリー全体の背景として塗りが要るため、widgets.rcss側は変えない)。 */
+    background-color: transparent;
+    /* パネル外(3Dビューポート)はUIに当たらない。RmlUi 6.3ではpointer-eventsは
+       継承プロパティで子の当たり判定が親より先に行われるため、パネル側で
+       auto に戻せば個別に当たり判定を持たせられる(§2)。 */
+    pointer-events: none;
+
+    /* 寸法・重なり順・アニメーション時間の変数。値はここにだけ書く。RCSSにはcalc()が無いため、
+       ほかの値から計算で求める値もここに並べ、「= …」で出どころを書く。元の値を変えたら、
+       それを参照している計算値も直すこと(使う側には数字を直書きしない)。 */
+    /* 編成編集パネルの車両1両の幅(ドラッグ中の複製の幅も同じ)。側面写真は横長4:1。 */
+    --formation-panel-car-width: 160dp;
+    /* 車両の間の`+`の帯の幅(ドロップの当たり判定を兼ねる。高さは行と同じ)。 */
+    --formation-panel-slot-width: 16dp;
+    --formation-panel-slot-min-height: 40dp;
+    /* 車両1両の高さの目安(0両のヒントの高さ)。= 上下padding --pad-widget-y(4dp) × 2 + 写真(幅 160dp - 左右padding --gap-x(8dp) × 2 = 144dp、
+       縦横比 4:1 で 36dp) + 車両名の行 20dp */
+    --formation-panel-car-height: 64dp;
+    /* 末尾の+の左の余白。車両の手前の+の帯と同じ幅を空けて、車両の位置にそろえる。
+       = --formation-panel-slot-width(16dp) + --gap-y(6dp) × 2 */
+    --formation-panel-slot-end-offset: 28dp;
+    /* 編成編集パネルの位置。左右は左右タブ --edge-tab-width(22%) の内側に2%の間をあける。
+       下は下部バーと凸の上に8dpの間をあける。= --bottom-bar-height(48dp) + --bottom-bar-bump-height(24dp) + 8dp */
+    --formation-panel-left: 24%;
+    --formation-panel-right: 24%;
+    --formation-panel-bottom: 80dp;
+    /* パネルの高さの上限(画面の高さの半分)。越えたらパネルだけ縦にスクロールする。 */
+    --formation-panel-max-height: 50%;
+    /* 編成カードの先頭車アイコンの箱(正方形。サムネイルも正方形)。 */
+    --formation-icon-size: 40dp;
+    /* 編成情報カードの幅と、現在速度の数字の大きさ。幅はC++側の最初の1フレームの目安(RmlUiTrainInfoCardView.cpp)と合わせる。 */
+    --train-card-width: 240dp;
+    --train-card-speed-font-size: 32dp;
+    /* 運転台視点の右上パネル。上端は右上のメニューボタンの下。= --pad-window(12dp) + --icon-button-size(40dp) + --gap-x(8dp) */
+    --cabin-hud-top: 60dp;
+    --cabin-hud-width: 220dp;
+    /* 速度の増減ボタン(−/+)の直径。 */
+    --train-card-step-height: 28dp;
+    --rail-label-width: 160dp;
+    /* = ceil(--font-size(16dp) × 1.2)。初回の高さの目安は、この1行 + --pad-widget-y × 2 + --border-width × 2。 */
+    --rail-label-line-height: 20dp;
+    /* 左右タブで共通の幅(中身がブラウザでも同じ、§1.2/§2.1)。 */
+    /* 画面の幅の割合にすると、幅1280では狭く幅3840では広すぎるため、UIの倍率に合わせて変わる dp で決める。 */
+    --edge-tab-width: 320dp;
+    /* 主メニューの幅。 */
+    --main-menu-width: 240dp;
+    /* ゲーム設定の縦のタブの幅。 */
+    --game-settings-tab-width: 140dp;
+    /* 上部バナーの高さ(モード名の1行)。左右タブ・移動できるウィンドウの上端もこの値に合わせる。
+       = --pad-window(12dp) × 2 + --icon-button-size(40dp)(右端のヘルプボタンが収まる高さ) */
+    --banner-height: 64dp;
+    /* ダイヤの要素の編集(左タブの右隣)の幅。 */
+    --dia-inspector-width: 320dp;
+    --edge-notch-width: 24dp;
+    /* 無の状態でノッチを画面外へ出す量。= -(--edge-notch-width) */
+    --edge-notch-hide-offset: -24dp;
+    /* 丸いアイコンボタン(右上のメニュー・ヘルプ、下部バーのモードボタン)の大きさ。 */
+    /* アイコン画像(@2xの32px)の@1x寸法。素材を差し替えたらここも直す。 */
+    --icon-size: 16dp;
+    --icon-button-size: 40dp;
+    /* = --icon-button-size / 2(丸にする) */
+    --icon-button-radius: 20dp;
+    /* 下部バーのモードボタン同士の間隔の半分(左右のmargin)。 */
+    --mode-button-gap: 10dp;
+    /* ヘルプボタンの右端からの位置(メニューボタンの左隣)。
+       = --pad-window(12dp) + --icon-button-size(40dp) + --gap-x(8dp) */
+    --top-button-help-right: 60dp;
+    /* トーストの上端。右上のボタン列の下に置く。= --pad-window(12dp) + --icon-button-size(40dp) + --gap-x(8dp) */
+    --toast-top: 76dp; /* = --banner-height(64dp) + --pad-window(12dp) */
+    /* 敷設エディタの幅(画面幅に対する比率)と、右下の既定位置の下端。
+       下端は右下の操作説明の上に置く。= --operation-hint-bottom(54dp) + 操作説明の高さ(1行16dp + 上下の余白 --pad-widget-y(4dp) × 2
+       + キーの枠 --border-width(1dp) × 2 ≒ 26dp) + --gap-y(6dp) */
+    --laying-editor-width: 25%;
+    /* タグの部品の高さと、頭の丸の直径。 */
+    --tag-chip-height: 20dp;
+    --tag-chip-dot-size: 8dp;
+    --laying-editor-bottom: 86dp;
+    /* 敷設エディタの敷設プラグインセット欄で、一覧の高さの上限(越えたら一覧の中だけ縦にスクロールする、§2.2)。 */
+    --laying-plugin-set-max-height: 33vh;
+    /* 合成プレビューの大きさ(幅:高さ = 2:3。撮影の解像度と同じ比。RCSSにcalc()が無いので、高さは幅の1.5倍を書く)。 */
+    --laying-set-preview-width: 110dp;
+    --laying-set-preview-height: 165dp;
+    /* プラグインブラウザのカード(§7.3)。カードの幅とサムネイルの高さ(幅の3/4)はRCSSには書かず、大きさ(大・中・小)の表
+       (src/app/plugin_browser/BrowserCardSizeCatalog.h)からC++が決めてデータモデルで流す(最小幅はその表が出どころ)。
+       C++は描かれたカードの位置から行の高さ・1行のカード数・右の間隔(--gap-x)を測る。 */
+    /* 詳細の欄(.browser-hover)の1行の高さ(文字の大きさ × 1.2 = 16dp × 1.2 ≒ 20dp に切り上げ)と、2行ぶんの高さ。
+       カードの名前は全文を折り返し、作者とともに高さを固定しない(同じ行のカードは高さがそろう)。
+       カードの名前・作者の文字の大きさは、大きさの表からデータモデルで流す。 */
+    --browser-name-line-height: 20dp;
+    /* = --browser-name-line-height(20dp) × 2 */
+    --browser-card-name-height: 40dp;
+    --layout-files-width: 80%;
+    --layout-files-height: 80%;
+    --layout-file-picture-width: 192dp;
+    --layout-file-picture-height: 108dp;
+    /* カード上のボタン(お気に入り・セット・警告)の大きさ。角丸 = 大きさ / 2(丸にする) */
+    --browser-card-button-size: 28dp;
+    /* 拡大鏡: 左の余白 = 4dp、入力欄の文字の始まり = 余白4dp + アイコン(--icon-size 16dp) + 間隔8dp */
+    --search-icon-inset: 4dp;
+    --search-pad-left: 28dp;
+    --search-icon-up: -8dp; /* = -(--icon-size / 2) */
+    --browser-filter-button-size: 32dp;
+    --browser-filter-panel-width: 200dp;
+    --browser-filter-panel-max-height: 60vh;
+    --browser-size-button-size: 26dp;
+    /* 四角の並びの箱。一辺 = 18dp、中の余白 = (--browser-size-button-size(26dp) - 18dp) / 2。
+       四角と間隔: 大 = 1個×(16dp+2dp)、中 = 2個×(7dp+2dp)、小 = 3個×(4dp+2dp) = どれも18dp */
+    --browser-size-mark: 18dp;
+    --browser-size-mark-inset: 4dp;
+    --browser-size-gap: 2dp;
+    --browser-size-dot-large: 16dp;
+    --browser-size-dot-medium: 7dp;
+    --browser-size-dot-small: 4dp;
+    /* 一覧のスクロールバーを右端へ寄せる量。= -(--pad-window(12dp)) */
+    --browser-grid-bleed: -12dp;
+    --browser-card-button-radius: 14dp;
+    /* カードの上端・左端の内側から、ボタンまでの距離。 */
+    --browser-card-button-inset: 4dp;
+    /* フォルダのカードの絵(サムネイル領域に対する割合)。つまみは本体の左上に重ねる。 */
+    --browser-folder-inset-x: 18%;
+    --browser-folder-body-top: 32%;
+    --browser-folder-body-bottom: 20%;
+    --browser-folder-tab-top: 20%;
+    --browser-folder-tab-width: 24%;
+    --browser-folder-tab-height: 14%;
+    /* プラグイン設定パネルの幅と、最初の左端の位置。= --edge-notch-width(24dp) + --pad-window(12dp) */
+    --plugin-settings-width: 420dp;
+    --plugin-settings-left: 36dp;
+    /* プラグイン設定パネルのスイッチ一覧の高さの上限(越えたら一覧の中だけ縦にスクロールする)。 */
+    --plugin-settings-body-max-height: 360dp;
+    /* ルート管理ウィンドウの幅(画面幅に対する比率)と、最初の左端の位置(左タブ --edge-tab-width(22%) の右隣に少し間をあける)。 */
+    --plugin-roots-width: 31%;
+    --plugin-roots-left: 24%;
+    /* ルート管理ウィンドウの行の右端のボタンの大きさ。 */
+    --root-button-size: 28dp;
+    /* ゲーム設定の項目名の列の幅。 */
+    --game-settings-label-width: 180dp;
+    /* ゲーム設定の内容の高さ。タブを替えてもウィンドウの大きさが変わらないよう固定し、はみ出せば縦にスクロールする。 */
+    --game-settings-scroll-height: 58vh;
+    /* 見つからないプラグインの警告バッジ(丸)。右上のボタンの並びで、ヘルプボタンの左隣に置く。
+       大きさ・丸さ・上端は、メニューボタン(--icon-button-size)と縦の中心をそろえる。
+       右端 = --top-button-help-right(60dp) + --icon-button-size(40dp) + --gap-x(8dp)
+       上端 = --pad-window(12dp) + (--icon-button-size(40dp) - --missing-badge-size(28dp)) / 2 */
+    --missing-badge-size: 28dp;
+    --missing-badge-radius: 14dp;
+    --missing-badge-top: 18dp;
+    --missing-badge-right: 108dp;
+    /* 見つからないプラグインの一覧ウィンドウの幅(画面幅に対する比率)と、最初の左端の位置。 */
+    --missing-plugins-width: 60%;
+    --missing-plugins-left: 20%;
+    /* 一覧の高さの上限(画面の高さに対する比率。越えたら一覧の中だけ縦にスクロールする)。 */
+    --missing-list-max-height: 60vh;
+    /* 画面中央に固定する窓(ゲーム設定など)の幅。画面幅の割合だけにせず、dp の下限と上限を付ける。 */
+    --modal-window-width: 50%;
+    --modal-window-min-width: 560dp;
+    --modal-window-max-width: 800dp;
+    /* 下部バーの今のシーン名の入れ物の最大幅と、両脇の切り替え矢印との間隔。 */
+    --scene-name-box-max-width: 240dp;
+    --scene-list-max-height: 30vh;
+    --scene-card-width: 100%;
+    /* ブラウザの中サイズのカードと同じ4:3の絵の目安。幅160dp × 3/4。 */
+    --scene-preview-height: 120dp;
+    --time-scale-width: 64dp;
+    /* 早送りの三角の文字の大きさ(三角1つの幅はほぼ文字の大きさ。並べた幅が18dp前後になる値)。 */
+    /* 選択中の早送りボタンの明滅の周期。 */
+    --time-step-pulse-cycle: 1.6s;
+    --time-step-arrows-1-size: 18dp;
+    --time-step-arrows-2-size: 10dp;
+    --time-step-arrows-3-size: 7dp;
+    --time-pause-width: 10dp;
+    --time-pause-height: 12dp;
+    --time-pause-bar-width: 3dp;
+    --time-window-width: 280dp;
+    --time-window-left: 68%;
+    /* ウィンドウのタイトルバーの閉じるボタンの大きさ。上端・右端からの位置は
+       --close-button-inset を使う。 */
+    --close-button-size: 24dp;
+    /* = (--titlebar-height(32dp) - --close-button-size(24dp)) / 2 */
+    --close-button-inset: 4dp;
+    /* 2つ目のボタンの右端からの位置。= --close-button-inset(4dp) + --close-button-size(24dp) */
+    --close-button-second-right: 28dp;
+    /* 下部バーの高さ。左右タブの下端もこの値に合わせる。= --row-height(48dp) */
+    --bottom-bar-height: 48dp;
+    /* 下部バー中央の凸の、バーの上へ突き出す量。 */
+    --bottom-bar-bump-height: 24dp;
+    /* 凸の左右の端から、いちばん外のボタンまでの余白。 */
+    --bottom-bar-bump-pad-x: 24dp;
+    /* 凸の中のモードボタンの大きさ。角丸 = 大きさ / 2(丸にする) */
+    --mode-button-size: 56dp;
+    --mode-button-radius: 28dp;
+    /* ボタンの下端からバーの下端までの距離。凸の全体の高さ(--bottom-bar-height(48dp) + --bottom-bar-bump-height(24dp) = 72dp)
+       の中でボタンを上下中央に置く。= (72dp - --mode-button-size(56dp)) / 2 */
+    --mode-button-inset: 8dp;
+    --z-menu-button: 100;
+    /* メニューを開いている間のメニューボタン。モーダル層(--z-modal)の幕より手前。 */
+    --z-menu-button-open: 111;
+    /* モーダル層(主メニュー・ゲーム設定と、その奥で画面全体を覆う幕)。メニューボタンより手前に置き、
+       モーダルを開いている間はほかのUIをすべて幕の下にする。 */
+    --z-modal: 110;
+    --z-overlays: 60;
+    --z-edge: 40;
+    --z-operation-hint: 30;
+    --z-screen-back: 20;
+    --z-banner: 10;
+    /* 編成情報カード。バナー・下部バー・左右タブなど固定のUIより奥に置き、3Dの上だけに重ねる。 */
+    --z-train-card: 5;
+    --z-rail-label: 5;
+    /* 信号カードの幅(閉じているとき=閉塞ラベルと同じ、選んで編集を広げたとき)。 */
+    --signal-card-width: 160dp;
+    --signal-card-open-width: 320dp;
+    --z-bottom-bar: 10;
+}
+
+/* 親いっぱいに広げる要素(左右タブのパネル本体・重ね表示層・モーダル層とその幕)。 */
+.edge-panel, .overlay-layer, .modal-layer, .modal-scrim {
+    position: absolute;
+    top: 0dp;
+    left: 0dp;
+    right: 0dp;
+    bottom: 0dp;
+}
+
+/* ---- 主メニューボタン(全画面で右上に常に表示、§1.3) ------------------------ */
+
+/* 丸いアイコンボタン(右上のメニュー・ヘルプ、下部バーのモードボタンで共通)。大きさと丸さだけを決める。 */
+button.round-icon {
+    width: var(--icon-button-size);
+    height: var(--icon-button-size);
+    line-height: var(--icon-button-size);
+    border-radius: var(--icon-button-radius);
+}
+
+button.menu-button {
+    display: block;
+    position: absolute;
+    top: var(--pad-window);
+    right: var(--pad-window);
+    z-index: var(--z-menu-button);
+    pointer-events: auto;
+}
+
+/* メニューを開いている間は、全画面の幕(--z-modal)より手前に出して押せるようにする。もう一度押すと閉じる。 */
+button.menu-button.is-open {
+    z-index: var(--z-menu-button-open);
+}
+
+/* 見つからないプラグインの警告バッジ。色は警告色の面に、テーマの「アクセント面の上の文字色」を重ねる。 */
+button.missing-badge {
+    display: block;
+    position: absolute;
+    top: var(--missing-badge-top);
+    right: var(--missing-badge-right);
+    z-index: var(--z-menu-button);
+    pointer-events: auto;
+    width: var(--missing-badge-size);
+    height: var(--missing-badge-size);
+    line-height: var(--missing-badge-size);
+    border-radius: var(--missing-badge-radius);
+    background-color: var(--warning);
+    color: var(--text-on-accent);
+    font-size: var(--font-size-small);
+}
+
+button.missing-badge:hover, button.missing-badge:active {
+    background-color: var(--warning);
+    color: var(--text-on-accent);
+}
+
+/* ---- 上部バナー(鑑賞・環境・カメラでは退避、§1.4) --------------------------- */
+
+.banner {
+    position: absolute;
+    top: 0dp;
+    left: 0dp;
+    right: 0dp;
+    z-index: var(--z-banner);
+    box-sizing: border-box;
+    height: var(--banner-height);
+    padding: var(--pad-window);
+    pointer-events: auto;
+    background-color: var(--bg-panel-bar); /* 半透明(ハイコントラストは不透明)。下部バーと共通 */
+    border-bottom: var(--border-width) var(--border-panel); /* 左右タブと同じく、線はハイコントラストだけ */
+    color: var(--text);
+}
+
+.banner-title {
+    display: block;
+    font-size: var(--font-size-heading);
+    line-height: var(--icon-button-size);
+}
+
+/* モード名の左のアイコン。下部バーのモードボタンと同じ素材を、文字に合わせた大きさで出す。 */
+.banner-icon {
+    display: inline-block;
+    width: var(--icon-button-size);
+    height: var(--icon-button-size);
+    margin-right: var(--gap-x);
+    vertical-align: middle;
+    image-color: var(--text);
+}
+
+button.banner-info {
+    display: block;
+    position: absolute;
+    top: var(--pad-window);
+    right: var(--top-button-help-right);
+}
+
+/* ---- 下部バー(カメラ画面のみ非表示、§1.4) ---------------------------------- */
+
+.bottom-bar {
+    position: absolute;
+    left: 0dp;
+    right: 0dp;
+    bottom: 0dp;
+    z-index: var(--z-bottom-bar);
+    box-sizing: border-box;
+    height: var(--bottom-bar-height);
+    padding: 0dp var(--pad-window);
+    pointer-events: auto;
+    background-color: var(--bg-panel-bar); /* 半透明(ハイコントラストは不透明) */
+    border-top: var(--border-width) var(--border-panel); /* 左右タブと同じく、線はハイコントラストだけ */
+    /* 左(環境・カメラ)・中央(モードボタン)・右(時計)の3つの枠を横に並べる。左右の枠を同じ
+       比率で伸ばすので、中央の枠は左右の中身の幅によらず画面の中央に来る。 */
+    display: flex;
+    align-items: center;
+}
+
+.bottom-bar-left, .bottom-bar-right {
+    flex: 1 1 0dp;
+}
+
+.bottom-bar-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.bottom-bar-modes {
+    flex: 0 0 auto;
+    position: relative; /* 凸(.bottom-bar-bump)の基準 */
+    align-self: stretch;
+    display: flex;
+    align-items: flex-end; /* ボタンはバーの下端から--mode-button-insetだけ上げて並べ、凸の上へはみ出させる */
+    padding: 0dp var(--bottom-bar-bump-pad-x);
+}
+
+/* モードボタンの列の上に突き出す凸。バー本体は塗りが半透明なので、凸はバーに重ねず、
+   バーの上線の真上から上へ出る部分だけを別の要素で塗る(重ねると半透明が二重になって線が見える)。 */
+.bottom-bar-bump {
+    position: absolute;
+    left: 0dp;
+    right: 0dp;
+    bottom: 100%;
+    height: var(--bottom-bar-bump-height);
+    box-sizing: border-box;
+    background-color: var(--bg-panel-bar);
+    border: var(--border-width) var(--border-panel);
+    border-bottom-width: 0dp;
+    border-radius: var(--radius-small) var(--radius-small) 0dp 0dp;
+}
+
+/* 文字だけのボタン(button.flat)。hoverの文字色もflatのもの。 */
+button.bottom-bar-entry {
+    margin-left: var(--pad-window);
+    margin-right: var(--gap-x);
+}
+
+button.bottom-bar-entry .ui-icon {
+    image-color: var(--text);
+}
+
+button.bottom-bar-entry:hover .ui-icon {
+    image-color: var(--text-accent);
+}
+
+/* 前後の切り替えとシーン名をまとめたカプセル。 */
+.scene-capsule {
+    display: flex;
+    align-items: center;
+    height: var(--control-small);
+    border-radius: var(--radius-pill);
+    background-color: var(--bg-widget);
+    border: var(--border-width) var(--border);
+}
+
+button.scene-arrow {
+    width: var(--control-small);
+    height: 100%;
+    border-radius: var(--radius-pill);
+    background-color: transparent;
+}
+
+button.scene-arrow:hover {
+    background-color: var(--bg-widget-hover);
+}
+
+button.mode-button {
+    display: inline-block;
+    margin: 0dp var(--mode-button-gap) var(--mode-button-inset) var(--mode-button-gap);
+    width: var(--mode-button-size);
+    height: var(--mode-button-size);
+    line-height: var(--mode-button-size);
+    border-radius: var(--mode-button-radius);
+    /* 凸(.bottom-bar-bump、position: absolute)がボタンの上側に重なって塗りを隠さないよう、
+       ボタンを凸より手前に出す。 */
+    position: relative;
+    z-index: 1;
+}
+
+/* 選択中のモードは色だけに依存しないよう下線も付ける。 */
+button.mode-button.is-selected {
+    background-color: var(--accent);
+    color: var(--text-on-accent);
+    border-bottom: var(--focus-width) var(--text-on-accent);
+}
+
+/* 面がaccentのため、フォーカスのリングは文字色にする。 */
+button.mode-button.is-selected:focus-visible {
+    box-shadow: 0dp 0dp 0dp var(--focus-width) var(--text-on-accent) inset;
+}
+
+/* ---- 左右タブの外枠(§1.2/§2.1) -------------------------- */
+
+/* 3状態(無/閉/開)は外枠1つに2つのプロパティを持たせて表す。calc()が無いため、
+   %(パネル幅ぶん)とdp(ノッチ幅ぶん)を1つの値にまとめられない(単位の異なる値は
+   補間されない)。
+     - transform: translateX(...) ... 自分の幅に対する割合で、パネル本体を画面外へ
+       出す(閉/無で共通)。自分の幅=幅トークンの値になるので、幅を書く場所は
+       widthプロパティ1箇所のまま増やさずに済む。
+     - left/right(dp) ... 閉から無へ、ノッチぶんだけさらに画面外へ押し出す。
+   is-absentはis-openより後に書き、両方のクラスが同時に付いても(タブが閉じた
+   まま該当モードを離れた場合等)無が優先されるようにする。 */
+.edge-frame {
+    position: absolute;
+    top: var(--banner-height);
+    bottom: var(--bottom-bar-height); /* 下部バーの上端に合わせる */
+    z-index: var(--z-edge);
+    width: var(--edge-tab-width);
+    background-color: var(--bg-panel-side); /* 半透明(ハイコントラストは不透明) */
+    box-sizing: border-box;
+    pointer-events: auto;
+    transition: transform var(--anim-slide) cubic-out, left var(--anim-slide) cubic-out,
+        right var(--anim-slide) cubic-out;
+}
+
+.edge-left {
+    left: 0dp;
+    transform: translateX(-100%); /* 既定(is-openなし)は閉。 */
+    border-right: var(--border-width) var(--border-panel); /* ライト・ダークは透明、ハイコントラストだけ線を引く */
+}
+
+.edge-right {
+    right: 0dp;
+    transform: translateX(100%);
+    border-left: var(--border-width) var(--border-panel);
+}
+
+.edge-left.is-open, .edge-right.is-open {
+    transform: translateX(0%);
+}
+
+/* 無(is-absent): 閉のtransformのまま、ノッチの幅だけさらに画面外へ出す。タブと
+   一緒に端へ寄ってから、ノッチも画面外へ出る動きになる。 */
+.edge-left.is-absent {
+    transform: translateX(-100%);
+    left: var(--edge-notch-hide-offset);
+}
+
+.edge-right.is-absent {
+    transform: translateX(100%);
+    right: var(--edge-notch-hide-offset);
+}
+
+/* ノッチは外枠の子要素で、外枠の内側の縁(左タブは外枠の右外側、
+   右タブは外枠の左外側)に絶対配置する(§1.2)。外枠が動けば一緒について来る。
+   パネルと一体に見せるため、塗りはパネルと同じ色にし、パネル側の辺には線を引かず、
+   外側の2つの角だけを丸める。絶対配置の基準は外枠の枠線の内側なので、left/right:100%の
+   ノッチは外枠の枠線の上に重なる(背景は枠線の内側だけに塗られるため、塗りが二重に
+   ならずにつながる)。ハイコントラストでは、不透明なノッチが外枠の線のうちノッチの
+   部分を隠し、パネルとノッチを囲む外周の線になる。 */
+button.edge-notch {
+    display: block;
+    position: absolute;
+    top: 0dp;
+    width: var(--edge-notch-width);
+    height: var(--row-height);
+    pointer-events: auto;
+    background-color: var(--bg-panel-side);
+    border-width: var(--border-width);
+    border-color: var(--border-panel);
+}
+
+/* マウスを乗せた・押したときは塗りを変えず、矢印の色だけ変える(パネルと一体のまま)。 */
+button.edge-notch:hover, button.edge-notch:active {
+    background-color: var(--bg-panel-side);
+    color: var(--text-accent);
+}
+
+/* 折りたたみボタンの共通の形(左タブのノッチと同じ「<」「>」)。畳んでいる間(.is-collapsed)は「>」、開いている間は「<」。
+   列車カード・ダイヤの駅一覧・敷設エディタの最小化など、折りたたみはすべてこのクラスで描く。 */
+button.fold-button {
+    display: inline-block;
+    flex: none;
+    width: var(--edge-notch-width);
+    height: var(--edge-notch-width);
+    padding: 0dp;
+    vertical-align: middle;
+    background-color: var(--bg-panel-side);
+    border-radius: var(--radius-small);
+    decorator: image(chevron-left none scale-none center center);
+    image-color: var(--text);
+}
+
+button.fold-button.is-collapsed {
+    decorator: image(chevron-right none scale-none center center);
+}
+
+/* 上下に畳むもの(.fold-vertical)は、開いている間「∧」、畳んでいる間「∨」。 */
+button.fold-button.fold-vertical {
+    decorator: image(chevron-up none scale-none center center);
+}
+
+button.fold-button.fold-vertical.is-collapsed {
+    decorator: image(chevron-down none scale-none center center);
+}
+
+button.fold-button:hover, button.fold-button:active {
+    background-color: var(--bg-panel-side);
+    image-color: var(--text-accent);
+}
+
+.edge-left .edge-notch {
+    left: 100%;
+    border-left-width: 0dp;
+    border-radius: 0dp var(--radius-small) var(--radius-small) 0dp;
+}
+
+.edge-right .edge-notch {
+    right: 100%;
+    border-right-width: 0dp;
+    border-radius: var(--radius-small) 0dp 0dp var(--radius-small);
+}
+
+/* パネル本体。外枠の全体を占め、外枠が画面外へ動いてもパネルの中身がはみ出て
+   見えないようoverflow: hiddenにする。 */
+.edge-panel {
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.tab-content {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    padding: var(--pad-window);
+    overflow-y: auto;
+    color: var(--text);
+}
+
+/* ---- 移動できるウィンドウ(敷設エディタ・プラグイン設定パネル、§2.3/§3.1) ---------
+   タイトルバー(<handle>)をドラッグすると、move_targetに指定したウィンドウ本体が動く。
+   ElementHandleはドラッグ中にウィンドウのleft/topをpx値で書き換えるため、最初の位置は
+   left/topとmarginで表す(transformで中央寄せすると、端のはみ出し判定が実際の位置と
+   ずれる)。主メニューとゲーム設定も同じ見た目の固定位置のウィンドウで、タイトルバーを
+   <handle>にしないため動かない(.float-window-fixed-center)。 */
+
+.float-window {
+    position: absolute;
+    box-sizing: border-box;
+    pointer-events: auto;
+    border: var(--border-width) var(--border);
+    border-radius: var(--radius-box);
+    background-color: var(--bg-popup);
+    color: var(--text);
+}
+
+.float-window-titlebar {
+    display: block;
+    position: relative; /* 右端の閉じるボタン(.float-window-close)の基準にする */
+    box-sizing: border-box;
+    height: var(--titlebar-height);
+    padding: var(--pad-widget-y) var(--pad-window);
+    pointer-events: auto;
+    border-bottom: var(--border-width) var(--border);
+}
+
+.float-window-body {
+    box-sizing: border-box;
+    padding: var(--pad-window);
+}
+
+.float-window-note {
+    margin-top: var(--gap-y);
+    color: var(--text-secondary);
+}
+
+/* 半透明にするウィンドウ(移動できるウィンドウ: 敷設エディタ・プラグイン設定パネル)。ハイコントラストは不透明。
+   主メニュー・ゲーム設定は.float-windowのbg-popupのまま不透明。 */
+.float-window-translucent {
+    background-color: var(--bg-panel-float);
+}
+
+/* 敷設エディタ: 最初は画面の中央上(上部バナーのすぐ下)。中央寄せは left:50% と
+   幅の半分の負のmarginで表す。 */
+.float-window-laying {
+    /* 右下基準。ドラッグ(handle)もright/bottomを書き換えるので、最小化すると下端に寄ったまま畳まれる。 */
+    right: var(--pad-window);
+    bottom: var(--laying-editor-bottom);
+    width: var(--laying-editor-width);
+}
+
+/* 敷設エディタの敷設プラグインセット欄(§2.2)。切替と設定の下に区切り線を引いて置く。
+   左に合成プレビュー、右に一覧(.laying-set-rows)を並べる。一覧だけ高さに上限を付けてスクロールする。 */
+.laying-plugin-set {
+    margin-top: var(--pad-window);
+    padding-top: var(--pad-window);
+    border-top: var(--border-width) var(--border);
+}
+
+/* ブラウザのカードをドラッグして乗せたとき(落とすとセットへ追加)。見た目は編成カードの落とし先と同じ。 */
+.laying-plugin-set.is-drop-target {
+    border-color: var(--text-accent);
+    background-color: var(--accent-subtle);
+}
+
+/* 合成プレビュー。左寄せで、段の幅いっぱいには広げない。画像が無いときはdata-ifで要素ごと出さない。 */
+.laying-set-body {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+img.laying-set-preview {
+    display: block;
+    flex: none;
+    width: var(--laying-set-preview-width);
+    height: var(--laying-set-preview-height);
+    margin-right: var(--gap-x);
+}
+
+.laying-set-rows {
+    flex: 1 1 0dp;
+    max-height: var(--laying-plugin-set-max-height);
+    overflow-y: auto;
+}
+
+/* プラグイン設定パネル: 最初は画面の左側(左ノッチ幅ぶんとすこしの余白を空け、上部
+   バナーの下)。重なり順は重ね表示層の中でdata-style-z-indexが決める。 */
+.float-window-pluginsettings {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    top: var(--banner-height);
+    left: var(--plugin-settings-left);
+    width: var(--plugin-settings-width);
+    min-width: 280dp;
+    min-height: 120dp;
+}
+
+.plugin-settings-hidden {
+    display: none;
+}
+
+/* スイッチ一覧: 高さに上限を付け、長ければ縦にスクロールする。 */
+.plugin-switch-list {
+    flex: 1 1 auto;
+    min-height: 0dp;
+    max-height: var(--plugin-settings-body-max-height);
+    overflow-y: auto;
+}
+
+.float-window-resize-handle {
+    position: absolute;
+    right: 0dp;
+    bottom: 0dp;
+    width: 18dp;
+    height: 18dp;
+    cursor: nwse-resize;
+}
+
+/* スイッチ一覧の空き(名前が空白だけのスイッチ)。高さは見出しの上の間隔(.form-section)とそろえる。 */
+.plugin-switch-spacer {
+    height: var(--pad-window);
+}
+
+/* ルート管理ウィンドウ: 最初は左タブの右隣(バナーの下)。 */
+.float-window-pluginroots {
+    top: var(--banner-height);
+    left: var(--plugin-roots-left);
+    width: var(--plugin-roots-width);
+}
+
+.float-window-help {
+    top: var(--banner-height);
+    left: var(--pad-window);
+    width: var(--help-window-width);
+    max-width: var(--help-window-max-width);
+}
+
+.help-window-body {
+    max-height: var(--help-window-max-height);
+    overflow-y: auto;
+}
+
+.help-table {
+    margin-top: var(--gap-y);
+    margin-bottom: var(--gap-y);
+}
+
+.help-table-row {
+    display: flex;
+    border-bottom: var(--border-width) var(--border);
+}
+
+.help-table-row > div {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+    padding: var(--pad-widget-y) var(--gap-x);
+}
+
+.help-table-header {
+    color: var(--text-secondary);
+}
+
+/* ルートの行: パスは残りの幅いっぱいに取り、長ければ末尾を省略して1行に収める(全文はtitle属性)。 */
+.root-path {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size-small);
+}
+
+/* ゲーム設定: 項目名の列は長い名前(レイアウト保存先など)が入る幅にする。
+   既定の値を出している間のパスは薄くする。 */
+.game-settings .form-label {
+    width: var(--game-settings-label-width);
+}
+
+.game-settings-body {
+    display: flex;
+    flex-direction: row;
+}
+
+/* タブの縦の列。選んでいるタブは一覧の行と同じく、薄いアクセントの面と左の帯にする。 */
+.game-settings-tabs {
+    flex: none;
+    width: var(--game-settings-tab-width);
+    margin-right: var(--pad-window);
+}
+
+button.game-settings-tab {
+    display: block;
+    width: 100%;
+    height: var(--control-medium);
+    line-height: var(--control-medium);
+    padding: 0dp var(--gap-x);
+    text-align: left;
+    border-radius: var(--radius);
+    border-left: 3dp transparent;
+}
+
+button.game-settings-tab:hover {
+    background-color: var(--bg-widget-hover);
+    color: var(--text);
+}
+
+button.game-settings-tab.is-selected {
+    background-color: var(--accent-subtle);
+    border-left-color: var(--accent);
+    color: var(--text-accent);
+}
+
+.game-settings-content {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+}
+
+.input-settings-binding {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+    /* キーの文字は行の高さを箱の高さに合わせて縦中央に置く(button共通の指定をそのまま使う)。 */
+    height: var(--control-height);
+    line-height: var(--control-height);
+    padding: 0dp var(--pad-widget-x);
+}
+
+/* キー割り当てのボタンは、文字を左に揃える。 */
+.input-settings-binding {
+    text-align: left;
+}
+
+/* バージョン情報の著作権表示。小さい文字で、控えめな色にする。 */
+.about-logo {
+    display: block;
+    width: 280dp;
+    height: 140dp;
+    margin-bottom: var(--gap-y);
+}
+
+.about-copyright {
+    margin-top: var(--gap-y);
+    font-size: var(--font-size-small);
+    color: var(--text-secondary);
+}
+
+.input-settings-row.is-warning, .input-settings-row.is-warning button, .input-settings-warning {
+    color: var(--warning);
+}
+
+/* 設定画面のスイッチは行の右端に寄せる(後ろに注記があれば、その注記ごと右へ寄る)。 */
+.game-settings-scroll .form-row > input.toggle {
+    margin-left: auto;
+}
+
+/* 内容の高さは全タブで固定し、長ければ縦にスクロールする。 */
+.game-settings-scroll {
+    height: var(--game-settings-scroll-height);
+    overflow-y: auto;
+}
+
+.root-path.is-default {
+    color: var(--text-secondary);
+}
+
+button.root-button {
+    flex: none;
+    width: var(--root-button-size);
+    height: var(--root-button-size);
+    border-radius: var(--radius);
+}
+
+/* 見つからないプラグインの一覧ウィンドウ: 最初はバナーの下。 */
+.float-window-missingplugins {
+    top: var(--banner-height);
+    left: var(--missing-plugins-left);
+    width: var(--missing-plugins-width);
+}
+
+/* 一覧: 高さに上限を付け、長ければ縦にスクロールする。 */
+.missing-list {
+    max-height: var(--missing-list-max-height);
+    overflow-y: auto;
+}
+
+/* 一覧の行: フォルダ名は残りの幅いっぱいに取り、長ければ末尾を省略して1行に収める(フルパスはtitle属性)。
+   種類・使っている数は右に寄せて幅を取らない。 */
+.missing-name {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size-small);
+}
+
+.missing-meta {
+    flex: none;
+    white-space: nowrap;
+    font-size: var(--font-size-small);
+    color: var(--text-secondary);
+}
+
+/* ゲーム設定などの窓: 画面の中央に固定(動かさない)。 */
+.float-window-fixed-center {
+    top: 50%;
+    left: 50%;
+    width: var(--modal-window-width);
+    min-width: var(--modal-window-min-width);
+    max-width: var(--modal-window-max-width);
+    transform: translate(-50%, -50%); /* 縦横とも画面中央。ドラッグしないのでtransformで寄せてよい */
+}
+
+/* レイアウト・シーンの読込中は、読込の表示以外のUI(バナー・下バー・左右タブ・カード・窓・メニュー)を隠す。
+   bodyに付く is-loading は loadingVisible から来る(workspace.rml)。 */
+body.is-loading .banner, body.is-loading .bottom-bar,
+body.is-loading .edge-frame, body.is-loading .formation-panel, body.is-loading .train-info-card, body.is-loading .rail-label,
+body.is-loading .screen-back, body.is-loading .overlay-layer, body.is-loading .modal-layer {
+    display: none;
+}
+
+/* レイアウト読込中の表示。モーダル層より手前、確認ダイアログより奥。 */
+.loading-layer {
+    position: absolute;
+    top: 0dp;
+    left: 0dp;
+    right: 0dp;
+    bottom: 0dp;
+    z-index: var(--z-loading);
+    pointer-events: auto;
+}
+
+.loading-scrim {
+    position: absolute;
+    top: 0dp;
+    left: 0dp;
+    right: 0dp;
+    bottom: 0dp;
+    background-color: var(--bg-scrim);
+}
+
+.loading-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--loading-box-width);
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    padding: var(--pad-window);
+    border: var(--border-width) var(--border);
+    border-radius: var(--radius-box);
+    background-color: var(--bg-popup);
+    color: var(--text);
+    font-size: var(--font-size);
+}
+
+/* 1emの正方形を共通に使い、配置先はfont-sizeだけで大きさを変える。
+   車両は固定、枕木は1本ぶん左へ動かす。端の1本が次の周期の先頭と重なる。 */
+.loading-train {
+    position: relative;
+    display: block;
+    width: 1em;
+    height: 1em;
+    pointer-events: none;
+}
+
+.loading-train-car {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    decorator: image(loading-train);
+    image-color: var(--text-secondary);
+}
+
+.loading-train-rail, .loading-train-track {
+    position: absolute;
+    left: 6.25%;
+    width: 87.5%;
+}
+
+.loading-train-rail {
+    top: 78.125%;
+    height: 3.125%;
+    background-color: var(--text-secondary);
+}
+
+.loading-train-track {
+    top: 84.375%;
+    height: 6.25%;
+    overflow: hidden;
+}
+
+.loading-train-sleepers {
+    display: flex;
+    width: var(--loading-train-sleepers-width);
+    height: 100%;
+    animation: var(--loading-train-cycle) linear-in infinite loading-train-travel;
+}
+
+.loading-train-sleepers span {
+    flex: 0 0 5%;
+    height: 100%;
+    margin-right: 15%;
+    background-color: var(--text-secondary);
+}
+
+@keyframes loading-train-travel {
+    from { transform: translateX(0%); }
+    to { transform: translateX(var(--loading-train-sleepers-shift)); }
+}
+
+.loading-train-card {
+    font-size: var(--loading-train-card-size);
+}
+
+.loading-train-layout {
+    display: flex;
+    justify-content: center;
+    font-size: var(--loading-train-layout-size);
+    margin-bottom: var(--gap-y);
+}
+
+.loading-progress {
+    width: 100%;
+    margin-top: var(--gap-y);
+    margin-bottom: var(--gap-y);
+}
+
+.loading-count {
+    color: var(--text-secondary);
+}
+
+/* レイアウトの一覧の画面。カードは横長の1行で、上から縦に並べる。 */
+.layout-files-window {
+    display: flex;
+    flex-direction: column;
+    width: var(--layout-files-width);
+    height: var(--layout-files-height);
+}
+
+/* 復元の画面は全画面に出す。 */
+.recovery-window {
+    display: flex;
+    flex-direction: column;
+    top: 0dp;
+    left: 0dp;
+    width: 100%;
+    height: 100%;
+    border-radius: 0dp;
+}
+
+.layout-files-window > .float-window-titlebar, .recovery-window > .float-window-titlebar {
+    flex: none;
+}
+
+.layout-files-body {
+    flex: 1 1 0dp;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* ロードの上に置くタブ。内容の幅だけ取り、左に寄せる。 */
+.layout-files-tabs {
+    flex: none;
+    align-self: flex-start;
+    --control-height: var(--field-height);
+    margin-bottom: var(--gap-y);
+}
+
+.layout-files-scroll {
+    flex: 1 1 0dp;
+    overflow-y: auto;
+}
+
+.layout-files-heading {
+    margin-bottom: var(--gap-y);
+    color: var(--text-secondary);
+}
+
+.layout-files-grid {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: var(--gap-y);
+}
+
+.layout-file-card {
+    flex: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    box-sizing: border-box;
+    margin: 0dp 0dp var(--gap-x) 0dp;
+    padding: var(--gap-x);
+    border-radius: var(--radius);
+    background-color: var(--bg-widget);
+    overflow: hidden;
+}
+
+.layout-file-card:hover {
+    background-color: var(--bg-widget-hover);
+}
+
+.layout-file-picture {
+    position: relative;
+    flex: none;
+    width: var(--layout-file-picture-width);
+    height: var(--layout-file-picture-height);
+    margin-right: var(--pad-window);
+    border-radius: var(--radius);
+    background-color: var(--bg-scrim);
+    overflow: hidden;
+}
+
+img.layout-file-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* 名前と日時の2行。残りの幅いっぱいに取り、長い名前は「…」で省略する。 */
+.layout-file-text {
+    flex: 1 1 0dp;
+    overflow: hidden;
+}
+
+.layout-file-name, .layout-file-date {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.layout-file-date {
+    color: var(--text-secondary);
+}
+
+/* RailSim2 のレイアウトの1行。サムネイルがないので、カードより低く、名前を左・日時を右に置く。
+   overflow: hidden は付けない。角丸と組むと行ごとにステンシルの切り抜きが走り、行が数百あるとGPUの時間が倍になる。
+   はみ出す名前は .layout-file-row-name が自分で切る。 */
+.layout-file-row {
+    flex: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    box-sizing: border-box;
+    height: var(--row-height);
+    margin: 0dp 0dp var(--gap-y) 0dp;
+    padding: 0dp var(--pad-widget-x);
+    border-radius: var(--radius);
+    background-color: var(--bg-widget);
+}
+
+.layout-file-row:hover {
+    background-color: var(--bg-widget-hover);
+}
+
+.layout-file-row-name {
+    flex: 1 1 0dp;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.layout-file-row-date {
+    flex: none;
+    margin-left: var(--pad-window);
+    color: var(--text-secondary);
+}
+
+/* 下の行の検索欄。残りの幅を取り、右のボタンに寄せる。 */
+.layout-rs2-search {
+    flex: 1 1 0dp;
+}
+
+/* 復元の画面のカードは、右端に復元とごみ箱を置く。 */
+.recovery-card-buttons {
+    flex: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-left: var(--pad-window);
+}
+
+.recovery-card-buttons > button {
+    margin-left: var(--gap-x);
+}
+
+.recovery-footer {
+    justify-content: flex-end;
+}
+
+.recovery-footer > button {
+    margin-left: var(--gap-x);
+}
+
+.layout-files-footer {
+    flex: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: var(--gap-y);
+}
+
+.layout-file-name-input {
+    flex: 1 1 0dp;
+    margin-right: var(--gap-x);
+}
+
+.toast-stack {
+    position: absolute;
+    top: var(--toast-top);
+    right: var(--pad-window);
+    z-index: var(--z-loading); /* モーダル層(--z-modal: 110)より手前、確認ダイアログ(--z-confirm-dialog: 150)より奥。 */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    width: var(--confirm-dialog-width);
+    pointer-events: none;
+}
+
+.toast-item {
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: var(--gap-y);
+    padding: var(--pad-widget-y) var(--pad-widget-x);
+    border: var(--border-width) var(--border);
+    border-left-width: 4dp;
+    border-radius: var(--radius-box);
+    background-color: var(--bg-panel-side);
+    color: var(--text);
+}
+
+.toast-icon {
+    margin-right: var(--gap-x);
+}
+
+/* 通知の操作ボタン。通知の一覧は pointer-events: none なので、ボタンだけ受け付ける。 */
+.toast-action {
+    pointer-events: auto;
+    margin-left: var(--gap-x);
+    color: var(--text-accent);
+}
+
+.toast-item.info {
+    border-left-color: var(--text-accent);
+}
+
+.toast-item.info .toast-icon {
+    image-color: var(--text-accent);
+}
+
+.toast-item.warning {
+    border-left-color: var(--warning);
+}
+
+.toast-item.warning .toast-icon {
+    image-color: var(--warning);
+}
+
+.toast-item.error {
+    border-left-color: var(--danger);
+}
+
+.toast-item.error .toast-icon {
+    image-color: var(--danger);
+}
+
+/* ---- モーダル層(主メニュー・ゲーム設定を開いている間だけ出す、§5.1) --------------
+   画面全体を覆う幕がクリックを受け止め、メニュー以外(左右タブ・下部バー・移動できる
+   ウィンドウ・メニューボタン)を押せなくする。幕は半透明の黒で、背後を暗くする。 */
+.modal-layer {
+    z-index: var(--z-modal);
+    pointer-events: none; /* 移動できるウィンドウだけが見えているときは、背後のビューポートを塞がない */
+}
+
+.modal-scrim {
+    pointer-events: auto;
+    background-color: var(--bg-scrim);
+}
+
+/* タイトルバーの右端の閉じるボタン(画像だけのボタン、button.flat)。 */
+button.float-window-close {
+    display: block;
+    position: absolute;
+    top: var(--close-button-inset);
+    right: var(--close-button-inset);
+    width: var(--close-button-size);
+    height: var(--close-button-size);
+    text-align: center;
+}
+
+/* タイトルバーに2つ目の小さなボタンを並べるとき、1つ目(右端)の左隣へずらす。
+   = --close-button-inset(4dp) + --close-button-size(24dp) */
+button.float-window-close-second {
+    right: var(--close-button-second-right);
+}
+
+/* ---- カメラ画面 -------------------------------------------------------- */
+
+.camera-screen { position: absolute; left: 0dp; top: 0dp; right: 0dp; bottom: 0dp; z-index: var(--z-screen-back); pointer-events: none; }
+.camera-mask, .camera-finder { position: absolute; box-sizing: border-box; pointer-events: none; }
+/* 枠の外は画面の地色より暗い不透明の色で塗りつぶし、3D画面はファインダーの枠の中だけに見せる。 */
+.camera-mask { background-color: var(--bg-camera-mask); }
+.camera-finder { border: var(--border-width) var(--text-on-screen); overflow: hidden; }
+.camera-photo-flash {
+    position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px;
+    background-color: #ffffff; opacity: 0; pointer-events: none;
+    transition: opacity var(--camera-photo-flash-time) linear-in;
+}
+.camera-photo-flash.is-started { opacity: 1; }
+.camera-photo-target {
+    position: absolute; right: var(--camera-photo-margin); bottom: var(--camera-photo-bottom);
+    width: var(--camera-photo-size); height: var(--camera-photo-size); visibility: hidden; pointer-events: none;
+}
+.camera-photo-preview-host { position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; pointer-events: none; }
+.camera-photo-preview {
+    position: absolute; visibility: hidden; opacity: 1; pointer-events: none;
+    left: var(--photo-start-left, 0px); top: var(--photo-start-top, 0px);
+    width: var(--photo-start-width, 0px); height: var(--photo-start-height, 0px);
+    transition: left var(--camera-photo-flight-time) cubic-out, top var(--camera-photo-flight-time) cubic-out,
+        width var(--camera-photo-flight-time) cubic-out, height var(--camera-photo-flight-time) cubic-out,
+        opacity var(--camera-photo-fade-time) linear-in;
+}
+.camera-photo-preview.is-moving {
+    visibility: visible;
+    left: var(--photo-end-left, 0px); top: var(--photo-end-top, 0px);
+    width: var(--photo-end-width, 0px); height: var(--photo-end-height, 0px);
+}
+.camera-photo-preview.is-fading { opacity: 0; }
+/* フォーカスの印。点を中心にした緑の四角の枠(撮影情報の数値と同じ色)。 */
+.camera-focus-mark {
+    position: absolute; box-sizing: border-box; pointer-events: none;
+    width: var(--camera-focus-mark-size); height: var(--camera-focus-mark-size);
+    margin-left: var(--camera-focus-mark-offset); margin-top: var(--camera-focus-mark-offset);
+    border: var(--camera-focus-mark-border) var(--ok);
+}
+button.camera-back { position: absolute; top: var(--pad-window); left: var(--pad-window); pointer-events: auto; }
+.camera-settings {
+    position: absolute; top: var(--banner-height); bottom: var(--camera-settings-bottom); left: var(--pad-window);
+    width: var(--edge-tab-width); box-sizing: border-box; overflow-y: auto;
+    padding: var(--pad-window); border-radius: var(--radius-box); background-color: var(--bg-panel-side); pointer-events: auto;
+}
+.camera-setting { margin-top: var(--gap-y); }
+.camera-setting label, .camera-setting input, .camera-settings select { display: block; width: 100%; box-sizing: border-box; }
+.camera-setting input { height: var(--field-height); }
+/* 入力欄の右に単位を出すので、欄は残りの幅に縮める。 */
+.camera-setting .form-row { display: flex; align-items: center; }
+.camera-setting .form-row input { flex: 1 1 0dp; width: auto; min-width: 0dp; }
+.camera-bookmarks { max-height: 20vh; overflow-y: auto; }
+button.camera-bookmark-name { padding: var(--pad-widget-y) var(--pad-box-x); }
+/* 撮影ボタンは左の設定パネルの下に、パネルと同じ幅で置く。 */
+button.camera-photo { position: absolute; left: var(--pad-window); width: var(--edge-tab-width); bottom: var(--pad-window); pointer-events: auto; }
+.camera-stage { position: absolute; left: var(--camera-stage-left); right: var(--pad-window); top: var(--banner-height); bottom: var(--camera-stage-bottom); }
+/* 枠の外の下側に、数値の行と撮影ボタンを置く。 */
+.camera-finder-space { position: absolute; left: 0dp; right: 0dp; top: 0dp; bottom: var(--camera-finder-space-bottom); }
+/* 撮影情報の数値は下にまとめて1行に並べ、緑で表示する。 */
+.camera-readout { position: absolute; bottom: 0dp; width: 20%; text-align: center; color: var(--ok); pointer-events: auto; }
+.camera-readout.top-left { left: 0%; }
+.camera-readout.top-right { left: 20%; }
+.camera-readout.bottom-left { left: 40%; }
+.camera-readout.bottom-center { left: 60%; }
+.camera-readout.bottom-right { left: 80%; }
+.camera-readout-label { font-size: var(--font-size-small); line-height: var(--camera-label-height); margin-bottom: var(--gap-y); }
+.camera-digits { display: flex; justify-content: center; }
+.camera-step { width: var(--camera-digit-height); height: var(--camera-digit-height); margin: 0dp var(--gap-x); flex: 0 0 auto; }
+.camera-digit { position: relative; flex: 0 0 auto; width: var(--camera-digit-width); max-width: 1.5vw; height: var(--camera-digit-height); margin-right: var(--border-width); }
+.camera-digit.is-narrow { width: var(--camera-digit-narrow-width); max-width: 0.75vw; }
+.camera-segment {
+    position: absolute; background-color: var(--segment-off); border-radius: var(--radius-small);
+    transform: rotateX(180deg); transition: transform background-color var(--anim-slide) linear-in;
+}
+/* 数字は暗いマスクの上に出すので、消えている線は黒寄り、点いている線は明るい緑にする(色はテーマの segment-on・segment-off)。 */
+.camera-segment.is-on { background-color: var(--segment-on); transform: rotateX(0deg); }
+.camera-segment.segment-0, .camera-segment.segment-3, .camera-segment.segment-6 { left: 15%; width: 70%; height: var(--camera-segment-thickness); }
+.camera-segment.segment-0 { top: 0%; }
+.camera-segment.segment-3 { bottom: 0%; }
+.camera-segment.segment-6 { top: 46%; }
+.camera-segment.segment-1, .camera-segment.segment-2, .camera-segment.segment-4, .camera-segment.segment-5 { width: var(--camera-segment-thickness); height: 40%; }
+.camera-segment.segment-1 { right: 0%; top: 6%; }
+.camera-segment.segment-2 { right: 0%; bottom: 6%; }
+.camera-segment.segment-4 { left: 0%; bottom: 6%; }
+.camera-segment.segment-5 { left: 0%; top: 6%; }
+.camera-segment.segment-7 { display: none; right: 0%; bottom: 0%; width: var(--camera-segment-thickness); height: var(--camera-segment-thickness); }
+.camera-segment.segment-8 { display: none; left: 45%; top: 0%; height: 100%; width: var(--camera-segment-thickness); transform: rotateZ(15deg) rotateX(180deg); }
+.camera-segment.segment-8.is-on { transform: rotateZ(15deg) rotateX(0deg); }
+.camera-digit.is-narrow .camera-segment { display: none; }
+.camera-digit.is-narrow .camera-segment.segment-7.is-on, .camera-digit.is-narrow .camera-segment.segment-8.is-on { display: block; }
+
+/* ---- 重ね表示層(敷設エディタ・プラグイン設定パネル、§2.3/§3.1) ---- */
+
+/* 移動できるウィンドウ2種を置く全画面の層(主メニュー・ゲーム設定はモーダル層 .modal-layer に置く)。
+   左右タブ・バナーより上、主メニューボタンより下に置き(§1.2「左右タブ < 重ね表示」)、内側の
+   重なり順(z-index)はWorkspaceShellが開いた順から導いた値をそのままdata-style-z-indexで受け取る。 */
+.overlay-layer {
+    z-index: var(--z-overlays);
+    pointer-events: none;
+}
+
+/* タブの中身の見出し(どのタブでも共通)。 */
+.tab-title {
+    display: block;
+    margin-bottom: var(--gap-y);
+}
+
+/* ---- プラグインブラウザ(左タブ) ---------------------------------------------- */
+
+/* タブ全体は縦に並べる入れ物にし、スクロールするのはグリッドだけにする(外側はスクロールさせない)。 */
+.tab-content-browser {
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden;
+}
+
+.tab-content-browser > * {
+    flex: none;
+}
+
+/* タブの列(折り返す)と、右端の設定ボタン。 */
+.browser-header {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.browser-tabs {
+    flex: 1 1 0dp;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+button.browser-tab {
+    margin: 0dp var(--gap-x) var(--gap-y) 0dp;
+    padding: var(--pad-widget-y) var(--pad-box-x);
+    border-radius: var(--radius);
+    font-size: var(--font-size-small);
+    background-color: var(--bg-widget);
+}
+
+button.browser-tab:hover, button.browser-tab:active {
+    background-color: var(--bg-widget-hover);
+}
+
+
+/* 検索欄と並べ替えを横に並べる。検索欄が残りの幅を取る。 */
+.browser-search-row {
+    position: relative; /* 漏斗のパネルの基準 */
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: var(--gap-y);
+}
+
+/* 検索欄の箱(プラグインブラウザとレイアウトの画面で共通)。左端に拡大鏡を重ね(押しは入力欄へ通す)、入力欄の左の余白で文字と重ならないようにする。 */
+.search-box {
+    position: relative;
+    flex: 1 1 0dp;
+}
+
+/* widgets.rcssの input[type="text"] のpadding指定より優先させるため、型つきで書く。 */
+input[type="text"].search-input {
+    width: 100%;
+    padding-left: var(--search-pad-left);
+}
+
+.search-icon {
+    position: absolute;
+    left: var(--search-icon-inset);
+    top: 50%;
+    margin-top: var(--search-icon-up); /* 縦の中央寄せ(calc()が無いので、アイコンの高さの半分の負の値を変数で持つ) */
+    width: var(--icon-size);
+    height: var(--icon-size);
+    pointer-events: none;
+    image-color: var(--text-secondary);
+}
+
+/* 漏斗のボタン。色は通常は文字色、使っている間と開いている間はaccent。 */
+button.browser-filter-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: var(--browser-filter-button-size);
+    height: var(--browser-filter-button-size);
+    margin-left: var(--gap-x);
+    border-radius: var(--radius);
+    background-color: transparent;
+}
+
+button.browser-filter-button:hover, button.browser-filter-button:active {
+    background-color: var(--bg-widget-hover);
+}
+
+.browser-filter-icon {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    flex: none;
+    image-color: var(--text);
+}
+
+button.browser-filter-button.is-active .browser-filter-icon {
+    image-color: var(--text-accent);
+}
+
+/* パネル。検索行の下、右端にそろえて重ねる。 */
+.browser-filter-panel {
+    position: absolute;
+    right: 0dp;
+    top: 100%;
+    z-index: 2;
+    box-sizing: border-box;
+    width: var(--browser-filter-panel-width);
+    /* 項目が多いと画面の下へはみ出して潰れるので、高さを抑えてスクロールさせる。 */
+    max-height: var(--browser-filter-panel-max-height);
+    overflow-y: auto;
+    padding: var(--pad-widget-y);
+    border: var(--border-width) var(--border);
+    border-radius: var(--radius-box);
+    background-color: var(--bg-popup);
+    color: var(--text);
+}
+
+.browser-filter-title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: var(--gap-y) var(--pad-box-x) 0dp var(--pad-box-x);
+    font-size: var(--font-size-small);
+    color: var(--text-secondary);
+}
+
+.browser-filter-title-text {
+    flex: 1 1 0dp;
+}
+
+button.browser-filter-clear {
+    flex: none;
+    padding: 0dp var(--pad-box-x);
+    border-radius: var(--radius);
+    font-size: var(--font-size-small);
+    color: var(--text-accent);
+}
+
+.browser-filter-choices {
+    display: flex;
+    flex-direction: row;
+    margin-top: var(--gap-y);
+}
+
+.browser-filter-options {
+    display: flex;
+    flex-direction: column;
+}
+
+.browser-filter-option, .dia-door-check {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    column-gap: var(--gap-x);
+}
+
+.browser-filter-option { margin-top: var(--gap-y); }
+
+button.browser-filter-choice {
+    flex: 1 1 0dp;
+    margin: var(--gap-y) var(--gap-x) 0dp 0dp;
+    padding: var(--pad-widget-y) var(--pad-box-x);
+    border-radius: var(--radius);
+    font-size: var(--font-size-small);
+    background-color: var(--bg-widget);
+}
+
+button.browser-filter-choice:hover, button.browser-filter-choice:active {
+    background-color: var(--bg-widget-hover);
+}
+
+/* 選んでいるタブ・選択肢は、選択中のモードボタン(button.mode-button.is-selected)と同じく、accentの面と
+   その上の文字色で示す。hoverのflatの文字色(accent)に負けないよう、文字色も指定する。 */
+button.browser-tab.is-selected, button.browser-filter-choice.is-selected {
+    background-color: var(--accent);
+    color: var(--text-on-accent);
+}
+
+button.browser-size-button {
+    position: relative; /* 中の四角の並び(.size-mark)の基準にする */
+    flex: none;
+    width: var(--browser-size-button-size);
+    height: var(--browser-size-button-size);
+    margin-left: var(--browser-size-gap); /* 検索欄の幅を取るため、ボタン同士は詰める */
+    border-radius: var(--radius);
+    background-color: transparent;
+}
+
+button.browser-size-button:hover, button.browser-size-button:active, button.browser-size-button.is-selected {
+    background-color: transparent;
+}
+
+/* 四角の並び。一辺 --browser-size-mark の箱に、段数ぶんの小さな四角を折り返して並べる
+   (大=1×1、中=2×2、小=3×3。四角の一辺と間隔は箱を段数で割った値)。 */
+.size-mark {
+    position: absolute;
+    left: var(--browser-size-mark-inset);
+    top: var(--browser-size-mark-inset);
+    width: var(--browser-size-mark);
+    height: var(--browser-size-mark);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+}
+
+.size-dot {
+    flex: none;
+    background-color: var(--text);
+    border-radius: 1dp;
+}
+
+button.browser-size-button.is-selected .size-dot {
+    background-color: var(--text-accent);
+}
+
+.size-large .size-dot {
+    width: var(--browser-size-dot-large);
+    height: var(--browser-size-dot-large);
+    margin: 0dp var(--browser-size-gap) var(--browser-size-gap) 0dp;
+}
+
+.size-medium .size-dot {
+    width: var(--browser-size-dot-medium);
+    height: var(--browser-size-dot-medium);
+    margin: 0dp var(--browser-size-gap) var(--browser-size-gap) 0dp;
+}
+
+.size-small .size-dot {
+    width: var(--browser-size-dot-small);
+    height: var(--browser-size-dot-small);
+    margin: 0dp var(--browser-size-gap) var(--browser-size-gap) 0dp;
+}
+
+/* パンくず。区切りと各部分を折り返しつつ横に並べる。 */
+.browser-crumbs {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: var(--gap-y);
+}
+
+.browser-crumb-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.browser-crumb-sep {
+    flex: none;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    margin: 0dp var(--gap-x);
+    image-color: var(--text-secondary);
+}
+
+button.browser-crumb {
+    padding: var(--pad-widget-y) var(--pad-box-x);
+    border-radius: var(--radius);
+    color: var(--text-accent);
+}
+
+.browser-crumb-current {
+    padding: var(--pad-widget-y) var(--pad-box-x);
+}
+
+button.browser-back {
+    margin-right: var(--pad-widget-y);
+}
+
+/* 閉塞を作るボタン(選んだレールの画面上の位置へ追従する)。重なり順は信号カードと同じ層。 */
+.signal-block-button {
+    position: absolute;
+    z-index: var(--z-rail-label);
+    pointer-events: auto;
+}
+
+/* カードにマウスを乗せている間の詳細。2行ぶんの高さを常に確保し(出入りでグリッドがずれない)、各行は1行で「…」省略する。 */
+.browser-hover {
+    height: var(--browser-card-name-height);
+    margin-top: var(--gap-y);
+}
+
+.browser-hover-line {
+    height: var(--browser-name-line-height);
+    line-height: var(--browser-name-line-height);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.browser-hover-detail {
+    color: var(--text-secondary);
+}
+
+.browser-detail, .browser-status {
+    color: var(--text-secondary);
+}
+
+.browser-status {
+    display: flex;
+    align-items: center;
+    column-gap: var(--gap-x);
+}
+
+/* カードのグリッド。残りの高さいっぱいに広げ、この中だけ縦にスクロールする。上下の空き(.browser-space)は
+   1行ぶん(width: 100%)の見えない要素で、作っていない行の高さを埋める。 */
+.browser-grid {
+    flex: 1 1 0dp;
+    min-height: 0dp;
+    margin-top: var(--gap-y);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    overflow-y: auto;
+    /* スクロールバーをタブの右端へ寄せる: 右の余白(--pad-window)ぶんだけ外へ広げる。
+       paddingは付けないので、カードはその分だけ広くなる(幅は GetClientWidth() で測るため、padding があると測定と合わなくなる)。 */
+    margin-right: var(--browser-grid-bleed);
+}
+
+.browser-space {
+    flex: none;
+    width: 100%;
+    height: 0dp;
+}
+
+.browser-card {
+    flex: none;
+    box-sizing: border-box;
+    margin: 0dp var(--gap-x) var(--gap-x) 0dp;
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+/* フォルダのカードの絵。CSSだけで、角丸の本体と左上のつまみを描く。 */
+.browser-folder-body, .browser-folder-tab {
+    position: absolute;
+    left: var(--browser-folder-inset-x);
+    background-color: var(--accent-subtle);
+    border-width: 2dp;
+    border-color: var(--text-accent);
+}
+
+.browser-folder-body {
+    right: var(--browser-folder-inset-x);
+    top: var(--browser-folder-body-top);
+    bottom: var(--browser-folder-body-bottom);
+    border-radius: var(--radius);
+}
+
+.browser-folder-tab {
+    top: var(--browser-folder-tab-top);
+    width: var(--browser-folder-tab-width);
+    height: var(--browser-folder-tab-height);
+    border-radius: var(--radius) var(--radius) 0dp 0dp;
+}
+
+/* 最上段の「選択中」の段。名前は1行で「…」省略する。 */
+.browser-selected {
+    margin-bottom: var(--gap-y);
+    padding: 0dp var(--gap-x);
+    height: var(--browser-name-line-height);
+    line-height: var(--browser-name-line-height);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-radius: var(--radius);
+    background-color: var(--accent-subtle);
+}
+
+.browser-selected-label {
+    color: var(--text-secondary);
+}
+
+/* カード(プラグイン・フォルダ)はどのモードでもドラッグでき、複製を作る。列車モードでは編成の`+`へ、どのモードでも
+   フォルダのカード・パンくず・戻るボタンへ落とせる。幅はカード自身のインラインstyleなので複製にも付く。 */
+.browser-card {
+    drag: clone;
+}
+
+/* ドラッグ中のカードが乗っている、落とせる場所(フォルダのカード・パンくず・戻るボタン)。 */
+.browser-card.browser-folder.is-drop-target, button.browser-crumb.is-drop-target, button.browser-back.is-drop-target {
+    background-color: var(--accent-subtle);
+    color: var(--text-accent);
+}
+
+.browser-card.is-selected {
+    background-color: var(--accent-subtle);
+}
+
+.browser-card:hover {
+    background-color: var(--bg-widget-hover);
+}
+
+.browser-card:focus {
+    outline: 2dp solid var(--text-accent);
+}
+
+/* 画像の箱。画像と読込中アニメーションは箱の中央に置く(flexで寄せる)。 */
+.browser-thumb {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-child);
+}
+
+/* 画像は箱いっぱいに広げる。サムネイルとフォールバックは箱と同じ4:3(256x192)なので歪まない。
+   元の大きさのままにすると、高密度の画面や大きいカードで箱より小さくなり周りに余白ができる。 */
+img.browser-thumb-image {
+    width: 100%;
+    height: 100%;
+}
+
+/* カード上の丸いボタン(button.icon)。位置は左上(お気に入り)・右上(セット)・左下(警告)。 */
+button.browser-card-button {
+    display: block;
+    position: absolute;
+    width: var(--browser-card-button-size);
+    height: var(--browser-card-button-size);
+    border-radius: var(--browser-card-button-radius);
+    font-size: var(--font-size-small);
+    line-height: var(--browser-card-button-size);
+}
+
+button.browser-card-favorite {
+    top: var(--browser-card-button-inset);
+    left: var(--browser-card-button-inset);
+}
+
+button.browser-card-favorite, button.browser-card-favorite:hover, button.browser-card-favorite:active {
+    background-color: transparent;
+}
+
+button.browser-card-favorite.is-on {
+    color: var(--star);
+}
+
+button.browser-card-set {
+    top: var(--browser-card-button-inset);
+    right: var(--browser-card-button-inset);
+}
+
+/* 編成テンプレートのカードの右上に出す両数。丸いボタンと同じ余白・文字の大きさで、右上に置く。 */
+.browser-card-count {
+    position: absolute;
+    top: var(--browser-card-button-inset);
+    right: var(--browser-card-button-inset);
+    padding: 0dp 6dp;
+    border-radius: var(--browser-card-button-radius);
+    font-size: var(--font-size-small);
+    background-color: var(--bg-child);
+    color: var(--text-secondary);
+}
+
+button.browser-card-duplicate {
+    bottom: var(--browser-card-button-inset);
+    left: var(--browser-card-button-inset);
+    color: var(--warning);
+}
+
+/* 名前は全文を折り返す(高さは文字に合わせて自動。文字の大きさはデータモデルのbrowserCardNameFontSize、
+   行の高さは文字の大きさに追従する倍率)。同じ行のカードの高さは、flexのalign-items: stretchでそろう。
+   作者は1行で「…」省略(文字の大きさはbrowserCardAuthorFontSize)。 */
+.browser-card-name {
+    line-height: 1.2;
+    /* 単語の途中でも折り返して、1行に入る文字数を増やす。 */
+    word-break: break-all;
+}
+
+.browser-card-author {
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-secondary);
+}
+
+/* 編成一覧(列車モードの左タブ)。一覧のページでだけ出て、タブ全体に広がる(下の .train-list-page)。出ていないモードでは何も変わらない。 */
+.tab-content-browser > .formation-section {
+    flex: 1 1 0dp;
+    min-height: 0dp;
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--gap-y);
+    padding-top: var(--gap-y);
+    border-top: var(--border-width) var(--border);
+}
+
+.formation-list-count { margin-left: var(--gap-x); color: var(--text-secondary); font-size: var(--font-size-small); }
+
+.formation-section > * {
+    flex: none;
+}
+
+.formation-section > .formation-list {
+    flex: 1 1 0dp;
+    min-height: 0dp;
+    overflow-y: auto;
+}
+
+/* 列車モードの左タブの階層(列車一覧 > ブラウザ)。一覧のページは編成一覧だけをタブ全体に広げ、ブラウザのページは編成一覧を隠す。
+   編成テンプレートの分類では、ブラウザの検索・グリッドなどをテンプレートのカード(.browser-template-grid)に入れ替える。 */
+.tab-content-browser.train-list-page > * {
+    display: none;
+}
+
+.tab-content-browser.train-list-page > .formation-section {
+    display: flex;
+    flex: 1 1 0dp;
+    margin-top: 0dp;
+    padding-top: 0dp;
+    border-top-width: 0dp;
+}
+
+.tab-content-browser.train-browser-page > .formation-section {
+    display: none;
+}
+
+.tab-content-browser.templates-page > .browser-selected,
+.tab-content-browser.templates-page > .browser-crumbs,
+.tab-content-browser.templates-page > .browser-search-row,
+.tab-content-browser.templates-page > .browser-hover,
+.tab-content-browser.templates-page > .browser-detail,
+.tab-content-browser.templates-page > .browser-status,
+.tab-content-browser.templates-page > .browser-back-row,
+.tab-content-browser.templates-page > .browser-grid,
+.tab-content-browser.templates-page > .browser-placement-options {
+    display: none;
+}
+
+.train-tab-header {
+    display: flex;
+    flex-direction: row;
+    column-gap: var(--gap-x);
+    margin-bottom: var(--gap-y);
+}
+
+.tab-content-browser > .browser-template-grid {
+    flex: 1 1 0dp;
+    min-height: 0dp;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    overflow-y: auto;
+    margin-top: var(--gap-y);
+}
+
+/* 新規編成(一覧の末尾)。枠のある普通のボタンを横いっぱいに置く。 */
+button.formation-add {
+    display: block;
+    flex: none;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: var(--gap-y);
+}
+
+.formation-card {
+    margin: 0dp var(--gap-x) var(--gap-y) 0dp;
+}
+
+.formation-card.is-drop-target {
+    border-color: var(--text-accent);
+    background-color: var(--accent-subtle);
+}
+
+.formation-card:hover {
+    background-color: var(--bg-widget-hover);
+}
+
+/* 先頭車のアイコンと、編成名(・入力欄)の横並び。 */
+.formation-card-head {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+/* アイコンの箱。正方形のサムネイルが収まる大きさ(全体の寄り具合は ThumbnailViewCamera.cpp の kEndFaceSectionScale)。 */
+.formation-card-icon {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: var(--formation-icon-size);
+    height: var(--formation-icon-size);
+    margin-right: var(--gap-x);
+    border-radius: var(--radius);
+    background-color: var(--bg-child);
+}
+
+img.formation-card-icon-image {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.formation-card-titles {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+}
+
+.formation-card-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 名前の編集中だけ、名前の代わりに入力欄を出す。 */
+input.formation-card-name-input {
+    display: none;
+}
+
+.formation-card.is-editing .formation-card-name {
+    display: none;
+}
+
+.formation-card.is-editing .formation-card-name-input,
+.laying-plugin-set.is-editing .formation-card-name-input {
+    display: block;
+}
+
+/* 両数(名前の右)。 */
+.formation-card-count {
+    flex: none;
+    margin-left: var(--gap-x);
+    color: var(--text-secondary);
+    font-size: var(--font-size-small);
+}
+
+/* 置いた列車がある編成(選べない)の印。右端に小さく出し、中身は薄くしない。 */
+.formation-card-placed {
+    flex: none;
+    margin-left: var(--gap-x);
+    padding: 0dp var(--pad-widget-y);
+    border: var(--border-width) var(--text-secondary);
+    border-radius: var(--radius-small);
+    color: var(--text-secondary);
+    font-size: var(--font-size-small);
+}
+
+/* ---- 編成編集パネル(画面下、列車モードだけ) ---------------------------------- */
+
+/* 下部バーと凸の上、左右タブの内側に置く。高さは中身で決め、上限を超えたらパネルだけ縦にスクロールする。
+   z-indexは左右タブと同じで、ドラッグの複製・メニュー・確認ダイアログ(これより手前)の下になる。 */
+.formation-panel {
+    position: absolute;
+    left: var(--formation-panel-left);
+    right: var(--formation-panel-right);
+    bottom: var(--formation-panel-bottom);
+    z-index: var(--z-edge);
+    box-sizing: border-box;
+    max-height: var(--formation-panel-max-height);
+    overflow-y: auto;
+    padding: var(--gap-y) var(--gap-x);
+    pointer-events: auto;
+    border-radius: var(--radius);
+    background-color: var(--bg-panel-side);
+    border: var(--border-width) var(--border-panel);
+}
+
+.formation-panel-head {
+    text-align: center;
+    margin-bottom: var(--gap-y);
+}
+
+.formation-panel-name {
+    margin-right: var(--gap-x);
+}
+
+.formation-panel-count {
+    color: var(--text-secondary);
+    font-size: var(--font-size-small);
+}
+
+/* 車両を横に並べ、幅に収まらなければ折り返す。組(`+`と車両)と末尾の`+`が並ぶ。 */
+.formation-panel-cars {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+/* 車両1両と、その前の`+`を1組にして横に並べる。`+`は行の高さまで伸びる。 */
+.formation-panel-unit {
+    display: flex;
+    flex-direction: row;
+    margin-top: var(--button-round-half); /* 車両の上へはみ出すボタンの分 */
+    margin-bottom: var(--gap-y);
+}
+
+/* 車両の挿入先(縦の細い帯)。ドラッグ中にポインタが乗ると is-drop-target(ドロップできるときだけ付く)で強調する。 */
+.formation-panel-slot {
+    flex: none;
+    box-sizing: border-box;
+    width: var(--formation-panel-slot-width);
+    margin: 0dp var(--gap-y) var(--gap-y) var(--gap-y);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: var(--formation-panel-slot-min-height);
+    text-align: center;
+    font-size: var(--font-size-small);
+    border-radius: var(--radius);
+    border: var(--border-width) var(--border-strong);
+    background-color: var(--bg-child);
+    color: var(--text);
+    opacity: 0.85;
+}
+
+/* 末尾の`+`。車両と同じ幅にして落としやすくする。高さは行に合わせて伸びる。 */
+.formation-panel-slot-end {
+    margin-left: var(--formation-panel-slot-end-offset);
+    margin-top: var(--button-round-half);
+    width: var(--formation-panel-car-width);
+    font-size: var(--font-size);
+}
+
+/* 0両のときの末尾の枠。ヒントの文だけを出し、枠線と塗りは付けない(ドラッグ中の強調は残す)。
+   手前の`+`がないので左の余白は不要。高さは車両を置いたときの1両の高さにそろえる。 */
+.formation-panel-slot-end.is-empty {
+    margin-left: var(--gap-y);
+    width: auto;
+    flex: 1 1 0dp;
+    min-height: var(--formation-panel-car-height);
+    border-color: transparent;
+    background-color: transparent;
+    opacity: 1;
+}
+
+.formation-panel-slot-end.is-empty.is-drop-target {
+    border-color: var(--text-accent);
+    background-color: var(--accent-subtle);
+}
+
+/* `+`の記号。flexの子の要素にして、帯の中央に置く(文字を直接flexの子にすると描かれない)。 */
+.formation-panel-slot-mark {
+    flex: none;
+}
+
+.formation-panel-slot.is-drop-target {
+    color: var(--text);
+    border-color: var(--text-accent);
+    background-color: var(--accent-subtle);
+}
+
+/* ドラッグ中の複製(`:drag` は複製だけに付く)。半透明にして縮め、裏のドロップ先(`+`など)を見せる。
+   ブラウザのカードと車両で同じ値を使う(値はtokens.rcss)。縮小は要素の中心を基準にするので、
+   つかんだ位置は複製の中に残る。 */
+.browser-card:drag, .formation-panel-car:drag {
+    opacity: var(--drag-clone-opacity);
+    transform: scale(var(--drag-clone-scale));
+}
+
+/* 車両の1両(上に絵、下に車両名。反転・ゴミ箱は右上の角)。複製(drag: clone)はカーソル用の別の木に付き、親のセレクタが
+   効かないため、見た目はこの単一クラスで決める。幅は固定値で、複製も同じ幅になる。 */
+.formation-panel-car {
+    drag: clone;
+    position: relative; /* 右上のボタンの基準にする */
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    width: var(--formation-panel-car-width);
+    padding: var(--pad-widget-y) var(--gap-x);
+    border-radius: var(--radius);
+    background-color: var(--bg-child);
+    font-size: var(--font-size-small);
+}
+
+.formation-panel-car.is-focused {
+    outline: 2dp solid var(--text-accent);
+}
+
+/* 車両のサムネイル(横長の真横)。車両の幅いっぱいに出す。 */
+.formation-panel-car-picture {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+img.formation-panel-car-image {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+}
+
+/* 写真の下の段(車両名)。 */
+.formation-panel-car-footer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+/* 車両名。段の残りの幅を取り、収まらない分は隠す。 */
+.formation-panel-car-name {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* 車両の上の縁のボタン置き場。幅いっぱいに広げ、反転は中央、ゴミ箱は右に置く。高さの半分だけ車両の外へはみ出す。
+   常に出す。 */
+.formation-panel-car-buttons {
+    position: absolute;
+    top: var(--button-round-half-neg);
+    left: 0dp;
+    right: 0dp;
+    height: var(--button-round-size);
+}
+
+/* 車両の中のボタンの上でマウスを押しても、車両のドラッグを始めない。アイコンは素材(白1色)に色を掛ける。 */
+button.formation-panel-car-button {
+    drag: block;
+    position: absolute;
+    top: 0dp;
+    image-color: var(--text);
+}
+
+button.formation-panel-car-flip {
+    left: 50%;
+    margin-left: var(--button-round-half-neg);
+    decorator: image(repeat none scale-none center center);
+}
+
+/* 反転済みの車両は、向きを反転するアイコンも強調色にする。 */
+.formation-panel-car.is-reversed button.formation-panel-car-flip {
+    image-color: var(--text-accent);
+}
+
+button.formation-panel-car-trash {
+    right: var(--button-round-half-neg);
+    decorator: image(trash none scale-none center center);
+}
+
+.formation-card-count {
+    text-align: right;
+    color: var(--text-secondary);
+    font-size: var(--font-size-small);
+}
+
+.formation-options {
+    margin-top: var(--gap-y);
+}
+
+/* 配置設定。項目名は行の残りの幅を取り、トグルを右端へ寄せる。 */
+.browser-placement-options {
+    margin-top: var(--gap-y);
+    padding-top: var(--gap-y);
+    border-top: var(--border-width) var(--border);
+}
+
+.browser-option-label {
+    flex: 1 1 0dp;
+    width: auto;
+}
+
+/* 主メニューの項目(文字だけのボタン button.flat を、行として縦に並べる)。hoverは面を出し、
+   文字色は変えない。 */
+button.menu-item {
+    display: block;
+    height: var(--row-height);
+    line-height: var(--row-height);
+    padding: 0dp var(--pad-widget-x);
+    text-align: left;
+}
+
+/* 主メニューの項目の左のアイコン。 */
+.menu-item-icon {
+    display: inline-block;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    margin-right: var(--gap-x);
+    vertical-align: middle;
+    image-color: var(--text);
+}
+
+button.menu-item:hover {
+    background-color: var(--bg-widget-hover);
+    color: var(--text);
+}
+
+button.menu-item:active {
+    background-color: var(--bg-widget-active);
+}
+
+/* 閉塞ラベル。位置はdata-style-left/topで入れ、ラベルの矩形だけがポインタを受ける。 */
+.rail-label {
+    position: absolute;
+    z-index: var(--z-rail-label);
+    box-sizing: border-box;
+    width: var(--rail-label-width);
+    padding: 0dp;
+    line-height: var(--rail-label-line-height);
+    pointer-events: auto;
+    border-radius: var(--radius-small);
+    background-color: var(--bg-panel-side);
+    color: var(--text);
+    border: var(--border-width) var(--border-panel);
+}
+
+.rail-label.is-selected {
+    background-color: var(--accent-subtle);
+    border-color: var(--accent);
+}
+
+.rail-label.is-warning, .rail-label.is-warning .rail-label-name {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+button.rail-label-name {
+    display: block;
+    width: 100%;
+    min-height: 0dp;
+    padding: var(--pad-widget-y) var(--gap-x);
+    border-width: 0dp;
+    line-height: var(--rail-label-line-height);
+    text-align: left;
+    color: var(--text);
+}
+
+.rail-label-name-input {
+    display: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+button.rail-label-name.is-disabled {
+    color: var(--text-disabled);
+    opacity: var(--disabled-opacity);
+}
+
+.rail-label.is-editing .rail-label-name {
+    display: none;
+}
+
+.rail-label.is-editing .rail-label-name-input {
+    display: block;
+}
+
+/* 改名の鉛筆。ラベルの右端に重ね、ホバー中と選択中だけ出す(行の右端の操作と同じ出し方)。 */
+button.rail-label-rename {
+    position: absolute;
+    top: 0dp;
+    right: 0dp;
+    width: var(--rail-label-line-height);
+    height: var(--rail-label-line-height);
+}
+
+.rail-label:hover button.rail-label-rename, .rail-label.is-selected button.rail-label-rename {
+    visibility: visible;
+}
+
+.rail-label.is-editing button.rail-label-rename {
+    display: none;
+}
+
+/* ---- 編成情報カード(列車モード、先頭車の画面上に追従、RmlUiTrainInfoCardView.cpp) ------------
+   位置は data-style-left/top で入る。pointer-events: auto で、ポインタを受けるのをカードの矩形だけにする
+   (親のbodyは none なので、カード以外はビューポートのクリックを奪わない)。 */
+.train-info-card {
+    position: absolute;
+    z-index: var(--z-train-card);
+    box-sizing: border-box;
+    width: var(--train-card-width);
+    padding: var(--gap-y) var(--gap-x);
+    pointer-events: auto;
+    border-radius: var(--radius);
+    background-color: var(--bg-panel-side);
+    border: var(--border-width) var(--border-panel);
+}
+
+/* 運転台視点中の左上の戻るボタン。 */
+button.cabin-back {
+    position: absolute;
+    top: var(--pad-window);
+    left: var(--pad-window);
+    z-index: var(--z-menu-button);
+    pointer-events: auto;
+}
+
+/* 運転台視点中の右上のパネル。編成情報カードと同じ面・文字の組み立て(種別・行先・列車番号の段と、現在速度の段)を使う。 */
+.cabin-hud {
+    position: absolute;
+    top: var(--cabin-hud-top);
+    right: var(--pad-window);
+    z-index: var(--z-train-card);
+    box-sizing: border-box;
+    width: var(--cabin-hud-width);
+    padding: var(--gap-y) var(--gap-x);
+    pointer-events: auto;
+    border-radius: var(--radius);
+    background-color: var(--bg-panel-side);
+    border: var(--border-width) var(--border-panel);
+    text-align: center;
+}
+
+.cabin-hud-run {
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: var(--font-size-small);
+    margin-bottom: var(--gap-y);
+}
+
+.cabin-hud-next {
+    margin-top: var(--gap-y);
+}
+
+.cabin-hud-platform {
+    font-size: var(--font-size-small);
+}
+
+.cabin-hud-speed {
+    margin-top: var(--gap-y);
+}
+
+.train-card-run {
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: var(--font-size-small);
+    margin-bottom: var(--gap-y);
+}
+
+.train-card-run-item {
+    margin: 0dp var(--gap-x);
+}
+
+.train-card-main {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.train-card-titles {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+}
+
+.train-card-titles .formation-card-count {
+    text-align: left;
+}
+
+.train-card-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 運転席視点ボタン。アイコンだけの丸ボタンで、大きさは目標速度の−/+と同じ。 */
+button.train-card-cabin {
+    flex: none;
+    --control-height: var(--train-card-step-height);
+    width: var(--train-card-step-height);
+    margin-left: var(--gap-x);
+    padding: 0dp;
+    decorator: image(cabin none scale-none center center);
+    image-color: var(--text);
+}
+
+/* 列車の削除ボタン。カードの右上の角に、半分だけはみ出して重ねる(中身の段と重ならない)。 */
+button.train-card-remove {
+    position: absolute;
+    top: var(--button-round-half-neg);
+    right: var(--button-round-half-neg);
+    decorator: image(trash none scale-none center center);
+    image-color: var(--text);
+}
+
+/* 折りたたみボタン。運転席視点ボタンの右に並べる丸ボタンで、大きさも同じ。 */
+button.train-card-fold {
+    margin-left: var(--gap-x);
+}
+
+/* 3つの速度ボタン。区画をカードの幅いっぱいに等分する。 */
+.train-card-speed-select {
+    margin: var(--gap-y) 0dp;
+}
+
+.train-card-speed-select .segment {
+    flex: 1 1 0dp;
+    padding-left: 0dp;
+    padding-right: 0dp;
+}
+
+/* 目標速度の段。丸い−/+で数字をはさむ。 */
+.train-card-step-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: var(--gap-y);
+}
+
+button.train-card-step {
+    flex: none;
+    --control-height: var(--train-card-step-height);
+    width: var(--train-card-step-height);
+    padding: 0dp;
+    text-align: center;
+}
+
+.train-card-target {
+    flex: 1 1 0dp;
+    text-align: center;
+}
+
+.train-card-target-unit {
+    margin-left: var(--gap-y);
+    font-size: var(--font-size-small);
+}
+
+/* 現在速度。運行状態は文字にせず、この段の色で表す(対応はsrc/app/workspace/TrainInfoCardCatalog.h)。 */
+.train-card-speed {
+    margin-top: var(--gap-y);
+    text-align: center;
+}
+
+.train-card-speed-value {
+    font-size: var(--train-card-speed-font-size);
+}
+
+.train-card-speed-unit {
+    margin-left: var(--gap-y);
+    font-size: var(--font-size-small);
+}
+
+.train-card-speed.speed-running {
+    color: var(--text);
+}
+
+.train-card-speed.speed-braking {
+    color: var(--warning);
+}
+
+.train-card-speed.speed-stopped {
+    color: var(--text-disabled);
+}
+
+.train-card-speed.speed-departing {
+    color: var(--text-accent);
+}
+
+/* ---- アイコン(画像)の状態と色 ------------------------------------------------
+   形は.ic-*(widgets.rcss)か、状態で変わるものはここで決める。色はimage-colorで掛ける。 */
+
+/* 下部バーのモードボタン。.mode-iconは24dpの画像をボタンの中央に置く入れ物。 */
+button.mode-button .mode-icon {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-color: var(--text);
+}
+
+button.mode-button.is-selected .mode-icon {
+    image-color: var(--text-on-accent);
+}
+
+/* 左右タブのノッチ。矢印は押したときにタブが動く向きを指す(開いていれば閉じる向き)。 */
+.edge-left .edge-notch {
+    decorator: image(chevron-right none scale-none center center);
+}
+
+.edge-left.is-open .edge-notch {
+    decorator: image(chevron-left none scale-none center center);
+}
+
+.edge-right .edge-notch {
+    decorator: image(chevron-left none scale-none center center);
+}
+
+.edge-right.is-open .edge-notch {
+    decorator: image(chevron-right none scale-none center center);
+}
+
+button.edge-notch:hover, button.edge-notch:active {
+    image-color: var(--text-accent);
+}
+
+/* カード上のボタン。お気に入りは星(登録済みは塗りつぶし)、セットは+(入っていれば−)、重複は警告。 */
+button.browser-card-favorite {
+    decorator: image(star none scale-none center center);
+}
+
+button.browser-card-favorite.is-on {
+    decorator: image(star-filled none scale-none center center);
+    image-color: var(--star);
+}
+
+button.browser-card-set {
+    decorator: image(plus none scale-none center center);
+}
+
+button.browser-card-set.in-set {
+    decorator: image(minus none scale-none center center);
+}
+
+button.browser-card-duplicate {
+    image-color: var(--warning);
+}
+
+/* 速度の微調整。普通のボタンなのでbutton.iconの色を受けない。折りたたみボタンの形は.fold-button。 */
+button.train-card-step {
+    image-color: var(--text);
+}
+
+button.train-card-step:disabled {
+    image-color: var(--text-disabled);
+}
+
+/* 復元カードの削除(文字だけのボタンに画像を置くので、大きさを決める)。 */
+button.recovery-discard {
+    width: var(--close-button-size);
+    height: var(--close-button-size);
+}
+
+/* 編成の挿入先の+。枠の内側の幅いっぱいに置いて、画像を中央に出す。 */
+.formation-panel-slot-mark.ic-plus {
+    width: 100%;
+    height: var(--icon-size);
+    image-color: var(--text);
+}
+
+/* ---- ダイヤの左タブ ------------------------------------------------------- */
+/* 左タブと、その右隣の要素の編集で共通の寸法。 */
+.dia-panel, .dia-inspector {
+    --control-height: 32dp;
+    --dia-field-label-width: 88dp;
+    --dia-number-width: 40dp;
+}
+
+.dia-header, .dia-row {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-y);
+    min-height: var(--control-height);
+}
+
+.dia-header {
+    margin-bottom: var(--gap-x);
+    gap: var(--pad-widget-x);
+}
+
+.dia-header > button {
+    flex-shrink: 0;
+}
+
+.dia-crumbs {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+}
+
+.dia-header .dia-crumbs span {
+    flex: none;
+}
+
+.dia-header span, .dia-row-label, .dia-scene > span {
+    flex: 1;
+    min-width: 0dp;
+}
+
+.dia-row, .dia-scene {
+    padding: var(--gap-y);
+    border-radius: var(--radius-small);
+}
+
+.dia-row:hover {
+    background-color: var(--accent-subtle);
+}
+
+.dia-scene {
+    display: flex;
+    align-items: center;
+    margin-top: var(--pad-window);
+    color: var(--text-secondary);
+    border-bottom: var(--border-width) var(--border);
+}
+
+.dia-platform {
+    padding-left: var(--pad-widget-x);
+}
+
+.dia-highlight {
+    background-color: var(--accent-subtle);
+}
+
+.dia-gray {
+    color: var(--text-disabled);
+}
+
+.dia-caption {
+    font-size: var(--font-size-small);
+    color: var(--text-secondary);
+    margin-top: var(--gap-y);
+}
+
+button.row-action.dia-show {
+    visibility: visible;
+}
+
+/* 番線の行の右の「未設定」の印。行の文字は薄くせず、印で見分ける。 */
+.dia-unset {
+    flex: none;
+    padding: 0dp var(--pad-widget-y);
+    border: var(--border-width) var(--text-secondary);
+    border-radius: var(--radius-small);
+    color: var(--text-secondary);
+    font-size: var(--font-size-small);
+}
+
+.dia-gray > .dia-platform {
+    color: var(--text);
+}
+
+/* シーンの行は見出しの形にする(番線の未設定の行と同じ灰色にしない)。 */
+.dia-gray > .dia-scene, .dia-scene {
+    color: var(--text-secondary);
+    font-size: var(--font-size-small);
+}
+
+/* 要素の編集(左タブの右隣)。左タブと同じ面で、上端はバナーの下にそろえる。 */
+.dia-inspector {
+    position: absolute;
+    top: var(--banner-height);
+    left: var(--edge-tab-width);
+    width: var(--dia-inspector-width);
+    max-height: 70%;
+    margin-left: var(--edge-notch-width);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    padding: var(--pad-window);
+    border-radius: 0dp 0dp var(--radius-box) var(--radius-box);
+    background-color: var(--bg-panel-side);
+    border: var(--border-width) var(--border-panel);
+    z-index: var(--z-edge);
+    pointer-events: auto;
+}
+
+.dia-inspector-head {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--gap-y);
+}
+
+.dia-inspector-title {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+}
+
+button.dia-inspector-close {
+    visibility: visible;
+}
+
+.dia-inspector-body {
+    flex: 1 1 auto;
+    min-height: 0dp;
+    overflow-y: auto;
+    padding-right: var(--pad-window); /* 縦のスクロールバーを中身に重ねない */
+}
+
+/* 層カードの見出しの開閉の向き(chevron)。 */
+.dia-layer-link .ui-icon {
+    image-color: var(--text-secondary);
+}
+
+.dia-detail, .dia-picker {
+    padding: var(--gap-y);
+    background-color: var(--bg-child);
+    border-radius: var(--radius-small);
+}
+
+.dia-detail .form-field, .dia-detail .segmented {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: var(--gap-y);
+}
+
+.dia-layer-body {
+    margin-left: var(--gap-x);
+    padding-left: var(--gap-x);
+    border-left: var(--border-width) var(--border-panel);
+}
+
+.dia-element {
+    margin-bottom: var(--gap-y);
+    drag: clone;
+}
+
+.dia-loop-return, .dia-guidance, .dia-section-title {
+    padding: var(--gap-x) var(--gap-y);
+}
+
+.dia-loop-return, .dia-guidance {
+    color: var(--text-secondary);
+}
+
+/* 日本語は空白が無いと折り返されないので、どこでも折り返す。 */
+.dia-guidance {
+    word-break: break-all;
+}
+
+.dia-loop-return {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-y);
+}
+
+.dia-return-icon {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    image-color: var(--text-secondary);
+}
+
+button.dia-layer-link, button.dia-element-link {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-y);
+    flex: 1;
+    min-width: 0dp;
+    padding: 0dp;
+    text-align: left;
+}
+
+.dia-layer-card {
+    margin-bottom: var(--gap-y);
+    padding: 0dp;
+    border-radius: var(--radius);
+    background-color: var(--bg-child);
+}
+
+.dia-layer-card.dia-open {
+    border: var(--border-width) var(--border-panel);
+}
+
+.dia-layer-number {
+    flex-shrink: 0;
+    color: var(--text-secondary);
+}
+
+.dia-layer-name {
+    flex-shrink: 0;
+    max-width: 12em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.dia-chips {
+    padding: 0dp var(--gap-y) var(--gap-y) var(--gap-y);
+    border-radius: var(--radius-small);
+}
+
+/* 閉じているときはカード全体を1つとして強調し、開いているときは見出しの行だけを強調する。 */
+.dia-layer-card:hover, .dia-layer-card.dia-open .dia-layer-head:hover {
+    background-color: var(--accent-subtle);
+}
+
+.dia-layer-card .dia-layer-head:hover, .dia-layer-card.dia-open:hover {
+    background-color: transparent;
+}
+
+.dia-layer-card.dia-open .dia-layer-head:hover {
+    background-color: var(--accent-subtle);
+}
+
+.dia-layer-body {
+    padding: 0dp var(--gap-y) var(--gap-y) 0dp;
+}
+
+.dia-chip {
+    display: inline-block;
+    margin: 0dp var(--gap-y) var(--gap-y) 0dp;
+    padding: 0dp var(--pad-box-x);
+    border-radius: var(--radius-pill);
+    background-color: var(--bg-widget);
+    font-size: var(--font-size-small);
+    line-height: var(--tag-chip-height);
+}
+
+.dia-gray .dia-chip, .dia-chip.dia-gray {
+    color: var(--text-disabled);
+}
+
+.dia-layer-link .tag-chip {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.dia-layer-link .tag-chip {
+    display: inline-block;
+    margin: 0dp;
+}
+
+.dia-sequence {
+    flex: 1;
+    min-width: 0dp;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.dia-element-number {
+    width: var(--dia-number-width);
+    flex-shrink: 0;
+}
+
+/* 要素の行の操作(無効化・削除)は場所を取らず、ホバー中だけ行の右端に重ねて出す(要約の幅を削らない)。 */
+.dia-element > .dia-row {
+    position: relative;
+}
+
+.dia-element > .dia-row > button.row-action {
+    position: absolute;
+    top: 0dp;
+    bottom: 0dp;
+    height: auto;
+    background-color: var(--bg-panel-side);
+}
+
+.dia-element > .dia-row > button.row-action.ic-trash {
+    right: 0dp;
+}
+
+/* 無効化はゴミ箱の左隣。= --control-small(32dp) */
+.dia-element > .dia-row > button.row-action.ic-disable {
+    right: 32dp;
+}
+
+.dia-element-link .dia-caption {
+    margin-top: 0dp;
+    flex-shrink: 0;
+}
+
+.dia-gray button.dia-layer-link, .dia-gray button.dia-element-link, .dia-gray .tag-chip {
+    color: var(--text-disabled);
+}
+
+.dia-gray .tag-chip-dot {
+    border-color: var(--text-disabled);
+}
+
+.dia-field-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-x);
+    padding: var(--gap-y) 0dp;
+    border-bottom: var(--border-width) var(--border);
+}
+
+.dia-field-label {
+    width: var(--dia-field-label-width);
+    flex-shrink: 0;
+    padding-top: var(--gap-y);
+}
+
+.dia-field-value {
+    flex: 1;
+    min-width: 0dp;
+}
+
+.dia-editor .segmented.compact {
+    font-size: var(--font-size);
+}
+
+.dia-editor .segment {
+    flex: 1;
+    min-width: 0dp;
+}
+
+.dia-editor .dia-row {
+    padding: 0dp;
+}
+
+.dia-section-title {
+    margin-top: var(--gap-x);
+}
+
+.dia-field-value > button {
+    padding: 0dp var(--gap-y);
+}
+
+.dia-draggable {
+    drag: clone;
+}
+
+.dia-panel button, .dia-panel input, .dia-panel select, .dia-inspector button, .dia-inspector input, .dia-inspector select, .dia-detail {
+    drag: block;
+}
+
+.dia-panel button.dia-draggable {
+    drag: clone;
+}
+
+.bottom-bar-left, .time-steps, .scene-panel-header, .scene-row, .camera-bookmark-row, .time-window-buttons {
+    display: flex;
+    align-items: center;
+}
+
+.bottom-bar-left {
+    min-width: 0dp;
+}
+
+/* 今のシーン名の入れ物(押すとシーン一覧を開閉する)。前後の切り替え矢印とは間を空ける。 */
+button.scene-name-box {
+    flex: 0 1 auto;
+    min-width: 0dp;
+    max-width: var(--scene-name-box-max-width);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding: 0dp var(--gap-x);
+}
+
+.scene-panel-header {
+    justify-content: space-between;
+}
+
+.scene-list {
+    max-height: var(--scene-list-max-height);
+    overflow-y: auto;
+}
+
+.scene-card {
+    drag: clone;
+}
+
+.scene-row input, .scene-row button.row-action {
+    drag: block;
+}
+
+button.scene-name, .scene-name-input, button.camera-bookmark-name, input.camera-bookmark-input {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+    text-align: left;
+}
+
+button.scene-name {
+    padding: var(--pad-widget-y) var(--pad-widget-x);
+    word-break: break-all;
+}
+
+input.scene-name-input, input.time-scale-input, input.camera-bookmark-input {
+    display: none;
+}
+
+input.scene-name-input.is-editing, input.time-scale-input.is-editing, input.camera-bookmark-input.is-editing {
+    display: block;
+}
+
+.scene-environment-title {
+    margin-top: var(--gap-y);
+    margin-bottom: var(--gap-y);
+}
+
+.scene-environment-grid {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+button.scene-environment-card {
+    width: var(--scene-card-width);
+    margin-right: 0dp;
+    padding: var(--pad-widget-y) var(--pad-widget-x);
+    border-radius: var(--radius);
+    text-align: left;
+}
+
+button.scene-environment-card:hover {
+    background-color: var(--bg-widget-hover);
+}
+
+.scene-environment-preview {
+    height: var(--scene-preview-height);
+    background-color: var(--bg-widget);
+    border-radius: var(--radius);
+    margin-bottom: var(--gap-y);
+}
+
+button.time-step.is-selected,
+button.scene-environment-card.is-selected {
+    background-color: var(--accent-subtle);
+    color: var(--text-accent);
+    border-bottom: var(--border-width) var(--text-accent);
+}
+
+button.time-step {
+    padding: var(--pad-widget-y);
+    white-space: nowrap;
+}
+
+/* 同梱フォントに一時停止の字形がないため、テーマの色で2本の棒を描く。 */
+.time-pause-icon {
+    display: inline-block;
+    box-sizing: border-box;
+    width: var(--time-pause-width);
+    height: var(--time-pause-height);
+    border-left: var(--time-pause-bar-width) var(--text);
+    border-right: var(--time-pause-bar-width) var(--text);
+}
+
+.time-step.is-selected .time-pause-icon, .time-step:hover .time-pause-icon {
+    border-color: var(--text-accent);
+}
+
+button.time-scale, .time-scale-input {
+    width: var(--time-scale-width);
+    flex: none;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+button.time-clock {
+    flex: none;
+    font-size: var(--font-size-small);
+    text-align: center;
+    padding: 0dp var(--gap-x);
+}
+
+.time-window {
+    bottom: var(--formation-panel-bottom);
+    right: var(--pad-window);
+    width: var(--time-window-width);
+    z-index: var(--z-overlays);
+}
+
+/* 年・月・日、時・分の欄を1行に並べ、各欄の右に単位を出す。 */
+.date-fields {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--gap-y);
+}
+
+.date-fields input {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+}
+
+.date-fields .form-unit {
+    margin: 0dp var(--gap-x) 0dp var(--pad-widget-y);
+}
+
+.time-window-buttons {
+    justify-content: flex-end;
+    margin-top: var(--gap-y);
+}
+
+.time-window-buttons button {
+    margin-left: var(--gap-x);
+}
+
+body.is-loading .time-window {
+    display: none;
+}
+
+/* 設定のキーと時刻の各段を中央へそろえる。 */
+/* 早送りの三角は、数によらず同じ幅に収まるよう、数ごとに文字の大きさを変える(1つ=大きく、3つ=小さく)。 */
+.time-step-arrows-1 { font-size: var(--time-step-arrows-1-size); }
+.time-step-arrows-2 { font-size: var(--time-step-arrows-2-size); }
+.time-step-arrows-3 { font-size: var(--time-step-arrows-3-size); }
+button.time-step { width: var(--field-height); height: var(--field-height); padding: 0dp; display: flex; align-items: center; justify-content: center; flex: none; }
+.time-clock-hours { font-size: var(--font-size-heading); line-height: var(--toggle-height); }
+.time-clock-seconds { display: inline-block; width: 1.5em; margin-left: 2dp; font-size: var(--font-size-small); text-align: left; }
+.time-clock-date { font-size: var(--font-size-small); line-height: var(--font-size-small); }
+/* シーン一覧は左タブと同じ幅で左に寄せ、下部バーの上へせり出す。カードは縦に並べて幅いっぱいに広げる。 */
+.scene-panel { position: absolute; left: 0dp; width: var(--edge-tab-width); box-sizing: border-box; bottom: var(--bottom-bar-height); height: 60vh; padding: var(--pad-window); background-color: var(--bg-panel-side); z-index: var(--z-edge); pointer-events: auto; animation: var(--anim-slide) cubic-out scene-rise; }
+@keyframes scene-rise { from { transform: translateY(100%); } to { transform: translateY(0%); } }
+button.scene-close-notch { position: absolute; left: 50%; top: var(--edge-notch-hide-offset); width: var(--icon-button-size); height: var(--edge-notch-width); background-color: var(--bg-panel-side); border-radius: var(--radius-box) var(--radius-box) 0dp 0dp; }
+.scene-panel .scene-list { display: flex; flex-wrap: wrap; gap: var(--pad-window); max-height: 90%; overflow-y: auto; }
+.scene-panel .scene-card { position: relative; width: var(--scene-card-width); }
+.scene-card-environment .form-field { width: 100%; box-sizing: border-box; }
+/* 地形の名前は、追加したあとは変えられないので、プルダウンにせず文字だけで出す。 */
+.scene-surface-name { padding: var(--pad-widget-y) var(--pad-widget-x); color: var(--text-secondary); }
+/* シーン追加のポップアップの地形の一覧(選択中の行の色は button.scene-environment-card.is-selected)。 */
+.scene-add-list { max-height: var(--scene-list-max-height); overflow-y: auto; margin-bottom: var(--pad-window); }
+/* 右下の操作説明。下部バーの上に小さく出し、ポインタは受けない。 */
+.operation-hint-item {
+    margin-left: var(--operation-hint-item-gap);
+}
+
+.operation-hint-item:first-child {
+    margin-left: 0dp;
+}
+
+/* カメラ画面では画面の下端へ置き、7セグの行をその上に出す。 */
+.operation-hint.is-camera { z-index: var(--z-operation-hint); bottom: var(--pad-window); }
+
+/* 運転台視点では下部バーが無いので、画面の下端へ寄せる。 */
+.operation-hint.is-cabin { bottom: var(--pad-window); }
+
+.operation-hint {
+    position: absolute;
+    right: var(--pad-window);
+    bottom: var(--operation-hint-bottom);
+    padding: var(--pad-widget-y) var(--gap-x);
+    border-radius: var(--radius);
+    background-color: var(--bg-panel-bar);
+    font-size: var(--font-size-small);
+    color: var(--text);
+    pointer-events: none;
+}
+
+/* 操作説明のキーの名前。角丸の枠で囲み、動作の文と見分ける。 */
+.keycap {
+    margin-right: var(--pad-widget-y);
+    padding: 0dp var(--pad-widget-y);
+    border: var(--border-width) var(--text-secondary);
+    border-radius: var(--radius-small);
+}
+
+/* 信号カード(信号の画面上の位置へ追従する)。閉じている間は名前の1行だけ、選ぶと下に編集を広げる。
+   重なり順は閉塞ラベルと同じ層。 */
+.signal-card {
+    position: absolute;
+    z-index: var(--z-rail-label);
+    box-sizing: border-box;
+    width: var(--signal-card-width);
+    pointer-events: auto;
+    border-radius: var(--radius-small);
+    background-color: var(--bg-panel-side);
+    color: var(--text);
+    border: var(--border-width) var(--border-panel);
+}
+
+.signal-card.is-selected {
+    width: var(--signal-card-open-width);
+    padding: 0dp var(--pad-box-x) var(--pad-box-x);
+    border-color: var(--text-accent);
+}
+
+button.signal-card-name {
+    display: block;
+    width: 100%;
+    height: auto;
+    line-height: var(--rail-label-line-height);
+    padding: var(--pad-widget-y) var(--pad-box-x);
+    text-align: left;
+    border-radius: var(--radius-small);
+}
+
+.signal-card.is-selected button.signal-card-name {
+    color: var(--text-accent);
+}
+
+/* 駅一覧の行の区切り線。 */
+.dia-list-row {
+    border-bottom: var(--border-width) var(--border);
+}
+
+/* タグの共通の部品(番線・編成カード)。「●タグ名」の形で、外せる場所では右端に`×`(.tag-chip-remove)を置き、
+   マウスを乗せている間だけ出す。 */
+.tag-row {
+    display: block;
+}
+
+.tag-chip {
+    display: inline-block;
+    padding: 0dp var(--pad-box-x);
+    margin: 0dp var(--gap-x) var(--gap-y) 0dp;
+    border-radius: var(--radius-pill);
+    background-color: var(--accent-subtle);
+    color: var(--text-accent);
+    font-size: var(--font-size-small);
+    line-height: var(--tag-chip-height);
+    height: var(--tag-chip-height);
+}
+
+.tag-chip-dot {
+    display: inline-block;
+    width: var(--tag-chip-dot-size);
+    height: var(--tag-chip-dot-size);
+    margin-right: var(--gap-x);
+    vertical-align: middle;
+    border-radius: var(--tag-chip-dot-size);
+    border: var(--border-width) var(--text-accent);
+}
+
+button.tag-chip-remove {
+    display: none;
+    width: var(--tag-chip-height);
+    height: var(--tag-chip-height);
+    margin-left: var(--gap-x);
+    padding: 0dp;
+    vertical-align: middle;
+    background-color: transparent;
+    image-color: var(--text-accent);
+}
+
+.tag-chip:hover button.tag-chip-remove {
+    display: inline-block;
+}
+
+button.tag-chip-remove:hover {
+    image-color: var(--text);
+}
+
+/* ---- 押せることが見て分かるようにする(§6.2) ---------------------------------- */
+
+/* 押すと入力に変わる文字(下部バーの倍率と時計)。ホバーで面を出す。 */
+button.time-scale:hover, button.time-clock:hover {
+    background-color: var(--bg-widget-hover);
+    border-radius: var(--radius);
+}
+
+/* <div>で作っている押せる行・カードも Tab キーで選べるようにし、フォーカスの枠を出す。 */
+.dia-row, .dia-chips, .formation-card, .layout-file-card, .layout-file-row, .formation-panel-slot-end {
+    tab-index: auto;
+}
+
+.dia-row:focus-visible, .dia-chips:focus-visible, .formation-card:focus-visible, .layout-file-card:focus-visible,
+.layout-file-row:focus-visible, .formation-panel-slot-end:focus-visible {
+    box-shadow: 0dp 0dp 0dp var(--focus-width) var(--accent) inset;
+}
+
+/* ---- 結果の伝え方(§6.4) ---------------------------------------------------- */
+
+/* バナーの元に戻す・やり直す。ヘルプボタンの左に並べる。
+   右端 = --top-button-help-right(60dp) + --icon-button-size(40dp) + --gap-x(8dp) */
+.banner-history {
+    position: absolute;
+    top: var(--pad-window);
+    right: 108dp;
+    display: flex;
+}
+
+.banner-history button {
+    margin-left: var(--gap-x);
+}
+
+/* 保存していない変更の点(右上のメニューボタンの角)。 */
+/* 一覧が空のときに出す、次の操作の案内。 */
+.empty-hint {
+    color: var(--text-secondary);
+    word-break: break-all;
+}
+
+/* ---- ドラッグ(§6.3) ------------------------------------------------------- */
+
+/* 並べ替えできる行の「つかみ手」。ホバー中だけ見せ、場所は常に取る(出入りで中身を動かさない)。 */
+.drag-grip {
+    flex: none;
+    margin-right: var(--pad-widget-y);
+    visibility: hidden;
+    image-color: var(--text-secondary);
+}
+
+.dia-layer-head:hover .drag-grip, .dia-element:hover .drag-grip, .dia-platform:hover .drag-grip,
+.scene-card:hover .drag-grip {
+    visibility: visible;
+}
+
+/* ---- 寸法と配置(§7) -------------------------------------------------------- */
+
+/* 主メニュー。右上のメニューボタンのすぐ下に出す。
+   上端 = --pad-window(12dp) + --icon-button-size(40dp) + --pad-widget-y(4dp) */
+.main-menu {
+    top: 56dp;
+    right: var(--pad-window);
+    width: var(--main-menu-width);
+}
+
+.main-menu .float-window-body {
+    padding: var(--pad-widget-y) 0dp;
+}
+
+.menu-separator {
+    height: var(--border-width);
+    margin: var(--pad-widget-y) 0dp;
+    background-color: var(--border);
+}
+
+/* 窓の × は見た目を変えずに、当たり判定だけ32dpに広げる(外側の透明な余白で広げる)。
+   = (32dp - --close-button-size(24dp)) / 2 */
+button.float-window-close {
+    padding: 4dp;
+    margin: -4dp;
+    box-sizing: content-box;
+}
+
+.browser-selected.is-empty {
+    visibility: hidden;
+}
+
+/* カードの名前は2行までにし、残りは隠す(全文はホバー詳細に出る)。= 行高 1.2 × 2 */
+.browser-card-name {
+    max-height: 2.4em;
+    overflow: hidden;
+}
+
+/* お気に入りの星は、登録済みのカードとホバー中のカードだけに出す。 */
+button.browser-card-favorite {
+    visibility: hidden;
+}
+
+.browser-card:hover button.browser-card-favorite, button.browser-card-favorite.is-on {
+    visibility: visible;
+}
+
+/* 復元の画面の「通常起動」「セーフモード」。ボタンの右に違いを1行ずつ添える。 */
+.recovery-choices {
+    margin-top: var(--pad-window);
+}
+
+.recovery-choice {
+    display: flex;
+    align-items: center;
+    margin-top: var(--gap-y);
+}
+
+.recovery-choice button {
+    flex: none;
+    width: 160dp;
+    margin-right: var(--gap-x);
+}
+
+.recovery-choice-note {
+    margin-top: 0dp;
+    color: var(--text-secondary);
+    word-break: break-all;
+}
+
+/* ---- カメラのファインダーの線(§8.4) ---------------------------------------- */
+
+/* 三分割の線。ファインダーの幅・高さの1/3と2/3に細い線を引き、ポインタは受けない。 */
+.finder-grid, .finder-horizon {
+    pointer-events: none;
+}
+
+.finder-line {
+    position: absolute;
+    background-color: var(--text-on-screen);
+    opacity: 0.5;
+}
+
+.finder-v1, .finder-v2 {
+    top: 0dp;
+    bottom: 0dp;
+    width: var(--border-width);
+}
+
+.finder-h1, .finder-h2 {
+    left: 0dp;
+    right: 0dp;
+    height: var(--border-width);
+}
+
+.finder-v1 { left: 33.333%; }
+.finder-v2 { left: 66.667%; }
+.finder-h1 { top: 33.333%; }
+.finder-h2 { top: 66.667%; }
+
+/* 水平線。中央の横線を、三分割の線より短く太く出して見分ける。 */
+.finder-horizon {
+    position: absolute;
+    top: 50%;
+    left: 35%;
+    right: 35%;
+    height: var(--focus-width);
+    background-color: var(--text-on-screen);
+    opacity: 0.8;
+}
+
+/* ---- 時間の操作のカプセル -------------------------------------------------- */
+
+/* 速さの段(一時停止・▶・▶▶・▶▶▶)と倍率を1つのカプセルにまとめる。選んでいる段はカプセルの中の丸い面で示す。 */
+.time-capsule {
+    display: flex;
+    align-items: center;
+    height: var(--control-medium);
+    margin-right: var(--gap-x);
+    padding: 0dp var(--pad-widget-y);
+    border-radius: var(--radius-pill);
+    background-color: var(--bg-widget);
+    border: var(--border-width) var(--border);
+}
+
+.time-capsule button.time-step {
+    width: var(--control-small);
+    height: var(--control-small);
+    border-radius: var(--radius-pill);
+}
+
+/* 選んでいる時間の速さのボタン(一時停止・通常・早送り)は、ゆっくり明滅させる。 */
+.time-capsule button.time-step.is-selected { animation: var(--time-step-pulse-cycle) sine-in-out infinite time-step-pulse; }
+@keyframes time-step-pulse { from { opacity: 1; } 50% { opacity: 0.55; } to { opacity: 1; } }
+
+.time-capsule button.time-step:hover {
+    background-color: var(--bg-widget-hover);
+}
+
+.time-capsule button.time-step.is-selected {
+    background-color: var(--accent);
+    color: var(--text-on-accent);
+    border-bottom-width: 0dp;
+}
+
+.time-capsule button.time-step.is-selected .time-pause-icon {
+    border-color: var(--text-on-accent);
+}
+
+/* 倍率はカプセルの右端。区切りの線で段と分ける。 */
+.time-capsule button.time-scale {
+    margin-left: var(--pad-widget-y);
+    padding: 0dp var(--gap-x);
+    border-left: var(--border-width) var(--border);
+}
+
+/* ---- モードのボタンの名前(§8.5) ---------------------------------------------- */
+
+/* 丸いボタンの形と大きさは変えず、中でアイコンを上に縮め、下に小さい名前を出す。
+   アイコン 26dp + 名前の行 12dp = 38dp を、ボタンの高さ --mode-button-size(56dp) の中で上下中央に置く。 */
+button.mode-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2;
+}
+
+button.mode-button .mode-icon {
+    flex: none;
+    width: 26dp;
+    height: 26dp;
+}
+
+.mode-name {
+    flex: none;
+    font-size: 10dp;
+    line-height: 12dp;
+    height: 12dp;
+    white-space: nowrap;
+}
+
+/* ボタンの中では縮めたアイコンの箱に合わせて素材を縮める(既定の .ic-mode-* は等倍)。 */
+button.mode-button .ic-mode-rail {
+    decorator: image(mode-rail none contain center center);
+}
+
+button.mode-button .ic-mode-train {
+    decorator: image(mode-train none contain center center);
+}
+
+button.mode-button .ic-mode-signal {
+    decorator: image(mode-signal none contain center center);
+}
+
+button.mode-button .ic-mode-dia {
+    decorator: image(mode-dia none contain center center);
+}
+
+button.mode-button .ic-mode-scenery {
+    decorator: image(mode-scenery none contain center center);
+}
+
+button.mode-button .ic-mode-terrain {
+    decorator: image(mode-terrain none contain center center);
+}
+
+/* ---- 質感(§9) ----------------------------------------------------------- */
+
+/* 閉塞ラベルの警告の印(文字の ⚠ の代わりの素材)。 */
+.rail-label-warning {
+    margin-right: var(--pad-widget-y);
+    image-color: var(--danger);
+}
+
+/* 40dpの丸いボタンの中のアイコンは、見た目も20dpにする(素材は@2xで32px=16dpなので、箱に合わせて広げる)。
+   余白 = (--icon-button-size(40dp) - 20dp) / 2 */
+button.round-icon.ic-menu, button.round-icon.ic-help, button.round-icon.ic-undo, button.round-icon.ic-redo,
+button.round-icon.ic-chevron-left {
+    padding: 10dp;
+    box-sizing: border-box;
+}
+
+button.round-icon.ic-menu { decorator: image(menu none contain center center) content-box; }
+button.round-icon.ic-help { decorator: image(help none contain center center) content-box; }
+button.round-icon.ic-undo { decorator: image(undo none contain center center) content-box; }
+button.round-icon.ic-redo { decorator: image(redo none contain center center) content-box; }
+button.round-icon.ic-chevron-left { decorator: image(chevron-left none contain center center) content-box; }

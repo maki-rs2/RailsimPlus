@@ -1,0 +1,38 @@
+/* viewer.rcss - プラグインビューアーの2枚のウィンドウの位置と大きさ。
+   部品(.float-window・.form-row・スイッチ一覧など)はworkspace.rcssとwidgets.rcssのものを使う。
+   最初は左上に並べる(1枚目の右隣に2枚目)。どちらもタイトルバーのドラッグで動かせる。 */
+
+body {
+    /* 1枚目の右隣の位置。= 左の余白 --plugin-settings-left(36dp) + 幅 --plugin-settings-width(420dp) + 余白 --plugin-settings-left。
+       RCSSにはcalc()が無いので、元の値を変えたらここも直すこと。 */
+    --viewer-settings-left: 492dp;
+}
+
+.viewer-switches-window {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    top: var(--plugin-settings-left);
+    left: var(--plugin-settings-left);
+    width: var(--plugin-settings-width);
+    min-width: 280dp;
+    min-height: 120dp;
+}
+
+.viewer-settings-window {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    top: var(--plugin-settings-left);
+    left: var(--viewer-settings-left);
+    width: var(--plugin-settings-width);
+    min-width: 280dp;
+}
+
+/* システムスイッチが多いときは、高さに上限を付けて縦にスクロールする(スイッチ一覧と同じ上限)。 */
+.viewer-settings-body {
+    flex: 1 1 auto;
+    min-height: 0dp;
+    max-height: var(--plugin-settings-body-max-height);
+    overflow-y: auto;
+}

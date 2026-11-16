@@ -1,0 +1,14 @@
+{
+  "minArcRadiusMeters": 5.0,
+  "maxTurnAngleRadians": 3.0543261909900763,
+  "minAcceptableLengthMeters": 0.5,
+  "minTransitionRadiusMeters": 0.3,
+  "tangentResidualToleranceMeters": 0.005,
+  "autoCantTransitionRatioMeters": 2000.0,
+  "parallelOccupiedDistanceM": 0.5,
+  "parallelMaxAlongM": 0.3,
+  "relaxedEndPositionToleranceM": 0.05,
+  "relaxedEndDirectionToleranceDeg": 0.5,
+  "importedFilletFitToleranceM": 0.15,
+  "importedCoplanarityToleranceDot": 0.03
+}

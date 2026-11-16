@@ -1,0 +1,181 @@
+/* proto.rcss - `--rmlui-proto`のウィジェット・配色確認用ギャラリー画面のレイアウトのみ。
+   色はすべて配色スロット(`var(--*)`)を経由し、ここでは直書きしない。ウィジェット自体の見た目は
+   ../theme/widgets.rcss、寸法トークンは../theme/tokens.rcssが正典。 */
+
+/* 確認画面の見本の列幅。ラベル列=220dp、見本のセル=160dp(1行に複数のウィジェット状態を並べる幅)。
+   見出し・セル・スクロール見本で同じ幅を使う。 */
+body {
+    --gallery-cell-width: 160dp;
+    --gallery-label-width: 220dp;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+.gallery-scroll {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    padding: var(--pad-window);
+}
+
+.gallery-toolbar {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: var(--pad-window);
+}
+
+.gallery-head, .gallery-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--gap-y);
+}
+
+.gallery-head-label, .gallery-label {
+    width: var(--gallery-label-width);
+    padding-right: var(--gap-x);
+    font-size: var(--font-size-small);
+}
+
+.gallery-head-cell {
+    width: var(--gallery-cell-width);
+    padding-right: var(--gap-x);
+    color: var(--text-disabled);
+    font-size: var(--font-size-small);
+}
+
+.gallery-cell {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: var(--gallery-cell-width);
+    padding-right: var(--gap-x);
+}
+
+/* ウィジェットごとに幅を明示していないので、セル内で幅いっぱいに広げる。
+   チェックボックス・ラジオ・進捗バーは固有の幅で中央寄せにしない(左詰め)。 */
+.gallery-cell button,
+.gallery-cell input[type="text"],
+.gallery-cell select,
+.gallery-cell input[type="range"],
+.gallery-cell progress {
+    width: 100%;
+}
+
+/* 一覧の部品の見本。行・カード・パンくずはセルの幅いっぱいにし、行の中の小さいボタンは部品の幅のままにする。 */
+.gallery-cell .ui-row, .gallery-cell .ui-card, .gallery-cell .crumbs {
+    width: 100%;
+}
+
+.gallery-cell button.row-action, .gallery-cell button.back {
+    width: var(--control-small);
+}
+
+.gallery-cell button.crumb {
+    width: auto;
+}
+
+.gallery-scroll-demo {
+    height: 96dp;
+    width: var(--gallery-cell-width);
+    overflow-y: auto;
+    padding: var(--pad-widget-y) var(--pad-widget-x);
+}
+
+.gallery-screen-demo {
+    width: 320dp;
+    padding: var(--pad-window);
+}
+
+.gallery-screen-demo p {
+    margin: 0 0 var(--gap-y) 0;
+}
+
+.gallery-screen-demo progress {
+    width: 100%;
+}
+
+.gallery-scroll-demo p {
+    margin: 0 0 var(--gap-y) 0;
+    font-size: var(--font-size-small);
+}
+
+/* セル幅(--gallery-cell-width)に3つのセグメントを等分に並べる。 */
+.gallery-cell .segmented {
+    width: 100%;
+}
+
+.gallery-cell .segment {
+    flex: 1 1 0dp;
+    padding-left: 0dp;
+    padding-right: 0dp;
+}
+
+/* ドラッグ&ドロップ確認: スクロールするカード列から右の枠へ落とす。 */
+.drag-demo {
+    width: 480dp;
+    display: flex;
+}
+
+.drag-list {
+    width: 180dp;
+    height: 160dp;
+    overflow-y: auto;
+}
+
+.drag-card {
+    drag: clone;
+    width: 150dp;
+    padding: 8dp;
+    margin-bottom: 4dp;
+    border-width: 1dp;
+    border-color: var(--border);
+}
+
+.drag-card:drag {
+    opacity: var(--drag-clone-opacity);
+    transform: scale(var(--drag-clone-scale));
+}
+
+.drag-side {
+    margin-left: 12dp;
+    flex: 1 1 0dp;
+}
+
+.drag-drop {
+    height: 60dp;
+    padding: 8dp;
+    border-width: 1dp;
+    border-color: var(--border);
+}
+
+.drag-drop:drag {
+    border-color: var(--accent);
+}
+
+.drag-log {
+    margin-top: 8dp;
+}
+
+.context-demo {
+    width: 480dp;
+    display: flex;
+}
+
+.context-card {
+    width: 100dp;
+    margin-right: var(--gap-x);
+    padding: 8dp;
+    border-width: 1dp;
+    border-color: var(--border);
+}
+
+.context-demo-side {
+    margin-left: 12dp;
+    flex: 1 1 0dp;
+}

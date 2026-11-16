@@ -1,0 +1,1474 @@
+/* widgets.rcss - 共通ウィジェットスタイル。
+   色はすべて配色スロット(`var(--*)`、tokens.rcssではなくRmlUiTheme.hが生成するRCSSで定義)を
+   参照する。寸法はtokens.rcssのトークンを使う。文字組み(letter-spacing/line-height/
+   text-transform)・影・グラデーション・ぼかし(フォーカスのリング用のぼかし無しbox-shadowを除く)・transform・長いtransitionは使わない。
+
+   区別は面の濃さを主にし、枠線はチェック類・子領域・ポップアップだけに付け、入力欄・コンボは下線1本で描く。
+   寸法はbox-sizing: border-boxで外寸を固定し、フォーカス時に枠を太くしても外寸が変わらない
+   よう、その分だけpaddingを減らす。文字を縦中央に置くための余白の計算は、下の変数欄
+   (body { --pad-* })に書く。
+
+   `.state-hover` / `.state-active` / `.state-focus` は本ファイル専用の確認用クラスで、
+   `--rmlui-proto` のギャラリー画面(proto.rml)が:hover/:active/:focus-visibleの見た目を
+   マウス操作なしで並べて表示するために使う。通常のUI実装では使わない。 */
+
+/* アイコン素材。@2xで書き出した白1色の画像を
+   resolution: 2x で@1x寸法として扱い、色はimage-colorで配色スロットから掛ける。 */
+@spritesheet icon-check {
+    src: ../icons/check.png;
+    resolution: 2x;
+    check: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-loading-train {
+    src: ../icons/loading_train.png;
+    resolution: 2x;
+    loading-train: 0px 0px 64px 64px;
+}
+
+@spritesheet icon-radio-dot {
+    src: ../icons/radio_dot.png;
+    resolution: 2x;
+    radio-dot: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-toggle-knob {
+    src: ../icons/toggle_knob.png;
+    resolution: 2x;
+    toggle-knob: 0px 0px 36px 36px;
+}
+
+@spritesheet icon-flip {
+    src: ../icons/flip.png;
+    resolution: 2x;
+    flip: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-camera {
+    src: ../icons/camera.png;
+    resolution: 2x;
+    camera: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-disable {
+    src: ../icons/disable.png;
+    resolution: 2x;
+    disable: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-grip {
+    src: ../icons/grip.png;
+    resolution: 2x;
+    grip: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-trash {
+    src: ../icons/trash.png;
+    resolution: 2x;
+    trash: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-cabin {
+    src: ../icons/cabin.png;
+    resolution: 2x;
+    cabin: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-chevron-down {
+    src: ../icons/chevron_down.png;
+    resolution: 2x;
+    chevron-down: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-chevron-up {
+    src: ../icons/chevron_up.png;
+    resolution: 2x;
+    chevron-up: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-chevron-left {
+    src: ../icons/chevron_left.png;
+    resolution: 2x;
+    chevron-left: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-chevron-right {
+    src: ../icons/chevron_right.png;
+    resolution: 2x;
+    chevron-right: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-menu {
+    src: ../icons/menu.png;
+    resolution: 2x;
+    menu: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-help {
+    src: ../icons/help.png;
+    resolution: 2x;
+    help: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-gear {
+    src: ../icons/gear.png;
+    resolution: 2x;
+    gear: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-funnel {
+    src: ../icons/funnel.png;
+    resolution: 2x;
+    funnel: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-search {
+    src: ../icons/search.png;
+    resolution: 2x;
+    search: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-star {
+    src: ../icons/star.png;
+    resolution: 2x;
+    star: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-star-filled {
+    src: ../icons/star_filled.png;
+    resolution: 2x;
+    star-filled: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-plus {
+    src: ../icons/plus.png;
+    resolution: 2x;
+    plus: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-minus {
+    src: ../icons/minus.png;
+    resolution: 2x;
+    minus: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-close {
+    src: ../icons/close.png;
+    resolution: 2x;
+    close: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-status-warning {
+    src: ../icons/status_warning.png;
+    resolution: 2x;
+    status-warning: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-move-up {
+    src: ../icons/move_up.png;
+    resolution: 2x;
+    move-up: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-move-down {
+    src: ../icons/move_down.png;
+    resolution: 2x;
+    move-down: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-undo {
+    src: ../icons/undo.png;
+    resolution: 2x;
+    undo: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-redo {
+    src: ../icons/redo.png;
+    resolution: 2x;
+    redo: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-mode-spectate {
+    src: ../icons/mode_spectate.png;
+    resolution: 2x;
+    mode-spectate: 0px 0px 64px 64px;
+}
+
+@spritesheet icon-mode-rail {
+    src: ../icons/mode_rail.png;
+    resolution: 2x;
+    mode-rail: 0px 0px 64px 64px;
+}
+
+@spritesheet icon-mode-train {
+    src: ../icons/mode_train.png;
+    resolution: 2x;
+    mode-train: 0px 0px 64px 64px;
+}
+
+@spritesheet icon-mode-signal {
+    src: ../icons/mode_signal.png;
+    resolution: 2x;
+    mode-signal: 0px 0px 64px 64px;
+}
+
+@spritesheet icon-mode-dia {
+    src: ../icons/mode_dia.png;
+    resolution: 2x;
+    mode-dia: 0px 0px 64px 64px;
+}
+
+@spritesheet icon-mode-scenery {
+    src: ../icons/mode_scenery.png;
+    resolution: 2x;
+    mode-scenery: 0px 0px 64px 64px;
+}
+
+@spritesheet icon-mode-terrain {
+    src: ../icons/mode_terrain.png;
+    resolution: 2x;
+    mode-terrain: 0px 0px 64px 64px;
+}
+
+@spritesheet icon-upload {
+    src: ../icons/upload.png;
+    resolution: 2x;
+    upload: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-save {
+    src: ../icons/save.png;
+    resolution: 2x;
+    save: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-pencil {
+    src: ../icons/pencil.png;
+    resolution: 2x;
+    pencil: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-power {
+    src: ../icons/power.png;
+    resolution: 2x;
+    power: 0px 0px 32px 32px;
+}
+
+@spritesheet icon-repeat {
+    src: ../icons/repeat.png;
+    resolution: 2x;
+    repeat: 0px 0px 32px 32px;
+}
+
+/* アイコンを描く共通クラス(`.ic-名前`)。大きさ・位置・色は使う側のクラスが決める。
+   色は`image-color`で掛ける(RmlUiには`currentcolor`が無く、文字色に追従しない)。 */
+.ic-chevron-down {
+    decorator: image(chevron-down none scale-none center center);
+}
+
+.ic-chevron-up {
+    decorator: image(chevron-up none scale-none center center);
+}
+
+.ic-chevron-left {
+    decorator: image(chevron-left none scale-none center center);
+}
+
+.ic-chevron-right {
+    decorator: image(chevron-right none scale-none center center);
+}
+
+.ic-menu {
+    decorator: image(menu none scale-none center center);
+}
+
+.ic-help {
+    decorator: image(help none scale-none center center);
+}
+
+.ic-gear {
+    decorator: image(gear none scale-none center center);
+}
+
+.ic-funnel {
+    decorator: image(funnel none scale-none center center);
+}
+
+.ic-search {
+    decorator: image(search none scale-none center center);
+}
+
+.ic-star {
+    decorator: image(star none scale-none center center);
+}
+
+.ic-star-filled {
+    decorator: image(star-filled none scale-none center center);
+}
+
+.ic-plus {
+    decorator: image(plus none scale-none center center);
+}
+
+.ic-minus {
+    decorator: image(minus none scale-none center center);
+}
+
+.ic-close {
+    decorator: image(close none scale-none center center);
+}
+
+.ic-trash {
+    decorator: image(trash none scale-none center center);
+}
+
+.ic-camera {
+    decorator: image(camera none scale-none center center);
+}
+
+.ic-grip {
+    decorator: image(grip none scale-none center center);
+}
+
+.ic-disable {
+    decorator: image(disable none scale-none center center);
+}
+
+.ic-status-warning {
+    decorator: image(status-warning none scale-none center center);
+}
+
+.ic-move-up {
+    decorator: image(move-up none scale-none center center);
+}
+
+.ic-move-down {
+    decorator: image(move-down none scale-none center center);
+}
+
+.ic-undo {
+    decorator: image(undo none scale-none center center);
+}
+
+.ic-redo {
+    decorator: image(redo none scale-none center center);
+}
+
+.ic-mode-spectate {
+    decorator: image(mode-spectate none scale-none center center);
+}
+
+.ic-mode-rail {
+    decorator: image(mode-rail none scale-none center center);
+}
+
+.ic-mode-train {
+    decorator: image(mode-train none scale-none center center);
+}
+
+.ic-mode-signal {
+    decorator: image(mode-signal none scale-none center center);
+}
+
+.ic-mode-dia {
+    decorator: image(mode-dia none scale-none center center);
+}
+
+.ic-mode-scenery {
+    decorator: image(mode-scenery none scale-none center center);
+}
+
+.ic-mode-terrain {
+    decorator: image(mode-terrain none scale-none center center);
+}
+
+.ic-upload {
+    decorator: image(upload none scale-none center center);
+}
+
+.ic-save {
+    decorator: image(save none scale-none center center);
+}
+
+.ic-pencil {
+    decorator: image(pencil none scale-none center center);
+}
+
+.ic-power {
+    decorator: image(power none scale-none center center);
+}
+
+.ic-repeat {
+    decorator: image(repeat none scale-none center center);
+}
+
+/* アイコンのボタンの色。文字色と同じ配色スロットを掛け、hoverと無効も文字と同じ動きにする。
+   個別の部品が上書きするときは、あとのファイルで`button.クラス名`と書く。 */
+button.icon, button.flat {
+    image-color: var(--text);
+}
+
+button.flat:hover {
+    image-color: var(--text-accent);
+}
+
+button.icon:disabled, button.flat:disabled {
+    image-color: var(--text-disabled);
+}
+
+/* RmlUiにはHTML相当のuser-agentデフォルトスタイルシートが無く、div/p/h1等のdisplay:blockは
+   明示しないとinlineのまま扱われる。 */
+div, p, h1 {
+    display: block;
+}
+
+/* ウィジェットの寸法のうち、トークンから計算で求める値。RCSSにはcalc()が無いため、ここに並べて
+   「= …」で出どころを書く(使う側には数字を直書きしない)。元のトークンを変えたら、ここも直すこと。
+   本文の行高は --font-size(16dp) × 1.2 = 19.2dp。ハイコントラストでは枠が太くなるが(tokens.rcss)、
+   ここの値は通常の枠の太さで計算したままにしている(その分だけ文字がずれる)。 */
+body {
+    /* 入力欄・選択肢の上の余白。= (--field-height(40dp) - 行高19.2dp) / 2 ≒ 10dp */
+    --pad-field-top: 10dp;
+    /* コンボの上の余白。= --pad-field-top(10dp) - コンボの枠 --border-width(1dp) */
+    --pad-select-top: 9dp;
+    /* フォーカス中のコンボの上・左の余白(枠が太くなった分だけ減らし、文字を動かさない)。
+       上 = --pad-field-top(10dp) - --focus-width(2dp)、左 = --pad-box-x(12dp) - (--focus-width(2dp) - --border-width(1dp)) */
+    --pad-select-top-focus: 8dp;
+    --pad-select-left-focus: 11dp;
+    /* ラジオボタンの角丸。= --check-size(18dp) / 2(丸にする) */
+    --radio-radius: 9dp;
+    /* スライダのトラック。上の余白 = (--row-height(48dp) - 太さ4dp) / 2、角丸 = 太さ / 2 */
+    --slider-track-height: 4dp;
+    --slider-track-top: 22dp;
+    --slider-track-radius: 2dp;
+    /* スライダのつまみ(縦長のカプセル形)。上の余白 = (--row-height(48dp) - 高さ20dp) / 2、角丸 = 幅 / 2 */
+    --slider-knob-width: 8dp;
+    --slider-knob-height: 20dp;
+    --slider-knob-top: 14dp;
+    --slider-knob-radius: 4dp;
+    /* 進捗バー。角丸 = 高さ / 2 */
+    --progress-height: 8dp;
+    --progress-radius: 4dp;
+    /* スクロールバー。右端からの間隔 = 右の余白--pad-window(12dp)の中央に置く = (12dp - --scrollbar-width(4dp)) / 2、
+       左のマージン = -(--scrollbar-width + 右端からの間隔)(幅の合計を0にして、内容の幅を縮めない)、
+       長さの縮め幅 = 上下それぞれ --radius(6dp) ぶん = 12dp、つまみの角丸 = --scrollbar-width(4dp) / 2 */
+    --scrollbar-gap-right: 4dp;
+    --scrollbar-offset-left: -8dp;
+    --scrollbar-margin: 12dp;
+    --scrollbar-thumb-radius: 2dp;
+    /* つまみの最小の長さ。件数が多い一覧でも、つまみが点のように小さくならない長さ。 */
+    --scrollbar-thumb-min-length: 24dp;
+}
+
+/* bodyだけは文書生成中(テーマ適用前)に一度スタイル計算されるため、未定義エラーを避ける
+   仮の値をvar()のフォールバックに置く。 */
+body {
+    background-color: var(--bg-window, transparent);
+    color: var(--text, black);
+    font-family: "Noto Sans JP";
+    font-weight: 600;
+    font-size: var(--font-size);
+}
+
+/* ---- ボタン ---------------------------------------------------------- */
+
+/* <button>は"*"(汎用Element)にマッピングされ、<input>/<select>等のElementFormControlと
+   異なりtab-index既定が"none"(Source/Core/Elements/ElementFormControl.cppのコンストラクタ参照)
+   のため、キーボード到達性(§2.4)とfocus-visibleのためにここで明示する。
+   高さは --control-height(呼び出し側の style で変えられる)、角丸は --radius-pill で、どの高さでもカプセル形になる。 */
+button {
+    display: block;
+    tab-index: auto;
+    box-sizing: border-box;
+    height: var(--control-height);
+    /* 文字の縦中央は行高を箱の高さに合わせて取る(上下の余白を数字で書かない)。枠は持たず、
+       フォーカスは内側のリング(box-shadowのinset)で描くので、文字は枠の分だけずれない。 */
+    line-height: var(--control-height);
+    padding: 0dp var(--pad-widget-x);
+    text-align: center;
+    border-radius: var(--radius-pill);
+    background-color: var(--bg-button);
+    color: var(--text);
+    font-size: var(--font-size);
+}
+
+button:hover, button.state-hover {
+    background-color: var(--bg-button-hover);
+}
+
+button:active, button.state-active {
+    background-color: var(--bg-button-active);
+}
+
+button:focus-visible, button.state-focus {
+    box-shadow: 0dp 0dp 0dp var(--focus-width) var(--accent) inset;
+}
+
+button:disabled {
+    color: var(--text-disabled);
+}
+
+/* 主操作(ダイアログで1つだけのOK・適用等)のボタン。accentで塗り、その上の文字はtext-on-accent。
+   accentの面にaccentのリングは見えないため、フォーカスのリングはtext色にする。 */
+button.primary {
+    background-color: var(--accent);
+    color: var(--text-on-accent);
+}
+
+button.primary:hover, button.primary.state-hover {
+    background-color: var(--accent-hover);
+}
+
+button.primary:active, button.primary.state-active {
+    background-color: var(--accent-active);
+}
+
+button.primary:focus-visible, button.primary.state-focus {
+    box-shadow: 0dp 0dp 0dp var(--focus-width) var(--text) inset;
+}
+
+/* ---- ボタンの形(button.flat / button.icon) --------------------------------- */
+
+/* 大きさ・位置・余白は使う側のクラスが決める(ワークスペースはworkspace.rcss)。
+   どちらも文字の行高は初期値(RmlUiの既定 1.2)へ戻す。普通のボタンの line-height: var(--control-height) は
+   箱の高さに合わせた値で、高さが auto や使う側の指定のときは合わないため。
+   フォーカスのリングは普通のボタンと同じ内側のリング(box-shadowのinset)。
+   使う側のクラスで上書きするときは、ここと詳細度がそろうよう`button.クラス名`で書く
+   (先に読み込まれるこのファイルより、あとのファイルが勝つ)。 */
+
+/* 文字だけのボタン。面・枠・角丸・余白を持たず、文字だけが押せる。hoverは文字色だけ
+   変え、hover・activeでも面は出さない(面を出したい部品は使う側で上書きする)。 */
+button.flat {
+    display: inline-block;
+    height: auto;
+    line-height: 1.2;
+    padding: 0dp;
+    border-width: 0dp;
+    border-radius: 0dp;
+    background-color: transparent;
+}
+
+button.flat:hover, button.flat:active {
+    background-color: transparent;
+}
+
+button.flat:hover {
+    color: var(--text-accent);
+}
+
+/* 文字だけで押せる操作(「+ 要素を追加」など)。面を持たず、アクセント色の文字で本文と見分ける。 */
+button.link {
+    color: var(--text-accent);
+    image-color: var(--text-accent);
+}
+
+button.link:hover {
+    color: var(--accent-hover);
+    image-color: var(--accent-hover);
+}
+
+/* アイコンボタン。面は普通のボタンのまま(hover・activeの色も共通)で、余白と枠をなくし、
+   中の文字・アイコンを中央に置く。幅・高さ・角丸は使う側のクラスで決める。 */
+button.icon {
+    line-height: 1.2;
+    padding: 0dp;
+    border-width: 0dp;
+    text-align: center;
+}
+
+/* カードの角などに置く小さい丸形のアイコンボタン。位置は使う側のクラスが決める。
+   使う側で上書きするときは`button.クラス名`で書く。 */
+button.icon-round {
+    width: var(--button-round-size);
+    height: var(--button-round-size);
+    border-radius: var(--radius-round);
+    image-color: var(--text);
+}
+
+/* ---- 一覧の共通部品(追加・削除・改名・戻る・選択中・カード) -------------- */
+
+/* 文の中や部品の中に置く小さいアイコン(16dp)。色は文字と同じ image-color を受け継ぐ。 */
+.ui-icon {
+    display: inline-block;
+    width: 16dp;
+    height: 16dp;
+    vertical-align: middle;
+}
+
+/* 追加の行。「+アイコン+文言」を横いっぱいに置く。面は持たず、アクセント色の文字にする。 */
+button.add-row {
+    display: block;
+    width: 100%;
+    height: var(--control-medium);
+    line-height: var(--control-medium);
+    padding: 0dp var(--gap-x);
+    text-align: left;
+    border-radius: var(--radius);
+    background-color: transparent;
+    color: var(--text-accent);
+    image-color: var(--text-accent);
+}
+
+button.add-row:hover {
+    background-color: var(--bg-widget-hover);
+    color: var(--text-accent);
+}
+
+button.add-row .ui-icon {
+    margin-right: var(--gap-x);
+    image-color: var(--text-accent);
+}
+
+/* 一覧の行とカード。選択中は薄いアクセントの面と左の帯で示す(帯の分だけ左の余白を減らし、中身を動かさない)。 */
+.ui-row {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    border-radius: var(--radius);
+    border-left: 3dp transparent;
+}
+
+.ui-row:hover {
+    background-color: var(--bg-widget-hover);
+}
+
+.ui-row.is-selected, .ui-card.is-selected {
+    background-color: var(--accent-subtle);
+    border-left-color: var(--accent);
+}
+
+/* カード(一覧の1件を箱で出すもの)。角丸・余白・面をここで決め、画面ごとに変えない。 */
+.ui-card {
+    display: block;
+    box-sizing: border-box;
+    border-left: 3dp transparent;
+    padding: var(--gap-x);
+    border-radius: var(--radius);
+    background-color: var(--bg-child);
+}
+
+/* 行の右端の操作(削除のゴミ箱・改名の鉛筆)。出すのは行のホバー中と選択中だけ。 */
+button.row-action {
+    flex: 0 0 auto;
+    width: var(--control-small);
+    height: var(--control-small);
+    padding: 0dp;
+    border-radius: var(--radius-pill);
+    background-color: transparent;
+    visibility: hidden;
+}
+
+button.row-action:hover {
+    background-color: var(--bg-widget-hover);
+}
+
+.ui-row:hover button.row-action, .ui-row.is-selected button.row-action,
+.ui-card:hover button.row-action, .ui-card.is-selected button.row-action, button.row-action:focus-visible, button.row-action.is-shown {
+    visibility: visible;
+}
+
+/* 場所だけ取って見せない行の操作(消せない行で、ほかの行と右端の位置をそろえる)。 */
+button.row-action.is-placeholder {
+    visibility: hidden;
+}
+
+/* 選ぶ・外すを切り替える小さいチップ(ドアの左・右など)。選んでいる間はアクセントの面にする。 */
+button.choice-chip {
+    display: inline-block;
+    height: var(--control-small);
+    line-height: var(--control-small);
+    margin-right: var(--gap-x);
+    padding: 0dp var(--pad-box-x);
+    border: var(--border-width) var(--border);
+    background-color: transparent;
+}
+
+button.choice-chip.is-selected {
+    background-color: var(--accent-subtle);
+    border-color: var(--accent);
+    color: var(--text-accent);
+}
+
+/* 戻る(`‹`)のボタンと、各部分を押せるパンくず。 */
+button.back {
+    flex: 0 0 auto;
+    width: var(--control-small);
+    height: var(--control-small);
+    padding: 0dp;
+    border-radius: var(--radius-pill);
+    background-color: transparent;
+}
+
+.crumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+button.crumb {
+    display: inline-block;
+    height: auto;
+    line-height: 1.2;
+    padding: 0dp;
+    background-color: transparent;
+    color: var(--text-secondary);
+}
+
+button.crumb:hover {
+    background-color: transparent;
+    color: var(--text-accent);
+}
+
+/* 今いる場所(最後の部分)は押せない見た目にする。 */
+.crumb-current {
+    color: var(--text);
+}
+
+.crumb-sep {
+    margin: 0dp var(--pad-widget-y);
+    image-color: var(--text-secondary);
+}
+
+/* ---- テキスト入力欄 ---------------------------------------------------- */
+
+/* 入力欄とコンボは面も四方の枠も持たず、下線1本だけで描く(§4.1)。下線は下の枠(border-bottom)で、
+   フォーカス時は太さとaccent色に変える。上の余白を固定し、下線が太くなった分は下側の内容領域が
+   縮むだけなので、フォーカスしても文字は動かない。 */
+input[type="text"] {
+    display: block;
+    box-sizing: border-box;
+    height: var(--field-height);
+    padding: var(--pad-field-top) var(--pad-underline-x) 0dp var(--pad-underline-x);
+    border-bottom: var(--border-width) var(--border-strong);
+    color: var(--text);
+    font-size: var(--font-size);
+}
+
+input[type="text"]:hover, input[type="text"].state-hover,
+input[type="text"]:active, input[type="text"].state-active {
+    border-bottom-color: var(--text);
+}
+
+input[type="text"]:focus-visible, input[type="text"].state-focus {
+    border-bottom: var(--focus-width) var(--accent);
+}
+
+input[type="text"]:disabled {
+    color: var(--text-disabled);
+}
+
+/* ---- コンボ(select) --------------------------------------------------- */
+
+/* コンボは入力欄と違い、枠付きの箱(角丸--radius-box)で描き、右端にarrow_downアイコンを置く。
+   矢印の要素(selectarrow)はRmlUiが右上に重ねて置く(Source/Core/Elements/WidgetDropDown.cpp
+   `ElementUtilities::PositionElement(button_element, ..., TOP_RIGHT)`)ため、値の表示(selectvalue)は
+   右の余白を矢印の幅だけ空けて文字が重ならないようにする。 */
+select {
+    display: block;
+    box-sizing: border-box;
+    height: var(--field-height);
+    border: var(--border-width) var(--border);
+    border-radius: var(--radius-box);
+    background-color: var(--bg-child);
+    color: var(--text);
+    font-size: var(--font-size);
+}
+
+select:hover, select.state-hover,
+select:active, select.state-active {
+    border-color: var(--border-strong);
+}
+
+select:focus-visible, select.state-focus {
+    border: var(--focus-width) var(--accent);
+}
+
+select:disabled {
+    color: var(--text-disabled);
+}
+
+select selectvalue {
+    padding: var(--pad-select-top) var(--select-arrow-width) 0dp var(--pad-box-x);
+    color: var(--text);
+}
+
+/* フォーカス時は枠が1dp太くなる分だけ余白を減らし、文字を動かさない。 */
+select:focus-visible selectvalue, select.state-focus selectvalue {
+    padding: var(--pad-select-top-focus) var(--select-arrow-width) 0dp var(--pad-select-left-focus);
+}
+
+select selectarrow {
+    width: var(--select-arrow-width);
+    height: 100%;
+    decorator: image(chevron-down none scale-none center center);
+    image-color: var(--text);
+}
+
+select[disabled] selectarrow {
+    image-color: var(--text-disabled);
+}
+
+select selectbox {
+    padding: var(--pad-widget-y);
+    border: var(--border-width) var(--border);
+    border-radius: var(--radius-box);
+    background-color: var(--bg-popup);
+}
+
+/* 箱を開く動き: 開いた直後の1フレームは向き(上/下)がまだ決まっていないので隠しておき
+   (RmlUiDropDown.cppのSyncDropDownRevealがreveal-down/reveal-upを付けるまでopacity: 0)、
+   向きが決まったら境目のくっきりしたmask-imageグラデーションで切り抜き、境目を動かして
+   見える範囲を広げる。文字はscaleしないのでつぶれない。閉じるときはRmlUiが即座に
+   非表示にするのでアニメーションは付けない。 */
+select selectbox:checked {
+    opacity: 0;
+}
+
+select selectbox.reveal-down, select selectbox.reveal-up {
+    opacity: 1;
+}
+
+select selectbox.reveal-down {
+    animation: var(--anim-normal) cubic-out selectbox-reveal-down;
+}
+
+select selectbox.reveal-up {
+    animation: var(--anim-normal) cubic-out selectbox-reveal-up;
+}
+
+@keyframes selectbox-reveal-down {
+    from {
+        mask-image: linear-gradient(to bottom, #000 0%, #000 0%, #0000 0%, #0000 100%) border-box;
+    }
+    to {
+        mask-image: linear-gradient(to bottom, #000 0%, #000 100%, #0000 100%, #0000 100%) border-box;
+    }
+}
+
+@keyframes selectbox-reveal-up {
+    from {
+        mask-image: linear-gradient(to top, #000 0%, #000 0%, #0000 0%, #0000 100%) border-box;
+    }
+    to {
+        mask-image: linear-gradient(to top, #000 0%, #000 100%, #0000 100%, #0000 100%) border-box;
+    }
+}
+
+/* 選択肢の角丸は箱の角丸から箱の内側余白を引いた値にして、内外の丸みを揃える。 */
+select selectbox option {
+    display: block;
+    box-sizing: border-box;
+    min-height: var(--field-height); /* 長い選択肢は折り返して高さが伸びる(幅はRmlUiDropDown.cppが選択肢に合わせる) */
+    padding: var(--pad-field-top) var(--pad-box-x);
+    border-radius: var(--radius);
+    color: var(--text);
+}
+
+select selectbox option:hover {
+    background-color: var(--bg-widget-hover);
+}
+
+/* 選択中の選択肢は薄いシアンの面に濃いシアンの文字(主操作ボタンの濃い塗りと区別する)。 */
+select selectbox option:checked {
+    background-color: var(--accent-subtle);
+    color: var(--text-accent);
+}
+
+/* ---- チェックボックス --------------------------------------------------- */
+
+/* :checkedはaccentで塗り、checkアイコン(§4.2 `check`)をtext-on-accentで描く。 */
+input[type="checkbox"] {
+    display: block;
+    box-sizing: border-box;
+    width: var(--check-size);
+    height: var(--check-size);
+    border: var(--border-width) var(--border-strong);
+    border-radius: var(--radius-small);
+    background-color: var(--bg-child);
+}
+
+input[type="checkbox"]:hover, input[type="checkbox"].state-hover {
+    background-color: var(--bg-widget-hover);
+}
+
+input[type="checkbox"]:active, input[type="checkbox"].state-active {
+    background-color: var(--bg-widget-active);
+}
+
+input[type="checkbox"]:checked {
+    border-color: var(--accent);
+    background-color: var(--accent);
+    decorator: image(check none scale-none center center);
+    image-color: var(--text-on-accent);
+}
+
+input[type="checkbox"]:checked:hover, input[type="checkbox"]:checked.state-hover {
+    border-color: var(--accent-hover);
+    background-color: var(--accent-hover);
+}
+
+input[type="checkbox"]:checked:active, input[type="checkbox"]:checked.state-active {
+    border-color: var(--accent-active);
+    background-color: var(--accent-active);
+}
+
+input[type="checkbox"]:focus-visible, input[type="checkbox"].state-focus {
+    border: var(--focus-width) var(--accent);
+}
+
+/* ---- トグルスイッチ ----------------------------------------------------- */
+
+/* 押した瞬間に反映されるON/OFF。中身はチェックボックス(class="toggle")のままで、見た目だけを変える。
+   トラックは面の色と角丸、つまみはtoggle_knobアイコンを内容領域(content-box)の左端に描く。
+   OFF/ONでpadding-leftを変え、transitionで補間してつまみをスライドさせる(外寸はborder-boxで固定)。
+   上のチェックボックスのルールと詳細度が同じものがあるため、このブロックは必ずその後ろに置く。 */
+input[type="checkbox"].toggle {
+    width: var(--toggle-width);
+    height: var(--toggle-height);
+    padding: var(--toggle-inset);
+    border-width: 0dp;
+    border-radius: var(--toggle-radius);
+    background-color: var(--border-strong);
+    decorator: image(toggle-knob none scale-none left center) content-box;
+    image-color: var(--bg-window);
+    transition: padding-left background-color var(--anim-normal) cubic-out;
+}
+
+input[type="checkbox"].toggle:hover, input[type="checkbox"].toggle.state-hover {
+    background-color: var(--border-strong-hover);
+}
+
+input[type="checkbox"].toggle:active, input[type="checkbox"].toggle.state-active {
+    background-color: var(--border-strong-active);
+}
+
+/* transitionは切り替え後の状態のものが使われる(Source/Core/ElementStyle.cpp、new_definitionの
+   transition)。ONにするときはアニメーションなしで即座に切り替え、OFFにするときだけスライドさせる。 */
+input[type="checkbox"].toggle:checked {
+    padding-left: var(--toggle-on-inset);
+    transition: none;
+    background-color: var(--accent);
+    decorator: image(toggle-knob none scale-none left center) content-box;
+    image-color: var(--bg-window);
+}
+
+input[type="checkbox"].toggle:checked:hover, input[type="checkbox"].toggle:checked.state-hover {
+    background-color: var(--accent-hover);
+}
+
+input[type="checkbox"].toggle:checked:active, input[type="checkbox"].toggle:checked.state-active {
+    background-color: var(--accent-active);
+}
+
+/* 押している間は、つまみを反対側へ少し寄せて押した手応えを出す(離すとON/OFFが切り替わる)。 */
+input[type="checkbox"].toggle:active, input[type="checkbox"].toggle.state-active {
+    padding-left: var(--toggle-press-inset);
+    transition: padding-left background-color var(--anim-fast) cubic-out;
+}
+
+input[type="checkbox"].toggle:checked:active, input[type="checkbox"].toggle:checked.state-active {
+    padding-left: var(--toggle-on-press-inset);
+    transition: padding-left background-color var(--anim-fast) cubic-out;
+}
+
+/* 枠線は持たないため、フォーカスはスライダのつまみと同じく外側のリングで描く。 */
+input[type="checkbox"].toggle:focus-visible, input[type="checkbox"].toggle.state-focus {
+    border-width: 0dp;
+    box-shadow: 0dp 0dp 0dp var(--focus-width) var(--text);
+}
+
+/* ---- ラジオボタン ------------------------------------------------------- */
+
+/* border-radiusはlengthのみ受け付け%指定は不可
+   (Source/Core/StyleSheetSpecification.cpp `border-top-left-radius`が"length"パーサ)ため、
+   --check-sizeの半分を変数(--radio-radius)で持つ。 */
+input[type="radio"] {
+    display: block;
+    box-sizing: border-box;
+    width: var(--check-size);
+    height: var(--check-size);
+    border: var(--border-width) var(--border-strong);
+    border-radius: var(--radio-radius);
+    background-color: var(--bg-child);
+}
+
+input[type="radio"]:hover, input[type="radio"].state-hover {
+    background-color: var(--bg-widget-hover);
+}
+
+input[type="radio"]:active, input[type="radio"].state-active {
+    background-color: var(--bg-widget-active);
+}
+
+input[type="radio"]:focus-visible, input[type="radio"].state-focus {
+    border: var(--focus-width) var(--accent);
+}
+
+/* 太い枠で輪を描くと、RmlUiでは外側の角丸まで失われて四角になる。チェックボックスと同じく
+   accentで塗り、点アイコン(§4.2 `radio_dot`)をtext-on-accentで描く。 */
+input[type="radio"]:checked {
+    border-color: var(--accent);
+    background-color: var(--accent);
+    decorator: image(radio-dot none scale-none center center);
+    image-color: var(--text-on-accent);
+}
+
+input[type="radio"]:checked:hover, input[type="radio"]:checked.state-hover {
+    border-color: var(--accent-hover);
+    background-color: var(--accent-hover);
+}
+
+input[type="radio"]:checked:active, input[type="radio"]:checked.state-active {
+    border-color: var(--accent-active);
+    background-color: var(--accent-active);
+}
+
+/* ---- スライダ ---------------------------------------------------------- */
+
+/* RCSSにcalc()は無い(§8.1)ため、トラック/つまみの縦位置は--row-height(48dp)を前提に
+   計算した変数(--slider-*、ファイル冒頭)で中央に合わせている。トークンの値を変えたら変数も直すこと。
+   sliderprogressはトラックのうちつまみより左側の部分(Source/Core/Elements/WidgetSlider.cpp)。 */
+input[type="range"] {
+    display: block;
+    height: var(--row-height);
+}
+
+input[type="range"] slidertrack {
+    height: var(--slider-track-height);
+    margin-top: var(--slider-track-top);
+    border-radius: var(--slider-track-radius);
+    background-color: var(--track);
+}
+
+input[type="range"] sliderprogress {
+    border-radius: var(--slider-track-radius);
+    background-color: var(--accent);
+}
+
+/* つまみは縦長のカプセル形(幅8dp・高さ20dp・半径は幅の半分)。 */
+input[type="range"] sliderbar {
+    box-sizing: border-box;
+    width: var(--slider-knob-width);
+    height: var(--slider-knob-height);
+    margin-top: var(--slider-knob-top);
+    border-radius: var(--slider-knob-radius);
+    background-color: var(--accent);
+}
+
+/* slidertrack/sliderbarはRmlUiが内部生成する要素で、RML側からクラスを直接持たせられない
+   (Source/Core/Elements/WidgetSlider.cpp `Factory::InstanceElement`)。ギャラリーの状態列は
+   代わりに`<input>`自身へ`.state-*`クラスを付けて表現する。 */
+input[type="range"] sliderbar:hover, input[type="range"].state-hover sliderbar,
+input[type="range"] sliderbar:active, input[type="range"].state-active sliderbar {
+    background-color: var(--accent-hover);
+}
+
+/* フォーカスはつまみの外側にリングを描く。border で描くと、RmlUi は角丸を枠の内側の寸法で縮めるため
+   (Source/Core/GeometryBackgroundBorder.cpp)、幅8dpのつまみでは外側も内側も角丸が合わなくなる。
+   ぼかし無しのbox-shadowはリングとしてだけ使う(§2.0)。 */
+input[type="range"]:focus-visible sliderbar, input[type="range"].state-focus sliderbar {
+    box-shadow: 0dp 0dp 0dp var(--focus-width) var(--text);
+}
+
+input[type="range"] sliderprogress:disabled,
+input[type="range"] sliderbar:disabled {
+    background-color: var(--text-disabled);
+}
+
+/* ---- 進捗バー ----------------------------------------------------------- */
+
+/* fill-imageは使わない(fill要素をaccentで塗るだけで十分。
+   Source/Core/Elements/ElementProgress.cpp `ElementProgress::GenerateGeometry`)。 */
+progress {
+    display: block;
+    height: var(--progress-height);
+    border-radius: var(--progress-radius);
+    background-color: var(--track);
+}
+
+progress fill {
+    border-radius: var(--progress-radius);
+    background-color: var(--accent);
+}
+
+/* ---- スクロールバー ------------------------------------------------------ */
+
+/* スクロールバーは子領域の右の余白(--pad-window)の中央に重ね、内容の幅を縮めない。こうすると内容の左右の余白は、
+   バーの有無によらず同じになる。RmlUiは内容の幅をバーのマージン込みの幅だけ縮めるので
+   (Source/Core/ElementScroll.cpp `EnableScrollbar`)、左のマージンを負にして合計を0にする。
+   右の余白を持たない子領域では、バーは内容の右端に重なる。上下は子領域の角丸(--radius)と同じだけ離し、
+   つまみが角の曲線に食い込んで張り付いて見えないようにする。位置はscrollbarvertical自身のmargin(上・右)、
+   長さはscrollbar-margin(上下の合計分を縮める)で決まる(`ElementScroll::FormatScrollbars`)。 */
+scrollbarvertical {
+    width: var(--scrollbar-width);
+    margin-top: var(--radius);
+    margin-left: var(--scrollbar-offset-left);
+    margin-right: var(--scrollbar-gap-right);
+    scrollbar-margin: var(--scrollbar-margin);
+}
+scrollbarvertical sliderbar {
+    border-radius: var(--scrollbar-thumb-radius);
+    min-height: var(--scrollbar-thumb-min-length);
+    background-color: var(--border-strong);
+}
+
+/* scrollbarverticalもRmlUiが内部生成する要素(Source/Core/ElementScroll.cpp)なので、
+   ギャラリーの状態列はoverflow元の要素(`.child`)へ`.state-*`クラスを付けて表現する。 */
+scrollbarvertical sliderbar:hover, .state-hover scrollbarvertical sliderbar {
+    background-color: var(--border-strong-hover);
+}
+
+/* ---- セグメントボタン(少数の決まった選択肢から1つを選ぶ、§4.1) ------------------ */
+
+/* 灰色のカプセル形の帯の内側に、カプセル形の区画を並べる(区切り線は付けない)。
+   選択中のハイライトは区画ではなく、帯の中の1つの要素(.segment-indicator)で描く。
+   ハイライトの位置と幅は RmlUiSegmented.cpp の SyncSegmentIndicators が選択中の区画に
+   合わせて left/width を入れ、Element::Animate でスライドさせる(長さもC++側の定数)。RmlUiの
+   transitionはクラス等による定義の切り替えでしか働かず、C++から入れた値は補間されないため。
+   重なり順は奥から「帯の背景 → 未選択の区画(z-index: -2、hoverの面) → ハイライト(-1) →
+   選択中の区画(0、白い文字)」。帯が重なりの基準になるよう position: relative と z-index: 0 を付ける。 */
+.segmented {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    z-index: 0;
+    box-sizing: border-box;
+    height: var(--control-height);
+    padding: var(--segment-inset);
+    border-radius: var(--radius-pill);
+    background-color: var(--bg-widget);
+}
+
+.segment-indicator {
+    position: absolute;
+    z-index: -1;
+    top: var(--segment-inset);
+    bottom: var(--segment-inset);
+    border-radius: var(--radius-pill);
+    background-color: var(--accent);
+}
+
+.segment {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: -2;
+    tab-index: auto;
+    box-sizing: border-box;
+    padding: 0dp var(--pad-widget-x);
+    border-radius: var(--radius-pill);
+    color: var(--text);
+    text-align: center;
+}
+
+.segment:hover, .segment.state-hover {
+    background-color: var(--bg-widget-hover);
+}
+
+.segment:active, .segment.state-active {
+    background-color: var(--bg-widget-active);
+}
+
+.segment:focus-visible, .segment.state-focus {
+    box-shadow: 0dp 0dp 0dp var(--focus-width) var(--accent) inset;
+}
+
+/* 窓の本文に直接置いた帯は、区画を帯の幅いっぱいに広げる(内容幅のままだと左に寄る)。基準の幅は内容の
+   幅にする(0にすると、幅が内容で決まる窓で帯が潰れる)。 */
+.float-window-body > .segmented .segment {
+    flex: 1 1 auto;
+}
+
+/* 選択中の区画はハイライトより手前に置き、面を塗らず(下のハイライトが見える)、文字だけ白にする。
+   選択中の区画のhover/押下の色は、いまは付けない。 */
+.segment.selected, .segment.selected:hover, .segment.selected.state-hover,
+.segment.selected:active, .segment.selected.state-active {
+    z-index: 0;
+    background-color: transparent;
+    color: var(--text-on-accent);
+}
+
+.segment.selected:focus-visible, .segment.selected.state-focus {
+    box-shadow: 0dp 0dp 0dp var(--focus-width) var(--text) inset;
+}
+
+/* 小さいセグメント(.segmented.compact)。高さは --control-height(区画は帯の内側いっぱい、文字は
+   flexで縦中央)なので、帯の中だけ高さ・左右の余白・文字の大きさを小さくする。
+   別の高さにしたいときは、呼び出し側が style="--control-height: …" で上書きする。 */
+.segmented.compact {
+    --control-height: 32dp;
+    --pad-widget-x: 12dp;
+    font-size: var(--font-size-small);
+}
+
+/* ---- 無効状態 ----------------------------------------------------------- */
+
+/* <button>やセグメント等の<div>は:disabledが立たない
+   ため、属性セレクタ[disabled]で統一する。文字のある部品は文字を薄くし、文字の無い
+   チェックボックス・ラジオは全体を半透明にする。 */
+button[disabled], input[type="text"][disabled], select[disabled] selectvalue, .segmented[disabled] .segment {
+    color: var(--text-disabled);
+}
+
+input[type="text"][disabled] {
+    border-bottom-color: var(--border);
+}
+
+input[type="checkbox"][disabled], input[type="radio"][disabled] {
+    opacity: var(--disabled-opacity);
+}
+
+/* accentの面の上に灰色の文字は読めないため、主操作ボタンと選択中のセグメントは文字色を保ったまま全体を半透明にする。 */
+button.primary[disabled], .segmented[disabled] .segment.selected {
+    color: var(--text-on-accent);
+    opacity: var(--disabled-opacity);
+}
+
+/* 無効な帯では、選択中のハイライトも半透明にする。 */
+.segmented[disabled] .segment-indicator {
+    opacity: var(--disabled-opacity);
+}
+
+/* ---- 区切り線・子領域・警告文字 -------------------------------------------- */
+
+.separator {
+    display: block;
+    width: 100%;
+    height: 0dp;
+    border-top: var(--border-width) var(--border);
+}
+
+.child {
+    display: block;
+    border: var(--border-width) var(--border);
+    border-radius: var(--radius);
+    background-color: var(--bg-child);
+}
+
+/* ウィンドウの後ろ全面に敷く画面(読み込み中等)。 */
+.screen {
+    display: block;
+    background-color: var(--bg-screen);
+    color: var(--text-on-screen);
+}
+
+.text-danger {
+    color: var(--danger);
+}
+
+.text-warning {
+    color: var(--warning);
+}
+
+.text-disabled {
+    color: var(--text-disabled);
+}
+
+.text-ok {
+    color: var(--ok);
+}
+
+/* ---- フォームの行(左に項目名、右に入力欄と単位) ------------------------------ */
+
+/* 項目名の幅は、項目名が最も長い行の文字数で決める。= 全角9字 × --font-size-small(13dp) = 117dp を切り上げ。
+   入力欄の幅は、符号付きの数値6字(例: -123.45)と左右の余白 --pad-underline-x(4dp) × 2 が入る大きさ。 */
+body {
+    --form-label-width: 120dp;
+    --form-field-width: 80dp;
+}
+
+.form-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: var(--gap-y);
+}
+
+/* 行の中の部品は、左の部品との間を --gap-x あける。 */
+.form-row > * + * {
+    margin-left: var(--gap-x);
+}
+
+.form-label {
+    flex: none;
+    width: var(--form-label-width);
+    font-size: var(--font-size-small);
+}
+
+/* 幅を固定した入力欄。 */
+.form-field {
+    flex: none;
+    width: var(--form-field-width);
+}
+
+/* 行の残りの幅いっぱいに広げる部品(コンボなど)。 */
+.form-field-fill {
+    flex: 1 1 0;
+}
+
+/* 入力欄の右の単位や補足の文字。 */
+.form-unit {
+    flex: none;
+}
+
+/* 行の下に出す1行の文(注意・状態)。色は .text-warning / .text-danger を付ける。 */
+.form-line {
+    display: block;
+    margin-top: var(--gap-y);
+    font-size: var(--font-size-small);
+}
+
+/* フォームの中の見出し(前の行との間を広げる)。 */
+.form-section {
+    margin-top: var(--pad-window);
+}
+
+/* 区切りの見出し(パネルの中の小見出し・フォームの節)。本文より小さく、補足の色にする。 */
+.form-section, .tab-title {
+    font-size: var(--font-size-small);
+    color: var(--text-secondary);
+}
+
+/* ---- コンテキストメニュー ------------------------------------------------ */
+
+/* 右クリックで出すメニュー(RmlUiContextMenu)。文書に1つだけ置く。閉じているときは出さない。
+   開いた直後は大きさが決まるまで見えないようにし(.placed が付くまで)、位置が決まってから出す。
+   面と枠はコンボの選択肢の箱と同じ。影は付けない。 */
+.context-menu {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: var(--z-context-menu);
+    pointer-events: auto;
+    box-sizing: border-box;
+    min-width: 180dp;
+    padding: var(--pad-widget-y);
+    border: var(--border-width) var(--border);
+    border-radius: var(--radius-box);
+    background-color: var(--bg-popup);
+    color: var(--text);
+    font-size: var(--font-size);
+}
+
+.context-menu.open {
+    display: block;
+    visibility: hidden;
+}
+
+.context-menu.open.placed {
+    visibility: visible;
+}
+
+.context-menu-item {
+    display: block;
+    box-sizing: border-box;
+    min-height: var(--field-height);
+    height: auto;
+    white-space: normal;
+    padding: var(--pad-field-top) var(--pad-box-x);
+    border-radius: var(--radius);
+    color: var(--text);
+}
+
+.context-menu-item.separator-before {
+    margin-top: var(--gap-y);
+}
+
+.context-menu-item.danger {
+    color: var(--danger);
+}
+
+.context-menu-item.highlighted {
+    background-color: var(--accent-subtle);
+}
+
+.context-menu-item.disabled {
+    color: var(--text-disabled);
+}
+
+/* ---- 確認ダイアログ ------------------------------------------------------ */
+
+/* 汎用の確認ダイアログ(RmlUiConfirmDialog)。文書に1つだけ置く。閉じているときは出さない。
+   画面全体を覆う幕がクリックを受け止め、箱の外は押せない。箱は画面の中央に置く。
+   面と枠はコンテキストメニュー・移動できるウィンドウと同じ。 */
+.confirm-dialog {
+    display: none;
+    position: absolute;
+    top: 0dp;
+    left: 0dp;
+    right: 0dp;
+    bottom: 0dp;
+    z-index: var(--z-confirm-dialog);
+    pointer-events: auto;
+}
+
+.confirm-dialog.open {
+    display: block;
+}
+
+.confirm-dialog-scrim {
+    position: absolute;
+    top: 0dp;
+    left: 0dp;
+    right: 0dp;
+    bottom: 0dp;
+    background-color: var(--bg-scrim);
+}
+
+.confirm-dialog-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--confirm-dialog-width);
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    padding: var(--pad-window);
+    border: var(--border-width) var(--border);
+    border-radius: var(--radius-box);
+    background-color: var(--bg-popup);
+    color: var(--text);
+    font-size: var(--font-size);
+}
+
+/* 本文の改行(\n)はそのまま改行にする。 */
+.confirm-dialog-message {
+    white-space: pre-line;
+    word-break: break-word;
+    margin-bottom: var(--pad-window);
+}
+
+.confirm-dialog-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.confirm-dialog-buttons > button {
+    flex: none;
+    margin-left: var(--gap-x);
+}
+
+.confirm-dialog-buttons > button.is-hidden {
+    display: none;
+}
+
+/* 危険な操作の確定ボタン(削除など)。accentの代わりにdangerで塗る。 */
+button.danger {
+    background-color: var(--danger);
+    color: var(--text-on-accent);
+}
+
+button.danger:hover, button.danger.state-hover {
+    opacity: 0.85;
+}
+
+button.danger:active, button.danger.state-active {
+    opacity: 0.7;
+}
+
+button.danger:focus-visible, button.danger.state-focus {
+    box-shadow: 0dp 0dp 0dp var(--focus-width) var(--text) inset;
+}

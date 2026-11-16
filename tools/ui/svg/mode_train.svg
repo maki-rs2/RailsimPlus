@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- 車体の外形。実物の前面の比率(幅:高さ約0.82、窓:顔:スカート約4:3:2.5)に合わせて、
+       アイコンの線の太さで潰れない範囲に寄せている。窓は上だけ枠(線の内側)から1離し、左右は枠につなぐ(実物の窓は左右の柱まで続く)。 -->
+  <path d="M7 2.5h10l2.5 1.7v11.3l-1 1.5v4.5h-13V17l-1-1.5V4.2z" />
+  <path d="M5.5 4.5h6v5h-6zM12.5 4.5h6v5h-6z" fill="#fff" stroke="none" />
+  <!-- 左右のくさび形の帯(ライト2灯ぶんの穴あき。枠の内側の端までつなぐ)と、中央の行先板 -->
+  <path fill="#fff" stroke="none" fill-rule="evenodd" d="M5.5 11.5h3l1 3.2H5.5zM5.85 13.1a0.65 0.65 0 1 0 1.3 0 0.65 0.65 0 1 0-1.3 0zM7.45 13.1a0.65 0.65 0 1 0 1.3 0 0.65 0.65 0 1 0-1.3 0zM18.5 11.5h-3l-1 3.2h4zM16.85 13.1a0.65 0.65 0 1 0 1.3 0 0.65 0.65 0 1 0-1.3 0zM15.25 13.1a0.65 0.65 0 1 0 1.3 0 0.65 0.65 0 1 0-1.3 0z" />
+  <rect x="10.3" y="12" width="3.4" height="2.2" fill="#fff" stroke="none" />
+  <!-- スカート中央の連結器(カバー付き) -->
+  <path d="M10.6 16.8h2.8l.4 2h-3.6z" fill="#fff" stroke="none" />
+</svg>

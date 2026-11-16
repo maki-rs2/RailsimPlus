@@ -1,0 +1,9 @@
+{
+  "maxParticles": 8192,
+  "maxStepSeconds": 0.03333333333333333,
+  "maxSubsteps": 8,
+  "smoothingSeconds": 0.2,
+  "noiseSpatialScale": 0.2,
+  "noiseTemporalScale": 0.15,
+  "maxAngularSpeedRadiansPerSecond": 0.25
+}
