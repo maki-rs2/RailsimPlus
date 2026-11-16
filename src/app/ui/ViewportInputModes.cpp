@@ -184,7 +184,8 @@ void HandlePlacementAddModeInput(const EditorViewportContext& ctx,
     // 優先」規約と統一)、ヒットしなかった場合のみedgeクリックで新規追加する。
     const bool placementConsumed =
         HandlePlacementPickAndDrag(ctx, vpr, mouse, leftClickForEditor);
-    if (leftClickForEditor && !placementConsumed && !gEditor.placementDragUi.active) {
+    if (leftClickForEditor && !placementConsumed && !gEditor.placementDragUi.active &&
+        !gEditor.placementAddFolder.empty()) {
         double s = 0.0;
         rs::world::Guid edge = gEditor.PickEdgeS(ray, mouse.x, mouse.y, vpr.viewProj,
                                                   gCurWidth, gCurHeight, s);

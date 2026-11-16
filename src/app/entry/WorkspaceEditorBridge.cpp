@@ -103,6 +103,11 @@ void WorkspaceEditorBridge::Tick(rmlui::RmlUiIntegration& rmlUi, const rs::app::
         view->PluginRoots().Attach(services.pluginBrowser, services.userSettings, services.windowHandle);
         view->CameraScreen().AttachSettings(services.userSettings);
         view->CameraScreen().AttachCamera(services.gameSettings.camera);
+        // ルートが空のまま起動したら、登録を促すためにルート管理ウィンドウを開く(起動ごとに1回)。
+        if (services.userSettings.pluginRoots.empty()) {
+            view->PluginRoots().SetFirstRun();
+            view->OpenOverlay(workspace::OverlayKind::PluginRoots);
+        }
         pluginRootsAttached_ = true;
     }
     if (!missingPluginsAttached_) {

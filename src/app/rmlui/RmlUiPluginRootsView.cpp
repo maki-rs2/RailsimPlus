@@ -23,10 +23,15 @@ struct PluginRootRowModel {
     bool operator==(const PluginRootRowModel&) const = default;
 };
 
+// タイトル。起動時に自動で開いた間(ルートが1つも無い間)だけ、最初の設定だと分かる文言にする。
+constexpr const char* kDefaultTitle = "プラグインフォルダ";
+constexpr const char* kFirstRunTitle = "最初の設定: RailSim II のフォルダ";
+
 // データモデルへ出す値の入れ物(定義はここだけ。変数名は下のk*Key)。
 struct PluginRootsModel {
     Rml::Vector<PluginRootRowModel> rows;
     bool picking = false;
+    Rml::String title = kDefaultTitle;
 };
 
 namespace {
@@ -34,6 +39,7 @@ namespace {
 // 重ね表示の名前"pluginRoots"(OverlayCatalog)と同じ名前の変数は作れないので、行の配列は別の名前にする。
 constexpr const char* kRowsKey = "pluginRootRows";
 constexpr const char* kPickingKey = "pluginRootPicking";
+constexpr const char* kTitleKey = "pluginRootTitle";
 
 // フォルダ選択ダイアログのタイトル(仮。ローカライズ基盤より前)。
 constexpr const char* kPickerTitle = "プラグインフォルダを選択";
@@ -63,6 +69,7 @@ void RmlUiPluginRootsView::RegisterModel(Rml::DataModelConstructor& constructor)
     constructor.RegisterArray<Rml::Vector<PluginRootRowModel>>();
     constructor.Bind(kRowsKey, &model_->rows);
     constructor.Bind(kPickingKey, &model_->picking);
+    constructor.Bind(kTitleKey, &model_->title);
 
     constructor.BindEventCallback("root_add", [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) {
         OnAdd();
@@ -91,6 +98,8 @@ void RmlUiPluginRootsView::Refresh() {
     if (picker_.TryTake(picked) && picked.has_value()) action.Add(*picked);
 
     const std::vector<std::string>& roots = action.Roots();
+    if (!roots.empty()) firstRun_ = false; // 1つ登録したら、ふだんのタイトルへ戻す
+    UpdateVariable(modelHandle_, kTitleKey, model_->title, Rml::String(firstRun_ ? kFirstRunTitle : kDefaultTitle));
     Rml::Vector<PluginRootRowModel> rows;
     for (std::size_t i = 0; i < roots.size(); ++i) {
         rows.push_back({roots[i], i > 0, i + 1 < roots.size()});

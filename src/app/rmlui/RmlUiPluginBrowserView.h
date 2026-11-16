@@ -93,6 +93,9 @@ private:
     void RefreshStatus();
 
     void OnSelectTab(const Rml::VariantList& arguments);
+    // 開いている種別に合わせて、配置物の追加/移動モードと架線の接続/切断モードを切り替える。
+    void EnterTrackPlacementMode(std::optional<plugin_browser::BrowserKind> kind);
+    void ApplyTabPlacementMode(const plugin_browser::BrowserTab& tab);
     void OnSearch(Rml::Event& event);
     // 並べ替えの軸を1つ変える(isField=trueは何で、偽は向き)。
     void OnSortAxis(const Rml::VariantList& arguments, bool isField);

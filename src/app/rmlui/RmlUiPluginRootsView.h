@@ -52,6 +52,9 @@ public:
     // フォルダ選択ダイアログを開いているか(開いている間は、ウィンドウを閉じても結果を受け取るために
     // Refreshを呼ぶ)。
     bool DialogOpen() const { return picker_.Open(); }
+    // 起動時にルートが空で自動的に開くとき、開く前に呼ぶ。ルートが1つ登録されるまで、
+    // タイトルを最初の設定向けの文言にする。
+    void SetFirstRun() { firstRun_ = true; }
 
 private:
     void OnAdd();
@@ -62,6 +65,7 @@ private:
     plugin_browser::PluginBrowserService* service_ = nullptr;
     UserSettingsData* userSettings_ = nullptr;
     void* ownerWindow_ = nullptr;
+    bool firstRun_ = false;
     Rml::DataModelHandle modelHandle_;
     std::unique_ptr<PluginRootsModel> model_;
     rs::platform_file::ShellPicker picker_;

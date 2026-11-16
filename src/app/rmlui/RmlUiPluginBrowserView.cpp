@@ -295,6 +295,7 @@ void RmlUiPluginBrowserView::OnSelectTab(const Rml::VariantList& arguments) {
     }
     operationError_.clear();
     service_->State().SelectTab(*tab);
+    ApplyTabPlacementMode(*tab);
     scrollToTopPending_ = true;
     hoveredEntry_.reset();
 }

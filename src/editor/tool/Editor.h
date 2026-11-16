@@ -803,6 +803,9 @@ public:
     // Selectモードでこれがtrueの間、Viewportで架線の接続点や径間をクリックして
     // 接続/切断する(下の「接続点を2つ結ぶ方式」。placementAddModeと同じくUI設定でUndo対象外)。
     bool wireEditMode = false;
+    // ブラウザで選んだ架線プラグインのフォルダ。空でなければ、接続する架線はこれを使う
+    // (空なら結ぶ柱の組から決める)。モードを抜けても保持する。
+    std::string wireLineFolder;
 
     // ---- 架線の接続点を2つ結ぶ方式(wireEditModeの中、Undo対象外のUI状態+Undo対象の操作) ----
     // 1点目に選んだ接続点。2点目を確定するかEsc/右クリックで空に戻る。

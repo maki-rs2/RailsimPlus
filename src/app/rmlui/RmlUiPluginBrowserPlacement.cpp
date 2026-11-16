@@ -44,6 +44,38 @@ namespace rs::app::rmlui {
 using rs::app::plugin_browser::BrowserCardAction;
 using rs::app::plugin_browser::EntryId;
 
+// 敷設プラグインのブラウザで開いている種別に合わせて、配置物(橋脚・架線柱)の追加/移動モードと
+// 架線の接続/切断モードを切り替える。橋脚・架線柱の種別なら前者、架線なら後者、それ以外は両方オフ。
+// 同時にはどちらか一方だけ(柱を扱う間は架線の追加・削除はできず、架線を扱う間は柱を選べない)。
+void RmlUiPluginBrowserView::EnterTrackPlacementMode(std::optional<plugin_browser::BrowserKind> kind) {
+    if (editor_ == nullptr) return;
+    const bool pillar = kind == plugin_browser::BrowserKind::Pier || kind == plugin_browser::BrowserKind::Pole;
+    const bool wire = kind == plugin_browser::BrowserKind::Line;
+    if (pillar || wire) editor_->sectionSplitMode = false;
+    if (!pillar) {
+        editor_->placementAddMode = false;
+        editor_->ClearSelectedPlacement();
+        editor_->hoveredPlacementEdge = rs::world::NilGuid();
+        editor_->hoveredPlacementFolder.clear();
+    }
+    if (!wire) {
+        editor_->wireEditMode = false;
+        editor_->wireFirstPoint.reset();
+        editor_->ClearWireSpanSelection();
+    }
+    if (pillar) editor_->placementAddMode = true;
+    if (wire && !editor_->wireEditMode) editor_->wireEditMode = true;
+}
+
+// タブを開いたとき。敷設プラグインのブラウザだけ、開いた種別に合わせてモードを切り替える。
+void RmlUiPluginBrowserView::ApplyTabPlacementMode(const plugin_browser::BrowserTab& tab) {
+    if (plugin_browser::GetBrowserProfile(service_->State().Profile()).cardAction !=
+        BrowserCardAction::ToggleSet) {
+        return;
+    }
+    EnterTrackPlacementMode(tab.favorites ? std::nullopt : std::optional(tab.kind));
+}
+
 void RmlUiPluginBrowserView::OnPlace(const Rml::VariantList& arguments) {
     if (service_ == nullptr) return;
     // 列車ではカードのドラッグで編成へ落とすので、クリックでは何もしない。
@@ -54,15 +86,12 @@ void RmlUiPluginBrowserView::OnPlace(const Rml::VariantList& arguments) {
         const plugin_browser::PluginCatalogEntry& entry = service_->Catalog().Entries()[*id];
         TrackLayingAction action(*editor_, *preview_);
         if (entry.kind == plugin_browser::BrowserKind::Pier || entry.kind == plugin_browser::BrowserKind::Pole) {
-            editor_->wireEditMode = false;
-            editor_->sectionSplitMode = false;
             action.SetPlacementAddFolder(entry.folderUtf8);
-            action.SetPlacementAddMode(true);
+            EnterTrackPlacementMode(entry.kind);
         } else if (entry.kind == plugin_browser::BrowserKind::Line) {
-            editor_->placementAddMode = false;
-            editor_->wireEditMode = true;
-            editor_->wireFirstPoint.reset();
-            editor_->ClearWireSpanSelection();
+            // 選んだ架線を保持する。以降の接続はこの架線で張る。
+            editor_->wireLineFolder = entry.folderUtf8;
+            EnterTrackPlacementMode(entry.kind);
         } else {
             // レール・枕木・桁は、カード本体を押しても敷設プラグインセットへ足す・外す。
             ToggleSetMembership(*id);

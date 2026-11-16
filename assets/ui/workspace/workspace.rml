@@ -129,7 +129,7 @@
     <div class="edge-panel">
         <!-- タブの中身はどれも共通の入れ物(.tab-content: 余白・縦スクロール)に入れ、見出しは.tab-titleにする。 -->
         <div class="tab-content" data-if="leftTab.content == 'panel'">
-            <div data-if="!dia.active && !scene.active">左タブ(仮)</div>
+            <div data-if="!dia.active && !scene.active">左タブ</div>
             <div class="dia-panel" data-if="dia.active">
                 <div class="tab-title" data-if="dia.screen == 0">駅・番線</div>
                 <div class="dia-header" data-if="dia.screen != 0">
@@ -823,7 +823,7 @@
 
 <div class="edge-frame edge-right" data-class-is-open="rightTab.open" data-class-is-absent="rightTab.content == 'none'">
     <button class="icon edge-notch" title="右のタブを開く・閉じる" data-event-click="toggle_notch('right')"></button>
-    <div class="edge-panel"><div class="tab-content">右タブ(仮)</div></div>
+    <div class="edge-panel"><div class="tab-content">右タブ</div></div>
 </div>
 
 <div class="camera-screen" data-if="camera.active">
@@ -854,7 +854,7 @@
     </div>
     <button class="icon round-icon camera-back ic-chevron-left" title="カメラ画面を閉じる (Esc)" data-event-click="close_screen"></button>
     <div class="camera-settings">
-        <div class="tab-title">カメラ設定 (仮の値)</div>
+        <div class="tab-title">カメラ設定</div>
         <div class="camera-setting" data-for="field, fi : camera.fields">
             <label>{{ field.label }}</label>
             <div class="form-row">
@@ -1116,7 +1116,7 @@
     <div class="float-window float-window-translucent float-window-pluginsettings"
          data-class-plugin-settings-hidden="!pluginSettings.visible"
          data-style-z-index="pluginSettings.z">
-        <handle class="float-window-titlebar" move_target="#parent" edge_margin="0dp">プラグイン設定(仮)
+        <handle class="float-window-titlebar" move_target="#parent" edge_margin="0dp">プラグイン設定
             <button class="flat float-window-close ic-close" title="閉じる" data-event-click="close_overlay('pluginSettings')"></button>
         </handle>
         <!-- 開いている個体のスイッチ一覧。部品は plugin_switch_list.rml(ビューアーと共有)。
@@ -1186,12 +1186,12 @@
          (pluginRoots)と区別するためpluginRootRowsという名前にしている。 -->
     <div class="float-window float-window-translucent float-window-pluginroots" data-if="pluginRoots.visible"
          data-style-z-index="pluginRoots.z">
-        <handle class="float-window-titlebar" move_target="#parent" edge_margin="0dp">プラグインフォルダ(仮)
+        <handle class="float-window-titlebar" move_target="#parent" edge_margin="0dp">{{ pluginRootTitle }}
             <button class="flat float-window-close ic-close" title="閉じる" data-event-click="close_overlay('pluginRoots')"></button>
         </handle>
         <div class="float-window-body">
-            <div class="form-line">上ほど優先。同じプラグインが複数のフォルダにあるときは、上のものを使う(仮)</div>
-            <div class="form-line float-window-note" data-if="pluginRootRows.size == 0">プラグインフォルダが未登録です。「追加…」で選んでください(仮)</div>
+            <div class="form-line">上ほど優先。同じプラグインが複数のフォルダにあるときは、上のものを使う</div>
+            <div class="form-line float-window-note" data-if="pluginRootRows.size == 0">RailSim II のフォルダを「追加…」で選んでください。あとからゲーム設定でも変えられます。</div>
             <div class="form-row" data-for="root, index : pluginRootRows">
                 <div class="root-path" data-attr-title="root.path">{{ root.path }}</div>
                 <button class="icon root-button ic-move-up" title="上へ" data-attrif-disabled="!root.canUp"

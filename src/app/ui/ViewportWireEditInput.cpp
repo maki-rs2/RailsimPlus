@@ -90,7 +90,10 @@ const WireConnectPoint* FindPoint(const WireEditCache& cache, const rs::editor::
 
 // 2点を結ぶ架線プラグイン。柱の点(区間に割り当てられた架線)を優先し、
 // Structの接続点どうしなら空(結べない)。
-const std::string& WireLineFolderOf(const WireConnectPoint& first, const WireConnectPoint& second) {
+// ブラウザで架線を選んでいればそれを使い、無ければ結ぶ柱の組から決める。
+const std::string& WireLineFolderOf(const rs::editor::Editor& editor, const WireConnectPoint& first,
+                                    const WireConnectPoint& second) {
+    if (!editor.wireLineFolder.empty()) return editor.wireLineFolder;
     return !first.lineFolderUtf8.empty() ? first.lineFolderUtf8 : second.lineFolderUtf8;
 }
 
@@ -131,13 +134,14 @@ void UpdatePreview(const EditorViewportContext& ctx, const rs::app::ViewProjResu
     rs::core::Vec3 endPos;
     rs::core::Vec3 endUp = first.up;
     if (hovered != nullptr) {
-        lineEntry = ctx.selector.FindTrackPluginEntry(WireLineFolderOf(first, *hovered));
+        lineEntry = ctx.selector.FindTrackPluginEntry(WireLineFolderOf(ctx.editor, first, *hovered));
         if (lineEntry != nullptr) {
             endPos = WireBasePosOf(*hovered, *lineEntry);
             endUp = hovered->up;
         }
     } else {
-        lineEntry = ctx.selector.FindTrackPluginEntry(first.lineFolderUtf8);
+        lineEntry = ctx.selector.FindTrackPluginEntry(
+            !ctx.editor.wireLineFolder.empty() ? ctx.editor.wireLineFolder : first.lineFolderUtf8);
         rs::core::Ray ray;
         if (!rs::core::ScreenToRay(mouse.x, mouse.y, vpr.viewProj, ctx.width, ctx.height, ray) ||
             !rs::core::RayHitPlaneY(ray, 0.0f, endPos)) {
@@ -161,7 +165,7 @@ void UpdatePreview(const EditorViewportContext& ctx, const rs::app::ViewProjResu
 void ConnectPoints(const EditorViewportContext& ctx, const WireConnectPoint& first,
                    const WireConnectPoint& second) {
     rs::editor::Editor& editor = ctx.editor;
-    const std::string& lineFolder = WireLineFolderOf(first, second);
+    const std::string& lineFolder = WireLineFolderOf(editor, first, second);
     if (lineFolder.empty() && rs::editor::IsStructLinePoint(first.ref) &&
         rs::editor::IsStructLinePoint(second.ref)) {
         editor.NoteOperationRejected(kBothLinePointsMessage);

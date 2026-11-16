@@ -1984,6 +1984,8 @@ button.browser-card-duplicate {
     align-content: flex-start;
     overflow-y: auto;
     margin-top: var(--gap-y);
+    /* カードの幅は .browser-grid の幅で決まる。同じ幅になるよう、同じだけ右へ広げる。 */
+    margin-right: var(--browser-grid-bleed);
 }
 
 /* 新規編成(一覧の末尾)。枠のある普通のボタンを横いっぱいに置く。 */
