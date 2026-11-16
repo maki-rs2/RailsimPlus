@@ -127,6 +127,7 @@ TrackNode BuildNode(const Rs2RailConnector& conn, const AddressMap& addrMap,
     node.tangent = conn.splitter.dir.Normalized();
     node.up = conn.splitter.up.Normalized();
     node.cant = conn.cant;
+    if (conn.pointInst.present) node.pointName = conn.pointInst.name;
 
     BuiltLinks built = BuildNodeLinks(conn, addrMap, warnings);
     node.links = built.links;

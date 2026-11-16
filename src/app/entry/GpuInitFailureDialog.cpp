@@ -2,7 +2,7 @@
 
 #include <format>
 
-#include "../../platform/text/Encoding.h"
+#include "StartupFailureDialog.h"
 #include "../locale/Localization.h"
 
 namespace rs::app {
@@ -30,15 +30,13 @@ std::string GpuInitFailureReason(const Localization& text, const GpuInitFailure&
     return text.Text("app.gpu_init_failed.reason_unknown");
 }
 
-void ShowGpuInitFailureDialog(HWND owner, const Localization& text, const GpuInitFailure& failure) {
+void ShowGpuInitFailureDialog(const Localization& text, const GpuInitFailure& failure) {
     const std::string gpu =
         failure.adapterName.empty() ? text.Text("app.gpu_init_failed.gpu_none") : failure.adapterName;
     const std::string reason = GpuInitFailureReason(text, failure);
     const std::string body = std::vformat(text.Text("app.gpu_init_failed.body"),
                                           std::make_format_args(gpu, reason));
-    MessageBoxW(owner, rs::platform_text::Utf8ToWide(body).c_str(),
-                rs::platform_text::Utf8ToWide(text.Text("app.gpu_init_failed.title")).c_str(),
-                MB_OK | MB_ICONERROR);
+    ShowFatalErrorBox(text.Text("app.gpu_init_failed.title"), body);
 }
 
 } // namespace rs::app

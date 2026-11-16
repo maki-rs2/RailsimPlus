@@ -138,4 +138,13 @@ inline std::optional<rmlui::RmlUiDocumentKind> RmlUiDocumentKindFor(const AppCom
 // cli.rmluiProto判定を散らさず、ここへ寄せる。
 inline bool UsesRmlUi(const AppCommandLine& cli) { return RmlUiDocumentKindFor(cli).has_value(); }
 
+// 人が見ていない検証用の起動(スモーク・PNGキャプチャなど)か。モーダルのダイアログや
+// ネットワークの確認など、人がいる前提の処理を止める判定はここ1箇所にする。
+inline bool IsUnattendedRun(const AppCommandLine& cli) {
+    return cli.smokeFrames > 0 || cli.switchFlipSmokeFrames > 0 || cli.sceneCycleSmokeSwitches > 0 ||
+        !cli.sceneInstanceSmokePath.empty() || !cli.sceneInstanceSmokeBatchSpec.empty() ||
+        !cli.trainInstanceSmokePath.empty() || !cli.sceneResidencySmokePath.empty() ||
+        !cli.capturePngPath.empty() || !cli.thumbnailPath.empty();
+}
+
 } // namespace rs::app

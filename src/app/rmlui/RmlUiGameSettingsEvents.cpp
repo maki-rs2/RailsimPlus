@@ -6,7 +6,6 @@
 #include "RmlUiUpdateVariable.h"
 #include "RmlUiUpdatePhase.h"
 #include "../action/GameSettingsScreenModel.h"
-#include "../../world/time/SolarModeNames.h"
 
 namespace rs::app::rmlui {
 namespace {
@@ -66,17 +65,6 @@ void RmlUiGameSettingsView::OnBrowseLayoutDirectory() {
     if (!refs_.has_value() || picker_.Open()) return;
     picker_.Start(ownerWindow_, refs_->localization.Text("game_settings.layout_save_picker_title"),
                   GameSettingsAction(*refs_).ViewModel().layoutSaveDirectory);
-}
-
-void RmlUiGameSettingsView::OnSetEarthRotation(const Rml::VariantList& arguments) {
-    if (!refs_.has_value()) return;
-    const Rml::String key = FirstEventArgument<Rml::String>(arguments, Rml::String());
-    for (std::size_t i = 0; i < rs::world::kEarthRotationKeys.size(); ++i) {
-        if (key == rs::world::kEarthRotationKeys[i]) {
-            GameSettingsAction(*refs_).SetEarthRotationMode(static_cast<int>(i));
-            return;
-        }
-    }
 }
 
 void RmlUiGameSettingsView::OnUpdateCheckEnabled(Rml::Event& event) {

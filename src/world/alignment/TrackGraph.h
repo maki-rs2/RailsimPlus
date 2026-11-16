@@ -108,6 +108,14 @@ struct TrackNode {
     std::vector<PointCondition> pointConditions;
     std::vector<PointTrainCondition> pointTrainConditions;
     std::vector<PointTagCondition> pointTagConditions;
+    // 編成定義(Formation)別の条件の層。pointFormationRoutinesと同じ位置づけで、
+    // 列車ごとの層の次、タグの層の前に評価する。
+    std::vector<PointFormationCondition> pointFormationConditions;
+
+    // 分岐の名前(UTF-8)。空なら未命名。番線名と同じく、3D画面のラベルなどに出す。
+    std::string pointName;
+    // 所属駅。NilGuidは未所属。
+    Guid pointStationId = NilGuid();
 
     // --- links の面/スロットを引くための問い合わせ（走行中に毎フレーム呼ばれるため
     //     いずれも links を1回走査するだけで、確保を伴わない） ---

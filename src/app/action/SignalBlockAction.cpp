@@ -1,10 +1,12 @@
 #include "SignalBlockAction.h"
 
+#include "../../world/alignment/NumberedName.h"
 #include "../../world/alignment/SpeedSignalRegistry.h"
 
 #include <algorithm>
 #include <optional>
 #include <string>
+#include <unordered_set>
 #include <memory>
 #include <utility>
 
@@ -21,16 +23,9 @@ rs::world::Guid OwnerBlockToPlace(std::span<const rs::editor::SpeedSignalOwnerCa
 }
 
 std::string NextBlockName(const rs::world::TrackGraph& graph) {
-    size_t candidate = 1;
-    for (;;) {
-        const std::string name = "閉塞 " + std::to_string(candidate);
-        const bool used = std::any_of(graph.blocks.begin(), graph.blocks.end(),
-                                      [&name](const rs::world::Block& existing) {
-                                          return existing.name == name;
-                                      });
-        if (!used) return name;
-        ++candidate;
-    }
+    std::unordered_set<std::string> used;
+    for (const rs::world::Block& block : graph.blocks) used.insert(block.name);
+    return rs::world::NextNumberedName("閉塞 ", used);
 }
 
 } // namespace

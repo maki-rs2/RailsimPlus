@@ -38,4 +38,8 @@ bool ParseDiaTime(std::string_view text, rs::world::DiaTimeOfDay& out);
 std::string FormatDiaSeconds(double seconds);
 bool ParseDiaSeconds(std::string_view text, double& out);
 
+// 分岐の開通方向の表示('左' / '右' / 'ランダム')と読み取り。hand は 0=左・1=右で、random が true のときは hand を見ない。
+std::string FormatPointHand(int hand, bool random = false);
+bool ParsePointHand(std::string_view text, int& hand, bool& random);
+
 } // namespace rs::app::workspace

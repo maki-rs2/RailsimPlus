@@ -14,6 +14,7 @@
 namespace rs::app {
 
 using namespace routine_change;
+using namespace routine_list_edit;
 
 namespace {
 
@@ -294,9 +295,7 @@ void PlatformRoutineAction::AddElement(const RoutineLayerRef& layer) {
 void PlatformRoutineAction::RemoveElement(const RoutineLayerRef& layer, std::size_t elementIndex) {
     ChangeRoutine(editor_, platformId_, layer,
                   [elementIndex](std::vector<rs::world::PlatformRoutineElement>& routine) {
-                      if (elementIndex < routine.size()) {
-                          routine.erase(routine.begin() + static_cast<std::ptrdiff_t>(elementIndex));
-                      }
+                      EraseAt(routine, elementIndex);
                   });
 }
 
@@ -304,12 +303,7 @@ void PlatformRoutineAction::MoveElement(const RoutineLayerRef& layer, std::size_
                                         int delta) {
     ChangeRoutine(editor_, platformId_, layer,
                   [elementIndex, delta](std::vector<rs::world::PlatformRoutineElement>& routine) {
-                      const std::ptrdiff_t target = static_cast<std::ptrdiff_t>(elementIndex) + delta;
-                      if (elementIndex >= routine.size() || target < 0 ||
-                          target >= static_cast<std::ptrdiff_t>(routine.size())) {
-                          return;
-                      }
-                      std::swap(routine[elementIndex], routine[static_cast<std::size_t>(target)]);
+                      MoveBy(routine, elementIndex, delta);
                   });
 }
 

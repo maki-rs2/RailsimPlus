@@ -26,6 +26,7 @@
 #include "../../world/scene/SceneRegistry.h"
 #include "AppCommandLine.h"
 #include "AppRuntime.h"
+#include "StartupFailureDialog.h"
 #ifdef RS_TUNING_HOT_RELOAD
 #include "RenderTuningHotReload.h"
 #endif
@@ -218,10 +219,10 @@ int main(int argc, char** argv) {
         g_lastArcPreview, g_fontRanges,
     };
     rs::app::AppRuntimeState state(forceDefFile);
-    if (!rs::app::InitializeAppRuntime(globals, cli, viewerMode, openPluginPath, state))
-        return 1;
-
     try {
+        // 失敗の理由のダイアログは InitializeAppRuntime の中で出す。
+        if (!rs::app::InitializeAppRuntime(globals, cli, viewerMode, openPluginPath, state))
+            return 1;
         rs::app::RunFrameLoop(globals, state);
         rs::app::ShutdownAppRuntime(globals, state);
         // 起動時に指定したレイアウトを読めなかったら、呼び出し側のスクリプトが気づけるよう失敗で返す。
@@ -230,6 +231,10 @@ int main(int argc, char** argv) {
     } catch (const std::exception& e) {
         spdlog::critical("[app] runtime aborted: {}", e.what());
         spdlog::default_logger()->flush();
+        // 起動の途中(最初のフレームまで)で抜けたときは、何も出さずに消えないよう理由を見せる。
+        if (!state.firstFrameRendered && !rs::app::IsUnattendedRun(cli)) {
+            rs::app::ShowStartupFailureDialog(state.localization, e.what());
+        }
         return 1;
     }
 }

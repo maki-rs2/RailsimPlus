@@ -97,8 +97,26 @@ const std::vector<PointCondition>* ResolvePointConditionLayer(
     const std::vector<PointTagCondition>& tagConditions,
     const std::vector<PointCondition>& commonConditions,
     TrainId trainId, const std::vector<int>& trainTagIds) {
+    static const std::vector<PointFormationCondition> kNoFormationConditions;
+    return ResolvePointConditionLayer(trainConditions, kNoFormationConditions, tagConditions,
+                                      commonConditions, trainId, NilGuid(), trainTagIds);
+}
+
+const std::vector<PointCondition>* ResolvePointConditionLayer(
+    const std::vector<PointTrainCondition>& trainConditions,
+    const std::vector<PointFormationCondition>& formationConditions,
+    const std::vector<PointTagCondition>& tagConditions,
+    const std::vector<PointCondition>& commonConditions,
+    TrainId trainId, const Guid& formationId, const std::vector<int>& trainTagIds) {
     for (const PointTrainCondition& item : trainConditions) {
         if (item.trainId == trainId && HasEnabledCondition(item.conditions)) return &item.conditions;
+    }
+    if (!GuidIsNil(formationId)) {
+        for (const PointFormationCondition& item : formationConditions) {
+            if (item.formationId == formationId && HasEnabledCondition(item.conditions)) {
+                return &item.conditions;
+            }
+        }
     }
     for (const PointTagCondition& item : tagConditions) {
         if (std::find(trainTagIds.begin(), trainTagIds.end(), item.tagId) != trainTagIds.end()) {
@@ -121,9 +139,17 @@ bool TimeOfDayInRange(double nowAbsSeconds, const DiaTimeOfDay& start, const Dia
 std::optional<int> ResolvePointConditionHand(
     const TrackNode& node, TrainId trainId, const std::vector<int>& trainTagIds,
     const std::unordered_set<Guid, GuidHash>& previousOccupiedBlocks, double nowAbsSeconds) {
+    return ResolvePointConditionHand(node, trainId, NilGuid(), trainTagIds,
+                                     previousOccupiedBlocks, nowAbsSeconds);
+}
+
+std::optional<int> ResolvePointConditionHand(
+    const TrackNode& node, TrainId trainId, const Guid& formationId,
+    const std::vector<int>& trainTagIds,
+    const std::unordered_set<Guid, GuidHash>& previousOccupiedBlocks, double nowAbsSeconds) {
     const std::vector<PointCondition>* conditions = ResolvePointConditionLayer(
-        node.pointTrainConditions, node.pointTagConditions, node.pointConditions,
-        trainId, trainTagIds);
+        node.pointTrainConditions, node.pointFormationConditions, node.pointTagConditions,
+        node.pointConditions, trainId, formationId, trainTagIds);
     for (const PointCondition& condition : *conditions) {
         if (!condition.enabled) continue;
         const bool matches = condition.kind == PointCondition::Kind::TimeRange

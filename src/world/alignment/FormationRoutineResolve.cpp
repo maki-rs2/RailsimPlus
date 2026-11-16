@@ -25,6 +25,19 @@ int MigrateTrainRoutinesToFormations(TrackGraph& graph, const TrainTagRegistry& 
             ++migratedCount;
         }
         node.pointTrainRoutines.clear();
+        for (const PointTrainCondition& trainCondition : node.pointTrainConditions) {
+            const Guid formationId = tagRegistry.FormationOfTrain(trainCondition.trainId);
+            if (GuidIsNil(formationId)) continue;
+            const bool alreadyPresent = std::any_of(
+                node.pointFormationConditions.begin(), node.pointFormationConditions.end(),
+                [&formationId](const PointFormationCondition& item) {
+                    return item.formationId == formationId;
+                });
+            if (alreadyPresent) continue;
+            node.pointFormationConditions.push_back({formationId, trainCondition.conditions});
+            ++migratedCount;
+        }
+        node.pointTrainConditions.clear();
     }
     for (PlatformStopInfo& platform : graph.platforms) {
         for (const PlatformTrainRoutine& trainRoutine : platform.trainRoutines) {

@@ -9,14 +9,13 @@
 namespace rs::app {
 namespace {
 
-// 番線1件のrailEdgesを指定色でなぞる。edgeが未解決(既に削除された等)なら黙って飛ばす。
-void DrawPlatformEdges(const EditorViewportContext& ctx,
-                       const rs::world::PlatformStopInfo& platform, uint32_t color,
-                       float thickness) {
+// edge列(番線のrailEdgesや閉塞のedges)を指定色でなぞる。edgeが未解決(既に削除された等)なら黙って飛ばす。
+void DrawEdgeList(const EditorViewportContext& ctx, const std::vector<rs::world::Guid>& edgeIds, uint32_t color,
+                  float thickness) {
     rs::core::DebugStyle style;
     style.color = color;
     style.widthPx = thickness;
-    for (const rs::world::Guid& edgeId : platform.railEdges) {
+    for (const rs::world::Guid& edgeId : edgeIds) {
         const std::unordered_map<rs::world::Guid, rs::world::TrackEdge, rs::world::GuidHash>::const_iterator edgeIt =
             ctx.editor.graph.edges.find(edgeId);
         if (edgeIt == ctx.editor.graph.edges.end()) {
@@ -56,20 +55,26 @@ void DrawStationDiaOverlay(const EditorViewportContext& ctx) {
             selected = &platform;
         }
         if (IsHovered(ctx.editor, platform)) {
-            DrawPlatformEdges(ctx, platform, colors.hover, 4.0f);
+            DrawEdgeList(ctx, platform.railEdges, colors.hover, 4.0f);
         }
     }
     if (selected) {
-        DrawPlatformEdges(ctx, *selected, colors.select, 5.0f);
+        DrawEdgeList(ctx, selected->railEdges, colors.select, 5.0f);
     }
-    // ポイント一覧でマウスが乗っている行のnodeを輪で示す。
-    const std::unordered_map<rs::world::Guid, rs::world::TrackNode, rs::world::GuidHash>::const_iterator
-        pointIt = ctx.editor.graph.nodes.find(ctx.editor.hoveredPointNode);
-    if (pointIt != ctx.editor.graph.nodes.end()) {
-        const OverlayLineTuning& lines = OverlayLineTuning::Embedded();
+    // 分岐の条件の閉塞の一覧でマウスが乗っている行の閉塞を、レールでなぞる。
+    for (const rs::world::Block& block : ctx.editor.graph.blocks) {
+        if (block.guid == ctx.editor.hoveredBlock) DrawEdgeList(ctx, block.edges, colors.hover, 4.0f);
+    }
+    // 選んでいる分岐と、ポイント一覧でマウスが乗っている行のnodeを輪で示す。ホバーを後に描いて上へ重ねる。
+    const OverlayLineTuning& lines = OverlayLineTuning::Embedded();
+    const auto drawPointRing = [&](const rs::world::Guid& nodeId, uint32_t color) {
+        const auto pointIt = ctx.editor.graph.nodes.find(nodeId);
+        if (pointIt == ctx.editor.graph.nodes.end() || !pointIt->second.IsPoint()) return;
         ctx.app.DebugDrawList().AddCircle(ctx.editor.NodeRailTopPos(pointIt->second), lines.markerRadiusPx,
-                                          MakeNodeLineStyle(colors.hover, lines.nodeLineWidthPx));
-    }
+                                          MakeNodeLineStyle(color, lines.nodeLineWidthPx));
+    };
+    drawPointRing(ctx.editor.selectedNode, colors.select);
+    drawPointRing(ctx.editor.hoveredPointNode, colors.hover);
 }
 
 }  // namespace rs::app

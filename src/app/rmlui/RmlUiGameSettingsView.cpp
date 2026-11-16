@@ -21,7 +21,6 @@
 #include "../action/SettingsPlaceholderAction.h"
 #include "../settings/UserSettings.h"
 #include "../../platform/text/Encoding.h"
-#include "../../world/time/SolarModeNames.h"
 
 namespace rs::app::rmlui {
 
@@ -50,8 +49,6 @@ constexpr const char* kPickingKey = "gsPicking";
 constexpr const char* kFramerateKey = "gsFramerate";
 constexpr const char* kDateTimeKey = "gsDateTime";
 constexpr const char* kTimeScaleKey = "gsTimeScale";
-constexpr const char* kEarthRotationKey = "gsEarthRotation";
-constexpr const char* kEarthRotationsKey = "gsEarthRotations";
 
 std::string FolderToUtf8(const std::filesystem::path& folder) {
     return rs::platform_text::WideToUtf8(folder.wstring());
@@ -74,11 +71,6 @@ void RmlUiGameSettingsView::Attach(const GameSettingsRefs& refs, void* ownerWind
 }
 
 void RmlUiGameSettingsView::RegisterModel(Rml::DataModelConstructor& constructor) {
-    if (Rml::StructHandle<GameSettingsChoice> handle = constructor.RegisterStruct<GameSettingsChoice>()) {
-        handle.RegisterMember("key", &GameSettingsChoice::key);
-        handle.RegisterMember("label", &GameSettingsChoice::label);
-    }
-    constructor.RegisterArray<Rml::Vector<GameSettingsChoice>>();
     constructor.Bind("gsFullscreen", &presentation_.fullscreen_);
     constructor.Bind("gsFullscreenLabel", &presentation_.label_);
     constructor.Bind("gsFullscreenNote", &presentation_.note_);
@@ -108,7 +100,6 @@ void RmlUiGameSettingsView::RegisterModel(Rml::DataModelConstructor& constructor
         handle.RegisterMember("resetCamera", &GameSettingsTexts::resetCamera);
         handle.RegisterMember("dateTime", &GameSettingsTexts::dateTime);
         handle.RegisterMember("timeScale", &GameSettingsTexts::timeScale);
-        handle.RegisterMember("earthRotation", &GameSettingsTexts::earthRotation);
         handle.RegisterMember("fpsDisplay", &GameSettingsTexts::fpsDisplay);
         handle.RegisterMember("effectsVolume", &GameSettingsTexts::effectsVolume);
         handle.RegisterMember("version", &GameSettingsTexts::version);
@@ -143,8 +134,6 @@ void RmlUiGameSettingsView::RegisterModel(Rml::DataModelConstructor& constructor
     constructor.Bind(kFramerateKey, &model_->framerate);
     constructor.Bind(kDateTimeKey, &model_->dateTime);
     constructor.Bind(kTimeScaleKey, &model_->timeScale);
-    constructor.Bind(kEarthRotationKey, &model_->earthRotation);
-    constructor.Bind(kEarthRotationsKey, &model_->earthRotations);
 
     constructor.BindEventCallback("gs_select_tab", [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& a) {
         OnSelectTab(a);
@@ -207,10 +196,6 @@ void RmlUiGameSettingsView::RegisterModel(Rml::DataModelConstructor& constructor
     constructor.BindEventCallback("gs_reset_layout_directory",
                                   [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) {
                                       if (refs_.has_value()) GameSettingsAction(*refs_).SetLayoutSaveDirectory("");
-                                  });
-    constructor.BindEventCallback("gs_set_earth_rotation",
-                                  [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& a) {
-                                      OnSetEarthRotation(a);
                                   });
     constructor.BindEventCallback("gs_time_scale_focus",
                                   [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) {
@@ -289,9 +274,6 @@ void RmlUiGameSettingsView::Tick(bool windowVisible, float framesPerSecond) {
     if (!timeScaleFocused_) { // 編集中の欄は上書きしない
         UpdateVariable(modelHandle_, kTimeScaleKey, model_->timeScale, Rml::String(FormatTimeScale(viewModel.timeScale)));
     }
-    UpdateVariable(modelHandle_, kEarthRotationKey, model_->earthRotation,
-                   Rml::String(rs::world::EarthRotationModeKey(
-                       rs::world::EarthRotationModeFromIndex(viewModel.earthRotationMode))));
 }
 
 void RmlUiGameSettingsView::RefreshTexts() {
@@ -310,8 +292,6 @@ void RmlUiGameSettingsView::RefreshTexts() {
         UpdateVariable(modelHandle_, kThemesKey, model_->themes,
                        Rml::Vector<GameSettingsChoice>(BuildUiThemeChoices(UiThemeNames(*themeSet_), localization)));
     }
-    UpdateVariable(modelHandle_, kEarthRotationsKey, model_->earthRotations,
-                   Rml::Vector<GameSettingsChoice>(BuildEarthRotationChoices(localization)));
 }
 
 } // namespace rs::app::rmlui

@@ -7,12 +7,7 @@
 #include <RmlUi/Core/DataStructHandle.h>
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
-#include <RmlUi/Core/Elements/ElementFormControl.h>
-#include <RmlUi/Core/Elements/ElementFormControlInput.h>
 #include <RmlUi/Core/Event.h>
-#include <RmlUi/Core/ID.h>
-#include <RmlUi/Core/Input.h>
-#include <RmlUi/Core/Traits.h>
 
 #include "RmlUiAnchoredArea.h"
 #include "RmlUiAnchoredElementPlacement.h"
@@ -43,7 +38,6 @@ struct RailLabelModel {
 
 struct RailLabelsModel {
     Rml::Vector<RailLabelModel> labels;
-    Rml::String editingId;
 };
 
 namespace {
@@ -66,7 +60,8 @@ constexpr double kEdgeMarginDp = 8.0;         // = --gap-x
 
 } // namespace
 
-RmlUiRailLabelView::RmlUiRailLabelView() : model_(std::make_unique<RailLabelsModel>()) {}
+RmlUiRailLabelView::RmlUiRailLabelView()
+    : rename_(kEditingIdKey, kEditingInputSelector), model_(std::make_unique<RailLabelsModel>()) {}
 RmlUiRailLabelView::~RmlUiRailLabelView() = default;
 
 void RmlUiRailLabelView::Attach(std::function<void(rs::world::Guid, bool)> selectBlock,
@@ -95,7 +90,7 @@ void RmlUiRailLabelView::RegisterModel(Rml::DataModelConstructor& constructor) {
     }
     constructor.RegisterArray<Rml::Vector<RailLabelModel>>();
     constructor.Bind(kLabelsKey, &model_->labels);
-    constructor.Bind(kEditingIdKey, &model_->editingId);
+    rename_.RegisterModel(constructor);
     constructor.BindEventCallback("select_rail_label",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& arguments) {
             OnSelectLabel(FirstEventArgument<Rml::String>(arguments, Rml::String()));
@@ -107,13 +102,13 @@ void RmlUiRailLabelView::RegisterModel(Rml::DataModelConstructor& constructor) {
     constructor.BindEventCallback("commit_rail_label_name",
         [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList&) { OnCommitName(event); });
     constructor.BindEventCallback("key_rail_label_name",
-        [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList&) { OnKeyName(event); });
+        [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList&) { rename_.OnKey(event); });
     modelHandle_ = constructor.GetModelHandle();
 }
 
 void RmlUiRailLabelView::OnSelectLabel(const std::string& id) {
     // dblclickの直後のclickと入力中のクリックでは、選択を戻さない。
-    if (!selectBlock_ || model_->editingId == id) return;
+    if (!selectBlock_ || rename_.IsEditing(id)) return;
     const std::optional<rs::world::Guid> guid = rs::world::GuidFromHex(id);
     if (!guid) return;
     const auto item = std::find_if(items_.begin(), items_.end(),
@@ -139,47 +134,14 @@ void RmlUiRailLabelView::OnBeginRename(Rml::Event& event, const std::string& id)
     Rml::Element* const element = event.GetCurrentElement();
     if (block == nullptr || element == nullptr) return;
     selectBlock_(*guid, true);
-    editingBlock_ = *guid;
-    editingInitialName_ = block->name;
-    document_ = element->GetOwnerDocument();
-    pendingFocus_ = true;
-    model_->editingId = id;
-    modelHandle_.DirtyVariable(kEditingIdKey);
-}
-
-void RmlUiRailLabelView::FocusEditingInput() {
-    if (document_ == nullptr) return;
-    Rml::ElementFormControlInput* const input = rmlui_dynamic_cast<Rml::ElementFormControlInput*>(
-        document_->QuerySelector(kEditingInputSelector));
-    if (input == nullptr) return;
-    pendingFocus_ = false;
-    input->SetValue(editingInitialName_);
-    input->Focus();
-    input->Select();
+    rename_.Begin(id, *guid, block->name, element->GetOwnerDocument());
 }
 
 void RmlUiRailLabelView::OnCommitName(Rml::Event& event) {
-    if (!renameBlock_ || rs::world::GuidIsNil(editingBlock_)) return;
-    Rml::ElementFormControl* const control = rmlui_dynamic_cast<Rml::ElementFormControl*>(event.GetCurrentElement());
-    if (control == nullptr) return;
-    if (event.GetId() != Rml::EventId::Blur && !event.GetParameter<bool>("linebreak", false)) return;
-    // blurの後に選択が移っても、編集を始めたguidの名前だけを変える。
-    const rs::world::Guid target = editingBlock_;
-    const std::string name = control->GetValue();
-    EndEditing();
-    renameBlock_(target, name);
-}
-
-void RmlUiRailLabelView::OnKeyName(Rml::Event& event) {
-    if (event.GetParameter<int>("key_identifier", 0) != static_cast<int>(Rml::Input::KI_ESCAPE)) return;
-    EndEditing();
-    event.StopPropagation();
-}
-
-void RmlUiRailLabelView::EndEditing() {
-    pendingFocus_ = false;
-    editingBlock_ = rs::world::NilGuid();
-    UpdateVariable(modelHandle_, kEditingIdKey, model_->editingId, Rml::String());
+    if (!renameBlock_) return;
+    // blurの後に選択が移っても、編集を始めたguidの名前だけを変える(確定先は部品が持つ)。
+    const std::optional<RmlUiInlineRename::Commit> commit = rename_.OnCommit(event);
+    if (commit.has_value()) renameBlock_(commit->target, commit->name);
 }
 
 void RmlUiRailLabelView::Refresh(bool active, const rs::world::TrackGraph& graph,
@@ -190,14 +152,14 @@ void RmlUiRailLabelView::Refresh(bool active, const rs::world::TrackGraph& graph
     graph_ = &graph;
     document_ = document;
     if (!active || sceneIndex_ != sceneIndex) {
-        EndEditing();
+        rename_.End();
     }
-    if (!rs::world::GuidIsNil(editingBlock_) && rs::world::FindBlock(graph, editingBlock_) == nullptr) EndEditing();
-    if (pendingFocus_) FocusEditingInput();
+    if (rename_.Active() && rs::world::FindBlock(graph, rename_.Target()) == nullptr) rename_.End();
+    rename_.FocusPending(document);
     sceneIndex_ = active ? std::optional<std::size_t>(sceneIndex) : std::nullopt;
     items_.clear();
     if (active && placement.candidateAnchor) {
-        EndEditing();
+        rename_.End();
         items_ = workspace::BuildRailLabelCandidateItems(graph, *placement.candidateAnchor, placement.ownerCandidates);
     } else if (active) {
         // 閉塞のラベルは、信号モードの間は常に、閉塞の中点の画面上へ出す。

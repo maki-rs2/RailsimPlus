@@ -40,7 +40,8 @@
 #include "RmlUiTimeControlView.h"
 #include "RmlUiTrainInfoCardView.h"
 #include "RmlUiCabinHudView.h"
-#include "RmlUiPlatformCardView.h"
+#include "RmlUiDiaCardView.h"
+#include "RmlUiPointHandMarkView.h"
 #include "RmlUiRailLabelView.h"
 #include "RmlUiToastView.h"
 #include "RmlUiTemplateSaveView.h"
@@ -91,6 +92,8 @@ public:
     void ReturnToSpectate();
     // 運転台視点中かを画面状態へ知らせる(変わったときだけデータモデルへ反映する)。
     void SetCabinView(bool active);
+    // 信号の配置待ち中かを知らせる(右下の操作説明を替える)。毎フレーム呼んでよい。
+    void SetSignalPlacing(bool active);
 
     // 現在の画面状態(ViewMode・ToolModeの反映元)。
     const rs::app::workspace::WorkspaceSnapshot& Snapshot() const;
@@ -165,7 +168,8 @@ public:
     // 運転台視点中の右上パネルと戻るボタン。
     RmlUiCabinHudView& CabinHud() { return cabinHud_; }
     RmlUiRailLabelView& RailLabel() { return railLabel_; }
-    RmlUiPlatformCardView& PlatformCard() { return platformCard_; }
+    RmlUiDiaCardView& DiaCard() { return diaCard_; }
+    RmlUiPointHandMarkView& PointHandMark() { return pointHandMark_; }
     // コンテキストメニューと確認ダイアログを、それを使う各ビューへ結ぶ。
     void RegisterPopups(RmlUiContextMenu& menu, RmlUiConfirmDialog& dialog) {
         templateSave_.RegisterPopups(menu, dialog);
@@ -226,7 +230,8 @@ private:
     RmlUiTrainInfoCardView trainInfoCard_;
     RmlUiCabinHudView cabinHud_;
     RmlUiRailLabelView railLabel_;
-    RmlUiPlatformCardView platformCard_;
+    RmlUiDiaCardView diaCard_;
+    RmlUiPointHandMarkView pointHandMark_;
     RmlUiFormationImages formationImages_;
     // 最新のスナップショット。RefreshViewModel()で更新し、Snapshot()/IsModalOverlayVisible()はこれを返す
     // (マウスメッセージのたびにShellから作り直さないため)。shell_の状態を変える経路は必ずRefreshViewModel()を呼ぶ。

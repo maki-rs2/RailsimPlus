@@ -9,9 +9,11 @@
 
 #include "RmlUiDataEventArgs.h"
 #include "RmlUiNumberParse.h"
+#include "../action/GameSettingsScreenModel.h"
 #include "../action/TimeControlAction.h"
 #include "../action/TimeControlViewModel.h"
 #include "../workspace/TimeControlTuning.h"
+#include "../../world/time/SolarModeNames.h"
 
 namespace rs::app::rmlui {
 using namespace workspace;
@@ -43,6 +45,10 @@ void RmlUiTimeControlView::RegisterModel(Rml::DataModelConstructor& constructor)
     control.RegisterMember("dayDraft", &TimeControlPresentation::dayDraft_);
     control.RegisterMember("hourDraft", &TimeControlPresentation::hourDraft_);
     control.RegisterMember("minuteDraft", &TimeControlPresentation::minuteDraft_);
+    control.RegisterMember("rotationDraft", &TimeControlPresentation::rotationDraft_);
+    control.RegisterMember("revolutionDraft", &TimeControlPresentation::revolutionDraft_);
+    control.RegisterMember("rotations", &TimeControlPresentation::rotations_);
+    control.RegisterMember("revolutions", &TimeControlPresentation::revolutions_);
     constructor.Bind("timeControl", &presentation_);
     constructor.BindEventCallback("time_ui", [this](Rml::DataModelHandle, Rml::Event& event,
         const Rml::VariantList& arguments) { OnUi(event, arguments); });
@@ -117,17 +123,35 @@ void RmlUiTimeControlView::OnUi(Rml::Event& event, const Rml::VariantList& argum
         else time_control_action::SetScale(action, presentation_.steps_[index].scale_);
     } else if (kind == "window") {
         if (presentation_.windowOpen_) presentation_.windowOpen_ = false;
-        else presentation_.OpenWindow();
+        else OpenWindow();
     }
+    else if (kind == "rotation") presentation_.rotationDraft_ = EventArgumentAt<std::string>(arguments, 1, "");
+    else if (kind == "revolution") presentation_.revolutionDraft_ = EventArgumentAt<std::string>(arguments, 1, "");
     else if (kind == "cancel") presentation_.windowOpen_ = false;
     else if (kind == "confirm" && presentation_.windowOpen_) ConfirmWindow();
     modelHandle_.DirtyVariable("timeControl");
 }
 
+void RmlUiTimeControlView::OpenWindow() {
+    presentation_.OpenWindow();
+    if (!refs_.has_value()) return;
+    const GameSettingsViewModel viewModel = GameSettingsAction(*refs_).ViewModel();
+    presentation_.rotationDraft_ = std::string(
+        rs::world::EarthRotationModeKey(rs::world::EarthRotationModeFromIndex(viewModel.earthRotationMode)));
+    presentation_.revolutionDraft_ = std::string(
+        rs::world::EarthRevolutionModeKey(rs::world::EarthRevolutionModeFromIndex(viewModel.earthRevolutionMode)));
+    // 言語を切り替えていても開くたびに今の言語になるよう、選択肢は開くときに作る。
+    presentation_.rotations_ = BuildEarthRotationChoices(refs_->localization);
+    presentation_.revolutions_ = BuildEarthRevolutionChoices(refs_->localization);
+}
+
 void RmlUiTimeControlView::ConfirmWindow() {
     if (refs_.has_value()) {
         GameSettingsAction action(*refs_);
-        time_control_action::ChangeDateTime(action, queue_, presentation_.DateDraft(), presentation_.TimeDraft());
+        // 日付が読めないときは自転・公転も変えない(確定は全部反映するか、何もしないかのどちらか)。
+        if (time_control_action::ChangeDateTime(action, queue_, presentation_.DateDraft(), presentation_.TimeDraft())) {
+            time_control_action::SetSolarModes(action, presentation_.rotationDraft_, presentation_.revolutionDraft_);
+        }
     }
     presentation_.windowOpen_ = false;
     modelHandle_.DirtyVariable("timeControl");

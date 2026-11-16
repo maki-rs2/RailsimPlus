@@ -30,7 +30,6 @@ struct GameSettingsTexts {
     std::string resetCamera;
     std::string dateTime;
     std::string timeScale;
-    std::string earthRotation;
     std::string fpsDisplay;
     std::string effectsVolume;
     std::string version;
@@ -69,8 +68,6 @@ struct GameSettingsModel {
     std::string framerate;
     std::string dateTime;
     std::string timeScale;
-    std::string earthRotation;
-    std::vector<GameSettingsChoice> earthRotations;
 };
 
 struct GameSettingsPresentation {

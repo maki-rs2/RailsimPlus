@@ -115,6 +115,9 @@ public:
     // 「停止目標に到達した」でしかなく、時間軸を持たない)。
     rs::sim::DiaState GroupDiaState(TrainId trainId) const;
     bool GroupDepartureAbsSeconds(TrainId trainId, double& outAbsSeconds) const;
+    // 今、列車が在線している閉塞の集合(直近のtickで求めた在線)。走行していなければ空。
+    // 分岐の手動切り替えが、在線中の分岐を転換しないかの判定に使う。
+    std::unordered_set<rs::world::Guid, rs::world::GuidHash> OccupiedBlocks() const;
     int PlatformRoutineCursorIndex(
         const rs::world::Guid& platformId,
         const std::vector<rs::world::PlatformRoutineElement>& routine,

@@ -12,6 +12,9 @@ namespace rs::app::workspace {
 
 bool CanCommitBlockName(const rs::world::Block* block, std::string_view name);
 
+// 閉塞の表示名。名前が空なら、graph.blocks での位置(0始まりの index)から「閉塞 N」と出す。
+std::string BlockDisplayName(const rs::world::Block& block, std::size_t index);
+
 struct RailLabelItem {
     rs::world::Guid guid = rs::world::NilGuid();
     std::string name;

@@ -20,7 +20,7 @@
 
 namespace rs::editor { class Editor; class WarpLinkAuthoring; }
 namespace rs::app::workspace { struct ScenePanelPresentation; }
-namespace rs::world { class GameClock; class SceneRegistry; struct SolarOverrides; }
+namespace rs::world { class GameClock; class SceneRegistry; struct EnvironmentPreset; struct SolarOverrides; }
 
 namespace rs::app {
 
@@ -78,6 +78,8 @@ struct LayoutPersistenceRefs {
     rs::editor::WarpLinkAuthoring& warpAuthoring;
     // Sceneの削除で編成を消すとき、運転台視点の追従を外す(編成パネルの撤去と同じ経路を通す)。
     CabinViewCamera& cabinCamera;
+    // 新規レイアウトで時計を戻す先の初期日時。
+    const rs::world::EnvironmentPreset& environmentPreset;
 };
 
 class LayoutPersistenceAction {

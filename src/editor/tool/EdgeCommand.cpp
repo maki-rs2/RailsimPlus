@@ -10,6 +10,7 @@
 #include "../../world/alignment/Alignment.h"
 #include "../../world/alignment/AutoCant.h"
 #include "../../world/alignment/EdgeShapeBuild.h"
+#include "../../world/alignment/PointName.h"
 #include "EdgeCommandLinks.h"
 
 namespace rs::editor {
@@ -102,6 +103,7 @@ bool AddEdgeCommand::CanApply(const TrackGraph& graph) const {
 
 void AddEdgeCommand::Apply(TrackGraph& graph) {
     applied_ = false;
+    namedPointNodes_.clear();
     if (nodeAIsNew_) graph.nodes[edge_.nodeA] = nodeATemplate_;
     if (nodeBIsNew_) graph.nodes[edge_.nodeB] = nodeBTemplate_;
     TrackEdge& added = graph.edges[edge_.guid] = edge_;
@@ -125,12 +127,20 @@ void AddEdgeCommand::Apply(TrackGraph& graph) {
     itB = graph.nodes.find(edge_.nodeB);
     if (itB != graph.nodes.end())
         AddLinkToNode(itB->second, edge_.guid, 1, EndTangent(built, itB->second, 1));
+    // このリンクで分岐になった(名前が空の)ノードに既定名を振る。Revertで戻せるよう覚える。
+    for (const Guid& nodeGuid : {edge_.nodeA, edge_.nodeB}) {
+        if (rs::world::AssignDefaultPointName(graph, nodeGuid)) namedPointNodes_.push_back(nodeGuid);
+    }
     //つなぎ先の自動カントの edge は、相手が増えたのでつなぎ目を決め直す。
     rs::world::RebuildAutoCantAtNodes(graph, {edge_.nodeA, edge_.nodeB});
 }
 
 void AddEdgeCommand::Revert(TrackGraph& graph) {
     if (!applied_) return;
+    for (const Guid& nodeGuid : namedPointNodes_) {
+        const auto named = graph.nodes.find(nodeGuid);
+        if (named != graph.nodes.end()) named->second.pointName.clear();
+    }
     auto itA = graph.nodes.find(edge_.nodeA);
     if (itA != graph.nodes.end()) RemoveLinkFromNode(itA->second, edge_.guid);
     auto itB = graph.nodes.find(edge_.nodeB);

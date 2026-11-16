@@ -39,6 +39,8 @@ std::vector<GameSettingsChoice> BuildUiThemeChoices(const std::vector<std::strin
                                                     const Localization& localization);
 // 自転(時刻連動・常に昼・常に夜)。keyはkEarthRotationKeysの名前。
 std::vector<GameSettingsChoice> BuildEarthRotationChoices(const Localization& localization);
+// 公転(自動・春・夏・秋・冬)。keyはkEarthRevolutionKeysの名前。
+std::vector<GameSettingsChoice> BuildEarthRevolutionChoices(const Localization& localization);
 
 // keyに合う言語を引く。どの言語のコードでもなければfalse。
 bool FindLanguageByKey(const std::string& key, Language& out);

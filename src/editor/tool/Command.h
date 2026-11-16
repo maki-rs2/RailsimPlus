@@ -91,6 +91,8 @@ private:
     void ResolveNodeBSign(rs::world::TrackEdge& edge, const rs::world::TrackNode& nodeB) const;
 
     bool applied_ = false;
+    // Applyで既定名を振った分岐。Revertで名前を空へ戻す。
+    std::vector<rs::world::Guid> namedPointNodes_;
     bool hasLaidEndTangent_ = false;
     rs::core::Vec3 laidEndTangent_;
     rs::world::TrackEdge edge_;

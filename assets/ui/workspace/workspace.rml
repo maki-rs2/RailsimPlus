@@ -35,7 +35,7 @@
 </div>
 
 <!-- 右下の操作説明(鑑賞・シーン設定では空)。文言はsrc/app/workspace/OperationHintCatalog.hの表。 -->
-<div class="operation-hint" data-class-is-camera="camera.active" data-class-is-cabin="cabinView" data-if="operationHint != '' && !loadingVisible"><span class="operation-hint-item" data-for="item : operationHintItems"><span class="keycap">{{ item.key }}</span>{{ item.action }}</span></div>
+<div class="operation-hint" data-class-is-camera="camera.active" data-class-is-cabin="cabinView" data-if="operationHint != '' && !loadingVisible"><span class="operation-hint-label" data-if="operationHintLabel != ''">{{ operationHintLabel }}</span><span><span class="operation-hint-item" data-for="item : operationHintItems"><span class="keycap">{{ item.key }}</span>{{ item.action }}</span></span></div>
 
 <div class="bottom-bar" data-if="bottomBarVisible">
     <div class="bottom-bar-left">
@@ -87,6 +87,22 @@
         <div class="form-row date-fields">
             <input class="form-field" type="text" data-value="timeControl.hourDraft" /><span class="form-unit">時</span>
             <input class="form-field" type="text" data-value="timeControl.minuteDraft" /><span class="form-unit">分</span>
+        </div>
+        <div class="form-row">
+            <div class="form-label">自転</div>
+            <div class="segmented compact">
+                <div class="segment-indicator"></div>
+                <div class="segment" data-for="choice : timeControl.rotations" data-class-selected="timeControl.rotationDraft == choice.key"
+                     data-event-click="time_ui('rotation', choice.key)"><span>{{ choice.label }}</span></div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-label">公転</div>
+            <div class="segmented compact">
+                <div class="segment-indicator"></div>
+                <div class="segment" data-for="choice : timeControl.revolutions" data-class-selected="timeControl.revolutionDraft == choice.key"
+                     data-event-click="time_ui('revolution', choice.key)"><span>{{ choice.label }}</span></div>
+            </div>
         </div>
         <div class="time-window-buttons">
             <button data-event-click="time_ui('cancel')">キャンセル</button>
@@ -167,7 +183,7 @@
                         <div class="dia-row dia-platform dia-list-row" data-if="row.kind == 'target'" data-style-padding-left="(row.depth * 16) + 'dp'"
                              data-attr-title="row.gray ? 'ダイヤが未設定' : ''"
                              data-class-dia-draggable="row.draggable" data-event-click="dia_ui('target', row.target)"
-                             data-event-dragstart="dia_ui('drag', i, 'platform')" data-event-dragend="dia_ui('dragEnd')"><span class="ui-icon drag-grip ic-grip" data-if="row.draggable"></span><span class="dia-row-label">{{ row.name }}</span><span class="dia-unset" data-if="row.gray">未設定</span></div>
+                             data-event-dragstart="dia_ui('drag', i, row.point ? 'point' : 'platform')" data-event-dragend="dia_ui('dragEnd')"><span class="ui-icon drag-grip ic-grip" data-if="row.draggable"></span><span class="ui-icon dia-point-icon ic-mode-rail" data-if="row.point" title="分岐"></span><span class="dia-row-label">{{ row.name }}</span><span class="dia-unset" data-if="row.gray">未設定</span></div>
                     </div>
                 </div>
                 <div data-for="target : dia.targets">
@@ -178,7 +194,14 @@
                                 <label class="dia-door-check"><input type="checkbox" data-attrif-checked="target.doorLeft" data-event-change="dia_action('ToggleDoor', -1, -1, 'left')" /><span class="dia-row-label">左</span></label>
                                 <label class="dia-door-check"><input type="checkbox" data-attrif-checked="target.doorRight" data-event-change="dia_action('ToggleDoor', -1, -1, 'right')" /><span class="dia-row-label">右</span></label>
                             </div>
-                            <button data-if="target.branch" data-event-click="dia_action('ChangeOpening')">今の開通先: {{ target.opening }}</button>
+                            <div class="dia-row" data-for="opening, oi : target.openings">
+                                <span class="dia-field-label">{{ opening.label }}</span>
+                                <div class="segmented compact dia-field-value">
+                                    <div class="segment-indicator"></div>
+                                    <div class="segment" data-class-selected="opening.left" data-event-click="dia_action('ChangeOpening', oi, -1, '', '左')"><span>左</span></div>
+                                    <div class="segment" data-class-selected="opening.right" data-event-click="dia_action('ChangeOpening', oi, -1, '', '右')"><span>右</span></div>
+                                </div>
+                            </div>
                             <div class="dia-guidance">上から順に、当てはまる最初の1つを使う</div>
                             <div class="dia-layer-card" data-for="layer, li : target.layers" data-class-dia-open="layer.selected" data-class-dia-gray="layer.empty">
                                 <div class="dia-row dia-layer-head" data-class-dia-gray="layer.empty"
@@ -206,8 +229,15 @@
                                 <div class="dia-layer-body" data-if="layer.selected">
                                     <div class="dia-conditions" data-if="target.branch">
                                         <div class="dia-caption">条件</div>
-                                        <div class="dia-condition" data-for="condition, ci : layer.conditions">
-                                            <div class="dia-row" data-event-click="dia_ui('condition', ci)"><span class="dia-row-label">{{ condition.summary }}</span></div>
+                                        <div class="dia-condition" data-for="condition, ci : layer.conditions" data-class-dia-gray="condition.disabled">
+                                            <div class="dia-row" data-event-click="dia_ui('condition', ci)"
+                                                 data-event-mouseover="dia_hover('condition', ci, true)" data-event-mouseout="dia_hover('condition', ci, false)">
+                                                <span class="dia-row-label">{{ condition.summary }}</span>
+                                                <button class="icon row-action ic-disable" data-class-dia-show="condition.hovered" title="無効化"
+                                                        data-event-click="dia_action('DisableCondition', ci)"></button>
+                                                <button class="icon row-action ic-trash" data-class-dia-show="condition.hovered" title="条件を削除"
+                                                        data-event-click="dia_action('DeleteCondition', ci)"></button>
+                                            </div>
                                             <div class="dia-detail" data-if="condition.open">
                                                 <div data-if="condition.kind == 'time'">
                                                     <label>開始</label><input class="form-field" type="text" data-value="condition.start"
@@ -216,7 +246,8 @@
                                                         data-event-blur="dia_commit('EditCondition', ci, -1, 'end')" data-event-keydown="dia_commit('EditCondition', ci, -1, 'end')" />
                                                 </div>
                                                 <div data-if="condition.kind == 'block'">
-                                                    <label class="dia-row" data-for="block, bi : condition.blocks">
+                                                    <label class="dia-row" data-for="block, bi : condition.blocks"
+                                                           data-event-mouseover="dia_hover('block', ci, true, bi)" data-event-mouseout="dia_hover('block', ci, false, bi)">
                                                         <input type="checkbox" data-attrif-checked="block.selected" data-event-change="dia_action('EditCondition', ci, bi, 'block')" /><span class="dia-row-label">{{ block.value }}</span>
                                                     </label>
                                                     <div class="segmented compact">
@@ -231,6 +262,11 @@
                                                     <div class="segment" data-class-selected="condition.hand == '右'" data-event-click="dia_action('EditCondition', ci, -1, 'hand', '右')"><span>右</span></div>
                                                 </div>
                                             </div>
+                                        </div>
+                                        <button class="flat add-row" data-event-click="dia_ui('addCondition')"><span class="ui-icon ic-plus"></span>条件を追加</button>
+                                        <div class="dia-picker" data-if="dia.addingCondition">
+                                            <button data-event-click="dia_action('AddCondition', -1, -1, '', 'time')">時刻範囲</button>
+                                            <button data-event-click="dia_action('AddCondition', -1, -1, '', 'block')">閉塞の在線</button>
                                         </div>
                                     </div>
                                     <div class="dia-loop">
@@ -740,12 +776,26 @@
     </div>
 </div>
 
-<!-- 番線カード(ダイヤモードだけ。結線はRmlUiPlatformCardView.cpp)。停車できる番線の中ほどの画面上へ名前を出し、
-     押すと左タブがその番線の画面へ移る。画面内の番線だけを、画面の中心に近い順に上限まで出す。 -->
-<div data-for="card : platformCards">
-    <div class="platform-card" data-attr-data-platform-id="card.id" data-class-is-selected="card.selected"
-         data-style-left="card.left" data-style-top="card.top">
-        <button class="flat platform-card-name" title="番線の画面を開く" data-event-click="open_platform_card(card.id)">{{ card.name }}</button>
+<!-- 番線と分岐のカード(ダイヤモードだけ。結線はRmlUiDiaCardView.cpp)。停車できる番線の中ほどと、分岐の位置の画面上へ
+     名前を出し、押すと左タブがその番線・分岐の画面へ移る。ダブルクリックでその場に入力欄を出して名前を変える。
+     画面内のものだけを、番線と分岐を合わせて画面の中心に近い順に上限まで出す。 -->
+<div data-for="card : diaCards">
+    <div class="dia-card" data-attr-data-card-id="card.id" data-class-is-selected="card.selected"
+         data-class-is-editing="card.id == diaCardEditingId" data-style-left="card.left" data-style-top="card.top">
+        <button class="flat dia-card-name" data-attr-title="card.title" data-event-click="open_dia_card(card.id)"
+                data-event-dblclick="begin_rename_dia_card(card.id)">{{ card.name }}</button>
+        <input type="text" class="dia-card-name-input" data-event-change="commit_dia_card_name"
+               data-event-blur="commit_dia_card_name" data-event-keydown="key_dia_card_name" />
+    </div>
+</div>
+
+<!-- 分岐の左右の印(ダイヤモードで分岐を選んでいる間だけ。結線はRmlUiPointHandMarkView.cpp)。分かれる線のレール上の
+     画面上へ出し、押すとその線へ開通先を切り替える。今開いている側は選択の見た目にする。 -->
+<div data-for="mark : pointHandMarks">
+    <div class="point-hand-mark" data-attr-data-mark-id="mark.id" data-class-is-selected="mark.selected"
+         data-style-left="mark.left" data-style-top="mark.top">
+        <button class="flat point-hand-mark-button" title="この線へ開通先を切り替える"
+                data-event-click="change_point_hand(mark.node, mark.link)">{{ mark.label }}</button>
     </div>
 </div>
 
@@ -1443,14 +1493,6 @@
                     <input type="text" class="form-field" data-attr-value="gsTimeScale"
                            data-event-focus="gs_time_scale_focus" data-event-change="gs_time_scale_commit"
                            data-event-blur="gs_time_scale_commit" data-event-keydown="gs_time_scale_key" />
-                </div>
-                <div class="form-row">
-                    <div class="form-label">{{ gsText.earthRotation }}</div>
-                    <div class="segmented compact">
-                        <div class="segment-indicator"></div>
-                        <div class="segment" data-for="choice : gsEarthRotations" data-class-selected="gsEarthRotation == choice.key"
-                             data-event-click="gs_set_earth_rotation(choice.key)"><span>{{ choice.label }}</span></div>
-                    </div>
                 </div>
             </div>
 

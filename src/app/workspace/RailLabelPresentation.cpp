@@ -8,6 +8,10 @@ bool CanCommitBlockName(const rs::world::Block* block, std::string_view name) {
     return block != nullptr && !name.empty() && block->name != name;
 }
 
+std::string BlockDisplayName(const rs::world::Block& block, std::size_t index) {
+    return block.name.empty() ? "閉塞 " + std::to_string(index + 1) : block.name;
+}
+
 std::vector<RailLabelItem> BuildRailLabelItems(const rs::world::TrackGraph& graph,
                                               std::span<const RailLabel> labels,
                                               const rs::world::Guid& selectedBlock,
@@ -26,7 +30,7 @@ std::vector<RailLabelItem> BuildRailLabelItems(const rs::world::TrackGraph& grap
         for (const RailLabelItem& previous : items) {
             if (previous.anchor == label->anchor) ++verticalIndex;
         }
-        items.push_back({block.guid, block.name.empty() ? "閉塞 " + std::to_string(index + 1) : block.name,
+        items.push_back({block.guid, BlockDisplayName(block, index),
                          block.guid == selectedBlock, warning, warning ? "danger" : "normal",
                          label->anchor, verticalIndex});
     }

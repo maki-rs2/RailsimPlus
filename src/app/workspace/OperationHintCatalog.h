@@ -39,9 +39,33 @@ inline constexpr std::array<const char*, kScreenCount> kScreenHints{
 // 運転台視点中の操作説明(画面・モードによらない)。
 inline constexpr const char* kCabinViewHint = "WASD:移動  ↑↓:高さ  右ドラッグ:見回す  Esc:戻る";
 
+// 配置待ちなど、作業モードの中の一時的な状態で替える操作説明。label は操作説明の先頭に札として出す状態名。
+struct OperationHintState {
+    const char* label;
+    const char* hint;
+};
+
+// 信号の配置待ち中(逆向きに置くのはShift+クリック。PointerAction::PlacementReverseの割り当てと合わせる)。
+inline constexpr OperationHintState kSignalPlacingHint{
+    "信号を配置中", "クリック:置く  Shift:逆向き  Esc:やめる"};
+
+// 今の作業モードの中の一時的な状態。無ければnullptr。
+inline const OperationHintState* OperationHintStateFor(const WorkspaceSnapshot& snapshot) {
+    if (snapshot.cabinView || !snapshot.InWorkMode()) return nullptr;
+    if (snapshot.workMode == WorkMode::Signal && snapshot.signalPlacing) return &kSignalPlacingHint;
+    return nullptr;
+}
+
+// 操作説明の先頭に札として出す状態名。出さないときは空文字。
+inline const char* OperationHintLabelFor(const WorkspaceSnapshot& snapshot) {
+    const OperationHintState* state = OperationHintStateFor(snapshot);
+    return state != nullptr ? state->label : "";
+}
+
 // 今の画面・モードの操作説明。出さないときは空文字。
 inline const char* OperationHintFor(const WorkspaceSnapshot& snapshot) {
     if (snapshot.cabinView) return kCabinViewHint;
+    if (const OperationHintState* state = OperationHintStateFor(snapshot)) return state->hint;
     if (snapshot.InWorkMode()) return kWorkModeHints[EnumIndex(snapshot.workMode)];
     return kScreenHints[EnumIndex(snapshot.screen)];
 }

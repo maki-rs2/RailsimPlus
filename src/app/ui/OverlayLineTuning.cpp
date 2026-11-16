@@ -43,6 +43,7 @@ OverlayLineTuning ParseEmbedded() {
             tuning.trainPlacementLineWidthPx = root.value("trainPlacementLineWidthPx", tuning.trainPlacementLineWidthPx);
             tuning.trainPlacementHeadBarHalfWidthM = root.value("trainPlacementHeadBarHalfWidthM", tuning.trainPlacementHeadBarHalfWidthM);
             tuning.trainPlacementLiftM = root.value("trainPlacementLiftM", tuning.trainPlacementLiftM);
+            tuning.pointHandMarkDistanceM = root.value("pointHandMarkDistanceM", tuning.pointHandMarkDistanceM);
             return tuning;
         });
     tuning.minWidthPx = std::max(tuning.minWidthPx, 0.0f);

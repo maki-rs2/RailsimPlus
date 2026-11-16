@@ -15,7 +15,10 @@ namespace time_control_action {
 void Pause(GameSettingsAction& action);
 // 倍率をscaleにする(GameSettingsAction::SetTimeScaleが範囲に丸める)。段の選択と倍率の入力で同じ。
 void SetScale(GameSettingsAction& action, double scale);
-// 「年/月/日」「時:分」を読んで日時にする。読めない・存在しない日付は理由をトーストで出して何も変えない。
-void ChangeDateTime(GameSettingsAction& action, ToastQueue& queue, std::string_view date, std::string_view time);
+// 「年/月/日」「時:分」を読んで日時にする。読めない・存在しない日付は理由をトーストで出して何も変えず、falseを返す。
+bool ChangeDateTime(GameSettingsAction& action, ToastQueue& queue, std::string_view date, std::string_view time);
+// 自転・公転を名前(kEarthRotationKeys・kEarthRevolutionKeys)で選ぶ。今と同じ値・知らない名前は変えない
+// (変えたときだけレイアウトの編集になる)。
+void SetSolarModes(GameSettingsAction& action, std::string_view rotationKey, std::string_view revolutionKey);
 }
 }

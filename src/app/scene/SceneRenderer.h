@@ -199,6 +199,8 @@ public:
     void SetGroupStopDistance(TrainId trainId, double remainingMeters);
     void ClearGroupStopTarget(TrainId trainId);
     bool GroupArrivedAtStop(TrainId trainId) const;
+    // 今、列車が在線している閉塞(SceneTrainController::OccupiedBlocks)。
+    std::unordered_set<rs::world::Guid, rs::world::GuidHash> OccupiedBlocks() const;
     // 編成の運行状態(rs::sim::DiaRuntime)への委譲。
     rs::sim::DiaState GroupDiaState(TrainId trainId) const;
     bool GroupDepartureAbsSeconds(TrainId trainId, double& outAbsSeconds) const;

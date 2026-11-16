@@ -12,6 +12,7 @@
 #include "GuidJson.h"
 #include "JsonReadValue.h"
 #include "PlatformRegistry.h"
+#include "PointName.h"
 #include "PlatformStopInfoSerialize.h"
 #include "SpeedSignalRegistry.h"
 
@@ -265,6 +266,8 @@ TrackGraph TrackGraphFromJson(const nlohmann::json& json) {
     }
     const std::vector<std::string> repairs = SanitizeTrackGraph(result);
     warnings.insert(warnings.end(), repairs.begin(), repairs.end());
+    // 名前を持たない古い保存データの分岐に、既定名を振る。
+    AssignDefaultPointNames(result);
     const std::vector<std::string> problems = ValidateTrackGraph(result);
     warnings.insert(warnings.end(), problems.begin(), problems.end());
     for (const std::string& warning : warnings) spdlog::warn("[{}] {}", kLogTag, warning);

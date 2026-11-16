@@ -6,6 +6,7 @@
 #include <cstdlib>
 
 #include "DiaPanelActionResolve.h"
+#include "DiaPanelBranchAction.h"
 #include "../workspace/DiaPanelFormat.h"
 
 namespace rs::app::dia_panel_action {
@@ -36,6 +37,7 @@ void WithElement(const Refs& refs, const Request& request, int elementIndex, Fun
 } // namespace
 
 void AddLayer(const Refs& refs, const Request& request) {
+    if (branch::IsBranchTarget(refs, request)) return branch::AddLayer(refs, request);
     const workspace::DiaPanelChoice* choice = At(refs.panel.layerChoices_, request.rowIndex_);
     const std::optional<ResolvedTarget> resolved = ResolveActiveTarget(refs, request);
     if (choice == nullptr || !resolved) return;
@@ -48,6 +50,7 @@ void AddLayer(const Refs& refs, const Request& request) {
 }
 
 void DeleteLayer(const Refs& refs, const Request& request) {
+    if (branch::IsBranchTarget(refs, request)) return branch::DeleteLayer(refs, request);
     const std::optional<ResolvedTarget> resolved = ResolveActiveTarget(refs, request);
     const workspace::DiaPanelLayer* layer = resolved ? At(resolved->target->layers_, request.rowIndex_) : nullptr;
     if (layer == nullptr || !layer->deletable_) return;
@@ -59,6 +62,7 @@ void DeleteLayer(const Refs& refs, const Request& request) {
 }
 
 void ReorderLayer(const Refs& refs, const Request& request) {
+    if (branch::IsBranchTarget(refs, request)) return branch::ReorderLayer(refs, request);
     const std::optional<ResolvedTarget> resolved = ResolveActiveTarget(refs, request);
     if (!resolved) return;
     const workspace::DiaPanelLayer* source = At(resolved->target->layers_, request.sourceIndex_);
@@ -71,12 +75,14 @@ void ReorderLayer(const Refs& refs, const Request& request) {
 }
 
 void AddElement(const Refs& refs, const Request& request) {
+    if (branch::IsBranchTarget(refs, request)) return branch::AddElement(refs, request);
     WithLayer(refs, request, request.layerIndex_,
               [](PlatformRoutineAction& action, const RoutineLayerRef& ref,
                  const std::vector<PlatformRoutineElement>&, const workspace::DiaPanelLayer&) { action.AddElement(ref); });
 }
 
 void DeleteElement(const Refs& refs, const Request& request) {
+    if (branch::IsBranchTarget(refs, request)) return branch::DeleteElement(refs, request);
     WithElement(refs, request, request.rowIndex_,
                 [](PlatformRoutineAction& action, const RoutineLayerRef& ref, const PlatformRoutineElement&, std::size_t index) {
                     action.RemoveElement(ref, index);
@@ -84,6 +90,7 @@ void DeleteElement(const Refs& refs, const Request& request) {
 }
 
 void DisableElement(const Refs& refs, const Request& request) {
+    if (branch::IsBranchTarget(refs, request)) return branch::DisableElement(refs, request);
     WithElement(refs, request, request.rowIndex_,
                 [](PlatformRoutineAction& action, const RoutineLayerRef& ref, const PlatformRoutineElement& element, std::size_t index) {
                     action.SetElementEnabled(ref, index, !element.enabled);
@@ -91,6 +98,7 @@ void DisableElement(const Refs& refs, const Request& request) {
 }
 
 void ReorderElement(const Refs& refs, const Request& request) {
+    if (branch::IsBranchTarget(refs, request)) return branch::ReorderElement(refs, request);
     if (request.sourceIndex_ < 0 || request.rowIndex_ < 0) return;
     WithLayer(refs, request, request.layerIndex_,
               [&request](PlatformRoutineAction& action, const RoutineLayerRef& ref,

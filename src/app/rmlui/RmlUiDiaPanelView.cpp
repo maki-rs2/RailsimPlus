@@ -48,7 +48,9 @@ constexpr ActionBinding kActions[] = {
     {"ResetStopPosition", dia_panel_action::ResetStopPosition}, {"ChangeStopPosition", dia_panel_action::ChangeStopPosition}, {"ChangeRunInfo", dia_panel_action::ChangeRunInfo},
     {"AddRunInfo", dia_panel_action::AddRunInfo}, {"DeleteRunInfo", dia_panel_action::DeleteRunInfo},
     {"EditCondition", dia_panel_action::EditCondition},
-    {"ChangeBranchHand", dia_panel_action::ChangeBranchHand}};
+    {"ChangeBranchHand", dia_panel_action::ChangeBranchHand},
+    {"AddCondition", dia_panel_action::AddCondition}, {"DeleteCondition", dia_panel_action::DeleteCondition},
+    {"DisableCondition", dia_panel_action::DisableCondition}, {"MovePoint", dia_panel_action::MovePoint}};
 
 // シーンの切り替えが終わるのを待つ最大のフレーム数(読込中などで切り替えが続けて断られるとき)。
 constexpr int kMaxNavigationWaitFrames = 600;
@@ -83,6 +85,7 @@ void RmlUiDiaPanelView::Attach(rs::editor::Editor& editor, LayoutSession& sessio
     renderer_ = &renderer;
     camera_ = &camera;
     switchScene_ = std::move(switchScene);
+    occupiedBlocks_ = [&renderer]() { return renderer.OccupiedBlocks(); };
 }
 
 void RmlUiDiaPanelView::SetActive(bool active) {
@@ -91,7 +94,11 @@ void RmlUiDiaPanelView::SetActive(bool active) {
     pendingFocus_ = false;
     navigation_ = {};
     built_ = false;
-    if (active && Attached()) lastSelectedPlatform_ = editor_->selectedPlatform;
+    ClearHoveredBlock();
+    if (active && Attached()) {
+        lastSelectedPlatform_ = editor_->selectedPlatform;
+        lastSelectedNode_ = editor_->selectedNode;
+    }
     modelHandle_.DirtyVariable("dia");
 }
 
@@ -161,6 +168,10 @@ void RmlUiDiaPanelView::ProcessNavigation() {
         StationDiaAction(*editor_).SelectPlatform(navigation_.platformId_);
         lastSelectedPlatform_ = navigation_.platformId_;
     }
+    if (navigation_.selectPoint_) {
+        StationDiaAction(*editor_).SelectPoint(navigation_.nodeId_);
+        lastSelectedNode_ = navigation_.nodeId_;
+    }
     if (navigation_.fly_) camera_->FlyTo({navigation_.flyX_, navigation_.flyY_, navigation_.flyZ_});
     navigation_ = {};
 }
@@ -168,12 +179,21 @@ void RmlUiDiaPanelView::ProcessNavigation() {
 // ダイヤモードで3D画面から番線が選ばれたら、左タブもその番線の画面へ移す。
 void RmlUiDiaPanelView::SyncSelectedPlatform() {
     const rs::world::Guid selected = editor_->selectedPlatform;
-    if (selected == lastSelectedPlatform_) return;
+    const rs::world::Guid selectedNode = editor_->selectedNode;
+    const bool platformChanged = selected != lastSelectedPlatform_;
+    const bool nodeChanged = selectedNode != lastSelectedNode_;
     lastSelectedPlatform_ = selected;
-    if (rs::world::GuidIsNil(selected)) return;
+    lastSelectedNode_ = selectedNode;
+    // 番線を選び直したら番線、分岐を選び直したら分岐の画面へ移す(同時に変わったら番線を優先する)。
+    const bool branch = !platformChanged && nodeChanged;
+    const rs::world::Guid& wanted = branch ? selectedNode : selected;
+    if ((!platformChanged && !nodeChanged) || rs::world::GuidIsNil(wanted)) return;
     for (std::size_t index = 0; index < presentation_.targets_.size(); ++index) {
         const DiaPanelTarget& target = presentation_.targets_[index];
-        if (target.platformId_ != selected || target.sceneIndex_ != presentation_.activeScene_) continue;
+        if (target.branch_ != branch || (branch ? target.nodeId_ : target.platformId_) != wanted ||
+            target.sceneIndex_ != presentation_.activeScene_) {
+            continue;
+        }
         if (presentation_.screen_ == 0 || presentation_.targetIndex_ != static_cast<int>(index)) {
             presentation_.OpenTarget(static_cast<int>(index));
             modelHandle_.DirtyVariable("dia");
@@ -189,28 +209,48 @@ void RmlUiDiaPanelView::OpenTarget(int targetIndex) {
     const DiaPanelTarget& target = presentation_.targets_[static_cast<std::size_t>(targetIndex)];
     navigation_ = {};
     if (target.sceneIndex_ == presentation_.activeScene_) {
-        StationDiaAction(*editor_).SelectPlatform(target.platformId_);
-        lastSelectedPlatform_ = target.platformId_;
+        if (target.branch_) {
+            StationDiaAction(*editor_).SelectPoint(target.nodeId_);
+            lastSelectedNode_ = target.nodeId_;
+        } else {
+            StationDiaAction(*editor_).SelectPlatform(target.platformId_);
+            lastSelectedPlatform_ = target.platformId_;
+        }
         return;
     }
     navigation_.pending_ = true;
     navigation_.sceneIndex_ = target.sceneIndex_;
-    navigation_.selectPlatform_ = true;
+    navigation_.selectPlatform_ = !target.branch_;
     navigation_.platformId_ = target.platformId_;
+    navigation_.selectPoint_ = target.branch_;
+    navigation_.nodeId_ = target.nodeId_;
 }
 
-void RmlUiDiaPanelView::OpenPlatform(const rs::world::Guid& platformId) {
+void RmlUiDiaPanelView::OpenPlatform(const rs::world::Guid& platformId) { OpenActiveTarget(false, platformId); }
+void RmlUiDiaPanelView::OpenPoint(const rs::world::Guid& nodeId) { OpenActiveTarget(true, nodeId); }
+
+void RmlUiDiaPanelView::OpenActiveTarget(bool branch, const rs::world::Guid& id) {
     for (std::size_t index = 0; index < presentation_.targets_.size(); ++index) {
         const DiaPanelTarget& target = presentation_.targets_[index];
-        if (target.platformId_ != platformId || target.sceneIndex_ != presentation_.activeScene_) continue;
+        if (target.branch_ != branch || (branch ? target.nodeId_ : target.platformId_) != id ||
+            target.sceneIndex_ != presentation_.activeScene_) {
+            continue;
+        }
         OpenTarget(static_cast<int>(index));
         modelHandle_.DirtyVariable("dia");
         return;
     }
 }
 
+void RmlUiDiaPanelView::ClearHoveredBlock() {
+    hoveredBlock_ = rs::world::NilGuid();
+    if (Attached()) editor_->hoveredBlock = rs::world::NilGuid();
+}
+
 void RmlUiDiaPanelView::OnUi(Rml::Event& event, const Rml::VariantList& arguments) {
     event.StopPropagation();
+    // 画面の移動や条件の開閉で、閉塞の行が消えるかもしれない。消えた行のmouseoutは届かないので、強調を戻す。
+    ClearHoveredBlock();
     const std::string kind = EventArgumentAt<std::string>(arguments, 0, "");
     const int index = EventArgumentAt<int>(arguments, 1, -1);
     if (kind == "target") OpenTarget(index);
@@ -223,6 +263,7 @@ void RmlUiDiaPanelView::OnUi(Rml::Event& event, const Rml::VariantList& argument
     else if (kind == "times") presentation_.ToggleTimes(index);
     else if (kind == "addLayer") presentation_.addingLayer_ = !presentation_.addingLayer_;
     else if (kind == "addOverwrite") presentation_.addingOverwrite_ = !presentation_.addingOverwrite_;
+    else if (kind == "addCondition") presentation_.addingCondition_ = !presentation_.addingCondition_;
     else if (kind == "rename") {
         presentation_.BeginRename(index);
         document_ = event.GetCurrentElement()->GetOwnerDocument();
@@ -237,10 +278,27 @@ void RmlUiDiaPanelView::OnUi(Rml::Event& event, const Rml::VariantList& argument
     modelHandle_.DirtyVariable("dia");
 }
 
+void RmlUiDiaPanelView::OnHoverBlock(int conditionIndex, int blockIndex, bool hovered) {
+    workspace::DiaPanelLayer* const layer = presentation_.CurrentLayer();
+    workspace::DiaPanelCondition* const condition = layer == nullptr ? nullptr : At(layer->conditions_, conditionIndex);
+    const workspace::DiaPanelChoice* const block = condition == nullptr ? nullptr : At(condition->blocks_, blockIndex);
+    if (block == nullptr) return;
+    // 行をまたぐと、出る側のmouseoutと入る側のmouseoverが続けて届く。出る側が今の強調を消してしまわないよう、
+    // 自分の閉塞のときだけ消す。
+    if (hovered) hoveredBlock_ = block->id_;
+    else if (hoveredBlock_ == block->id_) hoveredBlock_ = rs::world::NilGuid();
+    if (Attached()) editor_->hoveredBlock = hoveredBlock_;
+}
+
 void RmlUiDiaPanelView::OnHover(const Rml::VariantList& arguments) {
     const std::string kind = EventArgumentAt<std::string>(arguments, 0, "");
     const int index = EventArgumentAt<int>(arguments, 1, -1);
     const bool hovered = EventArgumentAt<bool>(arguments, 2, false);
+    if (kind == "block") {
+        // 条件の閉塞の行。3D画面でそのレールを強調するだけで、画面の表示値は変えない。
+        OnHoverBlock(index, EventArgumentAt<int>(arguments, 3, -1), hovered);
+        return;
+    }
     bool* flag = nullptr;
     if (kind == "list") {
         if (workspace::DiaPanelListRow* row = At(presentation_.rows_, index)) flag = &row->hovered_;
@@ -248,7 +306,9 @@ void RmlUiDiaPanelView::OnHover(const Rml::VariantList& arguments) {
         if (kind == "layer") {
             if (workspace::DiaPanelLayer* layer = At(target->layers_, index)) flag = &layer->hovered_;
         } else if (workspace::DiaPanelLayer* layer = presentation_.CurrentLayer()) {
-            if (workspace::DiaPanelElement* element = At(layer->elements_, index)) {
+            if (kind == "condition") {
+                if (workspace::DiaPanelCondition* condition = At(layer->conditions_, index)) flag = &condition->hovered_;
+            } else if (workspace::DiaPanelElement* element = At(layer->elements_, index)) {
                 if (kind == "element") flag = &element->hovered_;
                 else if (workspace::DiaPanelField* time = At(element->times_, EventArgumentAt<int>(arguments, 3, -1))) {
                     flag = &time->hovered_;
@@ -267,7 +327,9 @@ void RmlUiDiaPanelView::OnAction(Rml::Event& event, const Rml::VariantList& argu
     // チェックボックス・選択のchangeは、データ結線が値を書き換えたときにも届く(別の番線へ移ったときなど)。
     // 切り替えの操作は、ユーザーが変えたときだけ行う。
     if (event.GetId() == Rml::EventId::Change && IsInsideContextUpdate()) return;
-    const std::string name = EventArgumentAt<std::string>(arguments, 0, "");
+    std::string name = EventArgumentAt<std::string>(arguments, 0, "");
+    // 行へのドロップは、持ち上げたものが分岐なら分岐の移動として扱う(画面の結線は同じ MovePlatform)。
+    if (name == "MovePlatform" && presentation_.dragKind_ == "point") name = "MovePoint";
     if (commit && event.GetId() == Rml::EventId::Keydown) {
         const int key = event.GetParameter<int>("key_identifier", 0);
         if (key == static_cast<int>(Rml::Input::KI_ESCAPE) && name == "RenameStation") {
@@ -297,14 +359,15 @@ void RmlUiDiaPanelView::OnAction(Rml::Event& event, const Rml::VariantList& argu
         pendingFocus_ = false;
     }
     if (event.GetId() == Rml::EventId::Dragdrop) {
-        const std::string expected = name == "MovePlatform" ? "platform" : name == "ReorderLayer" ? "layer" : "element";
+        const std::string expected = name == "MovePlatform" ? "platform" : name == "MovePoint" ? "point"
+                                     : name == "ReorderLayer" ? "layer" : "element";
         if (presentation_.dragKind_ != expected || presentation_.dragIndex_ < 0) return;
         request.sourceIndex_ = presentation_.dragIndex_;
     }
     if (!Attached()) return;
     for (const ActionBinding& binding : kActions) {
         if (binding.name != name) continue;
-        const DiaPanelActionRefs refs{queue_, *editor_, presentation_, navigation_};
+        const DiaPanelActionRefs refs{queue_, *editor_, presentation_, navigation_, occupiedBlocks_};
         if (name == "DeleteStation" && confirmDialog_ != nullptr) {
             // 確認を待つ間に一覧が作り直されても別の駅を消さないよう、開いた時点の駅のGuidを覚えておく。
             const workspace::DiaPanelListRow* const row = At(presentation_.rows_, request.rowIndex_);
@@ -316,7 +379,7 @@ void RmlUiDiaPanelView::OnAction(Rml::Event& event, const Rml::VariantList& argu
                                          current->sceneIndex_ != scene) {
                                          return;
                                      }
-                                     action({queue_, *editor_, presentation_, navigation_}, request);
+                                     action({queue_, *editor_, presentation_, navigation_, occupiedBlocks_}, request);
                                      forceRebuild_ = true;
                                  });
         } else {
@@ -326,6 +389,9 @@ void RmlUiDiaPanelView::OnAction(Rml::Event& event, const Rml::VariantList& argu
     }
     // 書換える項目を選んだら、選択肢の一覧は閉じる。
     if (name == "AddRunInfo") presentation_.addingOverwrite_ = false;
+    // 条件の候補を選んだら一覧を閉じ、作り直した表示値で足した行を開く。
+    presentation_.openLastCondition_ = name == "AddCondition";
+    if (name == "AddCondition") presentation_.addingCondition_ = false;
     // 操作で値が変わらなかったとき(読めない入力など)も、入力欄を元の値へ戻すため作り直す。
     forceRebuild_ = true;
     modelHandle_.DirtyVariable("dia");

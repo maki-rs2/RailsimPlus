@@ -3,6 +3,8 @@
 //
 #include "DiaPanelPresentationBuilder.h"
 
+#include "DiaPanelBranchBuilder.h"
+
 #include <algorithm>
 #include <cstdio>
 
@@ -13,20 +15,8 @@ namespace rs::app {
 namespace {
 
 using namespace workspace;
-
-std::string FormationName(const DiaPanelBuildInput& input, const rs::world::Guid& id) {
-    for (const DiaPanelFormationName& formation : input.formations) {
-        if (formation.id == id) return formation.name;
-    }
-    return "(削除された編成)";
-}
-
-std::string TagLabel(const DiaPanelBuildInput& input, int tagId) {
-    for (const DiaPanelTagName& tag : input.tags) {
-        if (tag.id == tagId) return "タグ:" + tag.label;
-    }
-    return "タグ:#" + std::to_string(tagId);
-}
+using dia_builder::FormationName;
+using dia_builder::TagLabel;
 
 std::string ElementSummary(const rs::world::PlatformRoutineElement& element) {
     std::string summary = DiaActionLabel(element.action);
@@ -176,6 +166,25 @@ void AddPlatformRow(SceneRowContext& context, const rs::world::PlatformStopInfo&
                                         context.sceneIndex));
 }
 
+void AddPointRow(SceneRowContext& context, const dia_builder::PointEntry& point, const std::string& stationName,
+                 int depth) {
+    DiaPanelPresentation& panel = context.panel;
+    DiaPanelListRow row;
+    row.kind_ = "target";
+    row.point_ = true;
+    row.name_ = dia_builder::PointDisplayName(*point.node);
+    row.target_ = static_cast<int>(panel.targets_.size());
+    row.gray_ = dia_builder::PointIsUnset(*point.node);
+    row.draggable_ = true;
+    row.depth_ = depth;
+    row.id_ = point.id;
+    row.sceneIndex_ = context.sceneIndex;
+    const std::string breadcrumb = (stationName.empty() ? std::string("未所属") : stationName) + " > " + row.name_;
+    panel.rows_.push_back(std::move(row));
+    panel.targets_.push_back(dia_builder::MakeBranchTarget(context.input, *context.scene.graph, point, breadcrumb,
+                                                          context.sceneIndex));
+}
+
 // 停車できて、レールを持つ番線が1つでもあるか。
 bool HasStoppablePlatformWithRail(const rs::world::TrackGraph& graph, const rs::world::Guid& stationId) {
     return std::any_of(graph.platforms.begin(), graph.platforms.end(), [&stationId](const rs::world::PlatformStopInfo& platform) {
@@ -194,6 +203,8 @@ void AddScene(SceneRowContext& context, bool showSceneRow) {
         panel.rows_.push_back(std::move(row));
     }
     const int stationDepth = showSceneRow ? 1 : 0;
+    const std::vector<dia_builder::PointEntry> points = dia_builder::SortedPoints(graph);
+    std::vector<rs::world::Guid> shownStations;
     for (const rs::world::StationInfo& station : graph.stations) {
         // 取り込んだ駅(sourceAddressを持つ)のうち、停車できる番線にレールが無いものは出さない。
         // 手動で作った駅(sourceAddressが空)は、番線が空でも出す。
@@ -206,8 +217,12 @@ void AddScene(SceneRowContext& context, bool showSceneRow) {
         row.sceneIndex_ = context.sceneIndex;
         row.hasFlyTarget_ = StationFlyTarget(graph, station.id, row);
         panel.rows_.push_back(std::move(row));
+        shownStations.push_back(station.id);
         for (const rs::world::PlatformStopInfo& platform : graph.platforms) {
             if (platform.stationId == station.id) AddPlatformRow(context, platform, station.name, stationDepth + 1);
+        }
+        for (const dia_builder::PointEntry& point : points) {
+            if (point.node->pointStationId == station.id) AddPointRow(context, point, station.name, stationDepth + 1);
         }
     }
     for (const rs::world::PlatformStopInfo& platform : graph.platforms) {
@@ -215,6 +230,13 @@ void AddScene(SceneRowContext& context, bool showSceneRow) {
                            std::any_of(graph.stations.begin(), graph.stations.end(),
                                        [&platform](const rs::world::StationInfo& station) { return station.id == platform.stationId; });
         if (!known) AddPlatformRow(context, platform, showSceneRow ? context.scene.name : std::string(), stationDepth);
+    }
+    // 所属駅がない分岐と、一覧に出ていない駅(消えた駅など)を指す分岐は、未所属として番線の後ろに並べる。
+    for (const dia_builder::PointEntry& point : points) {
+        const rs::world::Guid& stationId = point.node->pointStationId;
+        const bool known = !rs::world::GuidIsNil(stationId) &&
+                           std::find(shownStations.begin(), shownStations.end(), stationId) != shownStations.end();
+        if (!known) AddPointRow(context, point, std::string(), stationDepth);
     }
 }
 
@@ -224,7 +246,10 @@ bool SameRow(const DiaPanelListRow& left, const DiaPanelListRow& right) {
 
 int FindTarget(const DiaPanelPresentation& panel, const DiaPanelTarget& wanted) {
     for (std::size_t index = 0; index < panel.targets_.size(); ++index) {
-        if (panel.targets_[index].platformId_ == wanted.platformId_ && panel.targets_[index].sceneIndex_ == wanted.sceneIndex_) {
+        const DiaPanelTarget& candidate = panel.targets_[index];
+        // 番線と分岐は別のGuidの空間なので、種類も合わせて見る。
+        const bool sameId = wanted.branch_ ? candidate.nodeId_ == wanted.nodeId_ : candidate.platformId_ == wanted.platformId_;
+        if (candidate.branch_ == wanted.branch_ && sameId && candidate.sceneIndex_ == wanted.sceneIndex_) {
             return static_cast<int>(index);
         }
     }
@@ -238,6 +263,13 @@ int FindLayer(const DiaPanelTarget& target, const DiaPanelLayer& wanted) {
         }
     }
     return -1;
+}
+
+// 開いていた条件の行の開閉を戻す(条件の並びの添字で対応づける)。
+void CarryConditionsOpen(const DiaPanelLayer& oldLayer, DiaPanelLayer& newLayer) {
+    for (std::size_t index = 0; index < newLayer.conditions_.size() && index < oldLayer.conditions_.size(); ++index) {
+        newLayer.conditions_[index].open_ = oldLayer.conditions_[index].open_;
+    }
 }
 
 template <typename T>
@@ -258,6 +290,24 @@ void CarryTimesOpen(const DiaPanelTarget& oldTarget, DiaPanelTarget& newTarget) 
 }
 
 } // namespace
+
+namespace dia_builder {
+
+std::string FormationName(const DiaPanelBuildInput& input, const rs::world::Guid& id) {
+    for (const DiaPanelFormationName& formation : input.formations) {
+        if (formation.id == id) return formation.name;
+    }
+    return "(削除された編成)";
+}
+
+std::string TagLabel(const DiaPanelBuildInput& input, int tagId) {
+    for (const DiaPanelTagName& tag : input.tags) {
+        if (tag.id == tagId) return "タグ:" + tag.label;
+    }
+    return "タグ:#" + std::to_string(tagId);
+}
+
+} // namespace dia_builder
 
 DiaPanelPresentation BuildDiaPanelPresentation(const DiaPanelBuildInput& input) {
     DiaPanelPresentation panel;
@@ -297,10 +347,18 @@ void CarryOverDiaPanelState(const DiaPanelPresentation& previous, DiaPanelPresen
             CarryTimesOpen(*oldTarget, next.targets_[static_cast<std::size_t>(targetIndex)]);
             const DiaPanelLayer* const oldLayer = At(oldTarget->layers_, previous.layerIndex_);
             const int layerIndex = oldLayer == nullptr ? -1 : FindLayer(next.targets_[static_cast<std::size_t>(targetIndex)], *oldLayer);
-            if (layerIndex >= 0 && next.OpenLayer(layerIndex) && previous.screen_ == 2) {
-                next.OpenElement(previous.elementIndex_);
+            if (layerIndex >= 0 && next.OpenLayer(layerIndex)) {
+                DiaPanelLayer* const layer = next.CurrentLayer();
+                if (oldLayer != nullptr && layer != nullptr) CarryConditionsOpen(*oldLayer, *layer);
+                // 条件を足した直後は、足した行(末尾)を開いた状態にする。
+                if (previous.openLastCondition_ && layer != nullptr && !layer->conditions_.empty()) {
+                    for (DiaPanelCondition& condition : layer->conditions_) condition.open_ = false;
+                    layer->conditions_.back().open_ = true;
+                }
+                if (previous.screen_ == 2) next.OpenElement(previous.elementIndex_);
             }
             next.addingLayer_ = previous.addingLayer_;
+            next.addingCondition_ = previous.addingCondition_ && next.layerIndex_ >= 0;
             next.addingOverwrite_ = previous.addingOverwrite_ && next.screen_ == 2;
         }
     }

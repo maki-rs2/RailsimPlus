@@ -38,10 +38,18 @@ void RemoveStationCommand::Apply(rs::world::TrackGraph& graph) {
     index_ = index;
     removed_ = true;
     detachedPlatformIds_.clear();
+    detachedPointIds_.clear();
     for (rs::world::PlatformStopInfo& platform : graph.platforms) {
         if (platform.stationId == stationId_) {
             detachedPlatformIds_.push_back(platform.id);
             platform.stationId = rs::world::NilGuid();
+        }
+    }
+    // 分岐も番線と同じく所属だけ外す。
+    for (auto& [nodeGuid, node] : graph.nodes) {
+        if (node.pointStationId == stationId_) {
+            detachedPointIds_.push_back(nodeGuid);
+            node.pointStationId = rs::world::NilGuid();
         }
     }
     graph.stations.erase(graph.stations.begin() + static_cast<std::ptrdiff_t>(index));
@@ -59,6 +67,10 @@ void RemoveStationCommand::Revert(rs::world::TrackGraph& graph) {
         if (index < graph.platforms.size()) {
             graph.platforms[index].stationId = stationId_;
         }
+    }
+    for (const rs::world::Guid& id : detachedPointIds_) {
+        const auto found = graph.nodes.find(id);
+        if (found != graph.nodes.end()) found->second.pointStationId = stationId_;
     }
 }
 

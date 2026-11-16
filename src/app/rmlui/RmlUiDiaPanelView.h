@@ -43,6 +43,8 @@ public:
     void Refresh();
     // 開いているシーンの番線の画面を開く(3D画面の番線カードから)。見つからなければ何もしない。
     void OpenPlatform(const rs::world::Guid& platformId);
+    // 開いているシーンの分岐の画面を開く(3D画面の分岐カードから)。見つからなければ何もしない。
+    void OpenPoint(const rs::world::Guid& nodeId);
     // Escで1段階戻る(要素編集 → 番線 → 一覧)。一覧にいるとき・パネルを開いていないときは何もせずfalse。
     bool CloseTransient();
 
@@ -50,7 +52,10 @@ private:
     void OnUi(Rml::Event& event, const Rml::VariantList& arguments);
     void OnAction(Rml::Event& event, const Rml::VariantList& arguments, bool commit);
     void OnHover(const Rml::VariantList& arguments);
+    void OnHoverBlock(int conditionIndex, int blockIndex, bool hovered);
+    void ClearHoveredBlock();
     void OpenTarget(int targetIndex);
+    void OpenActiveTarget(bool branch, const rs::world::Guid& id);
     void ProcessNavigation();
     void Rebuild();
     void SyncSelectedPlatform();
@@ -70,6 +75,9 @@ private:
     CameraController* camera_ = nullptr;
     std::function<void(int)> switchScene_;
     DiaPanelNavigation navigation_;
+    OccupiedBlocksSource occupiedBlocks_;
+    // 条件の閉塞の行でマウスが乗っている閉塞。Editor::hoveredBlock へ写す(3D画面の強調用)。
+    rs::world::Guid hoveredBlock_ = rs::world::NilGuid();
     // 表示値を作った時点のデータの世代。変わったときだけ作り直す。
     bool built_ = false;
     bool forceRebuild_ = false;
@@ -78,5 +86,6 @@ private:
     std::size_t builtSceneCount_ = 0;
     // 最後に見た選択中の番線。3D画面での選択の変化と、左タブから自分で開いた選択を区別する。
     rs::world::Guid lastSelectedPlatform_ = rs::world::NilGuid();
+    rs::world::Guid lastSelectedNode_ = rs::world::NilGuid();
 };
 } // namespace rs::app::rmlui

@@ -23,9 +23,9 @@ void HandleSceneEntitySelectionInput(const EditorViewportContext& ctx, const rs:
     }
     editor.sceneEntityGizmoHover = {};
     if (!sceneEntitySelectionEnabled) {
+        // 配置物(橋脚・架線柱)のホバーは配置物の入力処理が決める。この関数は配置物の入力より
+        // 後に呼ばれるので、ここで消すとレールの表示モードでホバーの色が出なくなる。
         editor.hoveredSceneEntityId = rs::world::NilGuid();
-        editor.hoveredPlacementEdge = rs::world::NilGuid();
-        editor.hoveredPlacementFolder.clear();
         return;
     }
     if (!input.AllowsPointer(rs::app::input::InputContext::Edit)) return;

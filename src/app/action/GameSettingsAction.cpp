@@ -69,6 +69,12 @@ void GameSettingsAction::SetEarthRotationMode(int mode) {
     refs_.document.MarkEdited();
 }
 
+void GameSettingsAction::SetEarthRevolutionMode(int mode) {
+    refs_.world.solarOverrides.earthRevolutionMode = rs::world::EarthRevolutionModeFromIndex(mode);
+    // 自転と同じく .rsl に保存する値なので、レイアウトの編集として数える。
+    refs_.document.MarkEdited();
+}
+
 void GameSettingsAction::SetLayoutSaveDirectory(const std::string& directoryUtf8) {
     refs_.userSettings.layoutSaveDirectory = directoryUtf8;
     SaveUserSettingsOrWarn(refs_.userSettings, "Failed to save user settings after layout save directory selection.");
@@ -131,6 +137,7 @@ GameSettingsViewModel GameSettingsAction::ViewModel() const {
     viewModel.second = clock.Second();
     viewModel.timeScale = static_cast<float>(clock.TimeScale());
     viewModel.earthRotationMode = static_cast<int>(refs_.world.solarOverrides.earthRotationMode);
+    viewModel.earthRevolutionMode = static_cast<int>(refs_.world.solarOverrides.earthRevolutionMode);
     viewModel.layoutSaveDirectory = refs_.userSettings.layoutSaveDirectory;
     viewModel.pluginRoots = refs_.userSettings.pluginRoots;
     viewModel.fullscreen = refs_.userSettings.fullscreen;

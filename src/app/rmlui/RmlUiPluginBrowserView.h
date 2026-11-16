@@ -122,6 +122,7 @@ private:
     bool* snapToRail_ = nullptr;
     SceneRenderer* sceneRenderer_ = nullptr; // 信号プラグインの速度表(station.json)の取得口
     rs::world::SceneRegistry* sceneRegistry_ = nullptr;
+    ToastQueue* toastQueue_ = nullptr;
     Rml::DataModelHandle modelHandle_;
     std::unique_ptr<PluginBrowserModel> model_;
     // レールのセットに入っているかの覚え書き(カードごとに毎フレームSamePluginPathを呼ばないため)。

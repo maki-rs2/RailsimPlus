@@ -28,6 +28,8 @@ public:
     // 参照はマウス入力(右ドラッグ回転/Shift+左ドラッグ高さ調節/ホイール)の
     // 委譲に使う。生成失敗時は false を返す(ログはこの関数内で出す)。
     bool Create(CameraController& camera, bool viewerMode, UINT width, UINT height);
+    // Create が失敗したときの GetLastError の値(成功時は 0)。
+    DWORD CreateError() const { return createError_; }
 
     HWND Handle() const { return hwnd_; }
     UINT Width() const { return width_; }
@@ -87,6 +89,7 @@ private:
     CabinViewCamera* cabinCamera_ = nullptr;
     const rs::app::input::InputSource* inputSource_ = nullptr;
     HWND hwnd_ = nullptr;
+    DWORD createError_ = 0;
     WNDCLASSEXW wc_{};
     UINT width_ = 0, height_ = 0;
 

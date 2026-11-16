@@ -102,8 +102,8 @@ PointRoutineScanResult ApplyPointRoutinesInScene(
             }
             if (!decidedSlot.has_value()) {
                 const std::optional<int> conditionHand = ResolvePointConditionHand(
-                    node, conditionContext.trainId, *conditionContext.trainTagIds,
-                    *conditionContext.previousOccupiedBlocks, conditionContext.nowAbsSeconds);
+                    node, conditionContext.trainId, conditionContext.formationId,
+                    *conditionContext.trainTagIds, *conditionContext.previousOccupiedBlocks, conditionContext.nowAbsSeconds);
                 if (conditionHand.has_value()) {
                     decidedSlot = ResolveHandToOrdinal(graph, node, exitSide, *conditionHand);
                     // ルーチンのカーソルは消費しない(条件が勝ったので未使用のまま。

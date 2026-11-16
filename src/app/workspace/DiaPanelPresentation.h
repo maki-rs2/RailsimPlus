@@ -49,11 +49,15 @@ struct DiaPanelElement {
 };
 
 struct DiaPanelCondition {
+    // 'time'(時刻範囲)か 'block'(閉塞の在線)。画面の出し分けに使う。
     std::string kind_;
     std::string summary_;
     bool open_ = false;
+    bool disabled_ = false;
+    bool hovered_ = false;
     std::string start_;
     std::string end_;
+    // 閉塞の在線の候補。分岐に近い順に全閉塞を並べ、選んでいるものを selected_ にする。id_ は閉塞のGuid。
     std::vector<DiaPanelChoice> blocks_;
     bool all_ = false;
     std::string hand_;
@@ -76,15 +80,25 @@ struct DiaPanelLayer {
     rs::world::Guid formationId_{};
 };
 
+// 分岐の開通先の1行。分岐している面ごとに1行で、どちらか一方だけが開く。
+struct DiaPanelOpening {
+    // 面が1つなら「開通先」、2つなら「開通先1」「開通先2」。
+    std::string label_;
+    bool left_ = false;
+    bool right_ = false;
+};
+
+// 番線か分岐の1件。分岐なら branch_ が true で nodeId_ を使い、番線なら platformId_ を使う。
 struct DiaPanelTarget {
     std::string breadcrumb_;
     bool branch_ = false;
     bool selected_ = false;
     bool doorLeft_ = false;
     bool doorRight_ = false;
-    std::string opening_;
+    std::vector<DiaPanelOpening> openings_;
     std::vector<DiaPanelLayer> layers_;
     rs::world::Guid platformId_{};
+    rs::world::Guid nodeId_{};
     int sceneIndex_ = 0;
 };
 
@@ -93,6 +107,8 @@ struct DiaPanelListRow {
     std::string name_;
     int target_ = -1;
     bool gray_ = false;
+    // 分岐の行。kind_ は番線と同じ "target" で、id_ は分岐のノードのGuid。
+    bool point_ = false;
     bool highlighted_ = false;
     bool hovered_ = false;
     bool editing_ = false;
@@ -133,6 +149,10 @@ struct DiaPanelPresentation {
     std::vector<DiaPanelChoice> overwriteChoices_;
     bool addingLayer_ = false;
     bool addingOverwrite_ = false;
+    // 分岐の層の条件の追加の候補を開いているか。
+    bool addingCondition_ = false;
+    // 条件を足した直後に、作り直した表示値で末尾の条件を開く(開いた状態で足すため)。
+    bool openLastCondition_ = false;
     int targetIndex_ = -1;
     int layerIndex_ = -1;
     int elementIndex_ = -1;

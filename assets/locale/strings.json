@@ -264,10 +264,6 @@
     "ja": "TimeScale",
     "en": "TimeScale"
   },
-  "game_settings.earth_rotation": {
-    "ja": "自転",
-    "en": "Earth rotation"
-  },
   "game_settings.earth_rotation.auto": {
     "ja": "時刻連動",
     "en": "Follow time"
@@ -279,6 +275,26 @@
   "game_settings.earth_rotation.night": {
     "ja": "常に夜",
     "en": "Always night"
+  },
+  "game_settings.earth_revolution.auto": {
+    "ja": "自動",
+    "en": "Auto"
+  },
+  "game_settings.earth_revolution.spring": {
+    "ja": "春",
+    "en": "Spring"
+  },
+  "game_settings.earth_revolution.summer": {
+    "ja": "夏",
+    "en": "Summer"
+  },
+  "game_settings.earth_revolution.autumn": {
+    "ja": "秋",
+    "en": "Autumn"
+  },
+  "game_settings.earth_revolution.winter": {
+    "ja": "冬",
+    "en": "Winter"
   },
   "game_settings.weekday.0": {
     "ja": "日",
@@ -579,6 +595,18 @@
   "app.gpu_init_failed.reason_unknown": {
     "ja": "初期化に失敗しました",
     "en": "Initialization failed"
+  },
+  "app.startup_failed.title": {
+    "ja": "RailsimPlus を起動できませんでした",
+    "en": "RailsimPlus could not start"
+  },
+  "app.startup_failed.body": {
+    "ja": "起動中にエラーが起きたため、RailsimPlus を終了します。\n\n理由: {}",
+    "en": "An error occurred during startup, so RailsimPlus will close.\n\nReason: {}"
+  },
+  "app.startup_failed.reason_window": {
+    "ja": "ウィンドウを作れませんでした(エラー {})",
+    "en": "Could not create the window (error {})"
   },
   "app.device_lost.title": {
     "ja": "グラフィックスデバイスのエラー",

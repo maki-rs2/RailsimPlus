@@ -25,7 +25,9 @@ public:
 private:
     void OnUi(Rml::Event& event, const Rml::VariantList& arguments);
     void OnEdit(Rml::Event& event);
-    // 下書きの日時を時計へ反映して、ウィンドウを閉じる。
+    // 日時のウィンドウを開き、下書きへ今の日時・自転・公転を入れる。
+    void OpenWindow();
+    // 下書きの日時・自転・公転を反映して、ウィンドウを閉じる。
     void ConfirmWindow();
     ToastQueue& queue_;
     std::optional<GameSettingsRefs> refs_;

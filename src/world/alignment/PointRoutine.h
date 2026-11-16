@@ -60,6 +60,12 @@ struct PointFormationRoutine {
     std::vector<PointRoutineElement> routine;
 };
 
+// 編成定義(Formation)別の分岐条件。ルーチンと同じく、Formation guidをキーに持つ。
+struct PointFormationCondition {
+    Guid formationId = NilGuid();
+    std::vector<PointCondition> conditions;
+};
+
 struct PointTagRoutine {
     int tagId = -1;
     std::vector<PointRoutineElement> routine;
@@ -84,14 +90,22 @@ ResolvedPointRoutine ResolvePointTrainRoutine(
     const std::vector<PointRoutineElement>& commonRoutine, TrainId trainId,
     const Guid& formationId, const std::vector<int>& trainTagIds);
 
-// ResolveTrainRoutine(PlatformRoutine.h)と同じ優先順位(個別>タグ>共通)で、
-// trainId/trainTagIdsに適用される条件リストを1つ選んで返す。該当が無くても
-// 常にcommonConditionsを指す非nullptrを返す(最後の手段)。
+// 編成の層を持たない呼び出し用。編成なし(formationId=NilGuid)で下の版へ渡す。
 const std::vector<PointCondition>* ResolvePointConditionLayer(
     const std::vector<PointTrainCondition>& trainConditions,
     const std::vector<PointTagCondition>& tagConditions,
     const std::vector<PointCondition>& commonConditions,
     TrainId trainId, const std::vector<int>& trainTagIds);
+
+// ResolvePointTrainRoutineと同じ優先順位(列車>編成>タグ>共通)で、trainId/formationId/
+// trainTagIdsに適用される条件リストを1つ選んで返す。有効な条件が1つもない層は飛ばす。
+// 該当が無くても常にcommonConditionsを指す非nullptrを返す(最後の手段)。
+const std::vector<PointCondition>* ResolvePointConditionLayer(
+    const std::vector<PointTrainCondition>& trainConditions,
+    const std::vector<PointFormationCondition>& formationConditions,
+    const std::vector<PointTagCondition>& tagConditions,
+    const std::vector<PointCondition>& commonConditions,
+    TrainId trainId, const Guid& formationId, const std::vector<int>& trainTagIds);
 
 // nowAbsSecondsの時刻部分(std::fmod(nowAbsSeconds, 86400.0)、負値は86400を
 // 足して補正)がstart〜endの範囲に入っているか判定する。start<=endなら

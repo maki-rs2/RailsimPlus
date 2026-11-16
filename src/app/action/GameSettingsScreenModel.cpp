@@ -34,6 +34,13 @@ constexpr std::array<const char*, 3> kEarthRotationTextKeys{"game_settings.earth
                                                             "game_settings.earth_rotation.night"};
 static_assert(kEarthRotationTextKeys.size() == rs::world::kEarthRotationKeys.size());
 
+// 公転の文言のキー。rs::world::kEarthRevolutionKeysと同じ並び。
+constexpr std::array<const char*, 5> kEarthRevolutionTextKeys{
+    "game_settings.earth_revolution.auto", "game_settings.earth_revolution.spring",
+    "game_settings.earth_revolution.summer", "game_settings.earth_revolution.autumn",
+    "game_settings.earth_revolution.winter"};
+static_assert(kEarthRevolutionTextKeys.size() == rs::world::kEarthRevolutionKeys.size());
+
 constexpr std::array<const char*, 7> kWeekdayTextKeys{
     "game_settings.weekday.0", "game_settings.weekday.1", "game_settings.weekday.2", "game_settings.weekday.3",
     "game_settings.weekday.4", "game_settings.weekday.5", "game_settings.weekday.6"};
@@ -63,7 +70,6 @@ GameSettingsTexts BuildGameSettingsTexts(const Localization& localization) {
     texts.resetCamera = localization.Text("game_settings.reset_camera");
     texts.dateTime = localization.Text("game_settings.date_time");
     texts.timeScale = localization.Text("game_settings.time_scale");
-    texts.earthRotation = localization.Text("game_settings.earth_rotation");
     texts.fpsDisplay = localization.Text("game_settings.fps_display");
     texts.effectsVolume = localization.Text("game_settings.effects_volume");
     texts.version = localization.Text("game_settings.about.version");
@@ -105,6 +111,15 @@ std::vector<GameSettingsChoice> BuildEarthRotationChoices(const Localization& lo
     std::vector<GameSettingsChoice> choices;
     for (std::size_t i = 0; i < kEarthRotationTextKeys.size(); ++i) {
         choices.push_back({std::string(rs::world::kEarthRotationKeys[i]), localization.Text(kEarthRotationTextKeys[i])});
+    }
+    return choices;
+}
+
+std::vector<GameSettingsChoice> BuildEarthRevolutionChoices(const Localization& localization) {
+    std::vector<GameSettingsChoice> choices;
+    for (std::size_t i = 0; i < kEarthRevolutionTextKeys.size(); ++i) {
+        choices.push_back(
+            {std::string(rs::world::kEarthRevolutionKeys[i]), localization.Text(kEarthRevolutionTextKeys[i])});
     }
     return choices;
 }

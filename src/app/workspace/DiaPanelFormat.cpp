@@ -100,4 +100,24 @@ bool ParseDiaSeconds(std::string_view text, double& out) {
     return true;
 }
 
+std::string FormatPointHand(int hand, bool random) {
+    if (random) return "ランダム";
+    return hand == 0 ? "左" : "右";
+}
+
+bool ParsePointHand(std::string_view text, int& hand, bool& random) {
+    if (text == "左") {
+        hand = 0;
+        random = false;
+    } else if (text == "右") {
+        hand = 1;
+        random = false;
+    } else if (text == "ランダム") {
+        random = true;
+    } else {
+        return false;
+    }
+    return true;
+}
+
 } // namespace rs::app::workspace

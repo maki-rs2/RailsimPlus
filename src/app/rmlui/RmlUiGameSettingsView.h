@@ -66,7 +66,6 @@ private:
     void OnVolumeCommit();
     void OnAudioDeviceChange(Rml::Event& event);
     void OnBrowseLayoutDirectory();
-    void OnSetEarthRotation(const Rml::VariantList& arguments);
     void OnTimeScaleCommit(Rml::Event& event);
     void OnTimeScaleKey(Rml::Event& event);
     // 時刻の入力欄の文字を今のTimeScaleの表示に戻す。

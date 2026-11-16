@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "CalendarUtil.h"
+#include "GameClock.h"
 
 namespace rs::world {
 
@@ -29,6 +30,9 @@ struct EnvironmentPreset {
     // directionToSunYと直接比較する)。
     double nightThresholdSin = 0.0;
 };
+
+// プリセットの初期日時に合わせた、等倍で進む時計を作る(起動時と新規レイアウトで共用)。
+GameClock MakeInitialGameClock(const EnvironmentPreset& preset);
 
 class EnvironmentPresets {
 public:

@@ -152,13 +152,23 @@ nlohmann::json NodeToJson(const TrackNode& node, const TrackGraph* graph) {
         for (const PointCondition& condition : group.conditions) groupConditions.push_back(ConditionToJson(condition));
         tagConditions.push_back({ { "tagId", group.tagId }, { "conditions", groupConditions } });
     }
-    return { { "guid", GuidToJson(node.guid) }, { "pos", Vec3ToJson(node.pos) }, { "tangent", Vec3ToJson(node.tangent) },
+    nlohmann::json formationConditions = nlohmann::json::array();
+    for (const PointFormationCondition& group : node.pointFormationConditions) {
+        nlohmann::json groupConditions = nlohmann::json::array();
+        for (const PointCondition& condition : group.conditions) groupConditions.push_back(ConditionToJson(condition));
+        formationConditions.push_back({ { "formation", GuidToJson(group.formationId) }, { "conditions", groupConditions } });
+    }
+    nlohmann::json result = { { "guid", GuidToJson(node.guid) }, { "pos", Vec3ToJson(node.pos) }, { "tangent", Vec3ToJson(node.tangent) },
              { "up", Vec3ToJson(node.up) }, { "cant", node.cant },
              { "faces", {{{ "activeSlot", node.activeSlot[0] }, { "links", faceLinks[0] }}, {{ "activeSlot", node.activeSlot[1] }, { "links", faceLinks[1] }}} }, { "pointRoutine", routine },
              { "pointTrainRoutines", trainRoutines }, { "pointFormationRoutines", formationRoutines },
              { "pointTagRoutines", tagRoutines },
              { "pointConditions", conditions }, { "pointTrainConditions", trainConditions },
              { "pointTagConditions", tagConditions } };
+    if (!formationConditions.empty()) result["pointFormationConditions"] = std::move(formationConditions);
+    if (!node.pointName.empty()) result["pointName"] = node.pointName;
+    if (!GuidIsNil(node.pointStationId)) result["pointStationId"] = GuidToJson(node.pointStationId);
+    return result;
 }
 
 TrackNode NodeFromJson(const nlohmann::json& json, std::vector<size_t>* linksWithoutEnd) {
@@ -217,9 +227,10 @@ TrackNode NodeFromJson(const nlohmann::json& json, std::vector<size_t>* linksWit
             result.pointConditions.push_back(ConditionFromJson(item));
         }
     }
-    // trainConditions/tagConditionsは「グループ添字＋条件配列」という同一形状のため、
-    // 読込処理を1つのラムダへ集約する(bool引数で書き込み先だけ切り替える)。
-    const auto readGroups = [](const nlohmann::json& groups, bool train, TrackNode& node) {
+    // 列車・編成・タグの条件は「キー＋条件配列」という同一形状のため、
+    // 読込処理を1つのラムダへ集約する(kindで書き込み先だけ切り替える)。
+    enum class GroupKind { Train, Formation, Tag };
+    const auto readGroups = [](const nlohmann::json& groups, GroupKind kind, TrackNode& node) {
         if (!groups.is_array()) return;
         for (const nlohmann::json& item : groups) {
             if (!item.is_object()) continue;
@@ -229,13 +240,20 @@ TrackNode NodeFromJson(const nlohmann::json& json, std::vector<size_t>* linksWit
                     conditions.push_back(ConditionFromJson(condition));
                 }
             }
-            if (train) {
+            if (kind == GroupKind::Train) {
                 PointTrainCondition group;
                 if (item.contains("train")) {
                     group.trainId = GuidFromJson(item["train"], group.trainId);
                 }
                 group.conditions = std::move(conditions);
                 node.pointTrainConditions.push_back(std::move(group));
+            } else if (kind == GroupKind::Formation) {
+                PointFormationCondition group;
+                if (item.contains("formation")) {
+                    group.formationId = GuidFromJson(item["formation"], group.formationId);
+                }
+                group.conditions = std::move(conditions);
+                node.pointFormationConditions.push_back(std::move(group));
             } else {
                 PointTagCondition group;
                 group.tagId = JsonReadValue(item, "tagId", group.tagId, kLogTag);
@@ -244,8 +262,11 @@ TrackNode NodeFromJson(const nlohmann::json& json, std::vector<size_t>* linksWit
             }
         }
     };
-    if (json.contains("pointTrainConditions")) readGroups(json["pointTrainConditions"], true, result);
-    if (json.contains("pointTagConditions")) readGroups(json["pointTagConditions"], false, result);
+    if (json.contains("pointTrainConditions")) readGroups(json["pointTrainConditions"], GroupKind::Train, result);
+    if (json.contains("pointFormationConditions")) readGroups(json["pointFormationConditions"], GroupKind::Formation, result);
+    if (json.contains("pointTagConditions")) readGroups(json["pointTagConditions"], GroupKind::Tag, result);
+    result.pointName = JsonReadValue(json, "pointName", std::string(), kLogTag);
+    if (json.contains("pointStationId")) result.pointStationId = GuidFromJson(json["pointStationId"], result.pointStationId);
     return result;
 }
 

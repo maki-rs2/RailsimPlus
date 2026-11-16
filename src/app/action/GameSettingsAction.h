@@ -54,6 +54,7 @@ struct GameSettingsViewModel {
     int second = 0;
     float timeScale = 0.0f;
     int earthRotationMode = 0;
+    int earthRevolutionMode = 0;
     std::string layoutSaveDirectory;
     std::vector<std::string> pluginRoots;
     bool fullscreen = false;
@@ -81,6 +82,7 @@ public:
     // 全画面表示の設定を保存し、ウィンドウへ反映する。同じ値なら何もしない。
     void SetFullscreen(bool enabled);
     void SetEarthRotationMode(int mode);
+    void SetEarthRevolutionMode(int mode);
     void SetLayoutSaveDirectory(const std::string& directoryUtf8);
     // プラグインルートを足す(複数登録。同じフォルダや空はfalseで何もしない)。削除・並べ替えはPluginRootAction。
     bool AddPluginRoot(const std::string& rootUtf8);

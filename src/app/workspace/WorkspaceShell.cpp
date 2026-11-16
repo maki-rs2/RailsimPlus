@@ -181,6 +181,7 @@ WorkspaceSnapshot WorkspaceShell::Snapshot() const {
 
     // 運転台視点中は、画面の表にかかわらず固定UIをすべて消す。
     snapshot.cabinView = cabinView_;
+    snapshot.signalPlacing = signalPlacing_;
     if (cabinView_) {
         snapshot.bannerVisible = false;
         snapshot.bottomBarVisible = false;

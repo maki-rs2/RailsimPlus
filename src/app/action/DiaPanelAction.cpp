@@ -4,6 +4,7 @@
 
 #include "DiaPanelActionResolve.h"
 #include "NotImplementedNotice.h"
+#include "PointRoutineAction.h"
 #include "StationDiaAction.h"
 #include "ToastQueue.h"
 
@@ -104,23 +105,42 @@ void DeleteStation(const Refs& refs, const Request& request) {
     StationDiaAction(refs.editor).RemoveStation(row->id_);
 }
 
+// 行へ落としたときの所属駅。駅の行・その駅の番線や分岐の行へ落とせばその駅、
+// シーンの行・未所属の番線や分岐の行へ落とせば未所属(Nil)。
+rs::world::Guid DroppedStation(const Refs& refs, const workspace::DiaPanelListRow& destination) {
+    rs::world::Guid stationId = rs::world::NilGuid();
+    if (destination.kind_ == "station") {
+        stationId = destination.id_;
+    } else if (destination.kind_ == "target" && destination.point_) {
+        const auto node = refs.editor.graph.nodes.find(destination.id_);
+        if (node != refs.editor.graph.nodes.end()) stationId = node->second.pointStationId;
+    } else if (destination.kind_ == "target") {
+        const rs::world::PlatformStopInfo* other = rs::world::FindPlatformById(refs.editor.graph, destination.id_);
+        if (other != nullptr) stationId = other->stationId;
+    }
+    return StationExists(refs.editor.graph, stationId) ? stationId : rs::world::NilGuid();
+}
+
 void MovePlatform(const Refs& refs, const Request& request) {
     const workspace::DiaPanelListRow* source = ActiveRow(refs, request.sourceIndex_, "target");
     const workspace::DiaPanelListRow* destination = At(refs.panel.rows_, request.rowIndex_);
-    if (source == nullptr || destination == nullptr || destination->sceneIndex_ != source->sceneIndex_) return;
+    if (source == nullptr || source->point_ || destination == nullptr || destination->sceneIndex_ != source->sceneIndex_) return;
     const rs::world::PlatformStopInfo* platform = rs::world::FindPlatformById(refs.editor.graph, source->id_);
     if (platform == nullptr) return;
-    // 駅の行・その駅の番線の行へ落とせばその駅へ、シーンの行・未所属の番線の行へ落とせば未所属へ移す。
-    rs::world::Guid stationId = rs::world::NilGuid();
-    if (destination->kind_ == "station") {
-        stationId = destination->id_;
-    } else if (destination->kind_ == "target") {
-        const rs::world::PlatformStopInfo* other = rs::world::FindPlatformById(refs.editor.graph, destination->id_);
-        if (other != nullptr) stationId = other->stationId;
-    }
-    if (!StationExists(refs.editor.graph, stationId)) stationId = rs::world::NilGuid();
+    const rs::world::Guid stationId = DroppedStation(refs, *destination);
     if (stationId == platform->stationId) return;
     StationDiaAction(refs.editor).SetPlatformStation(platform->id, stationId);
+}
+
+void MovePoint(const Refs& refs, const Request& request) {
+    const workspace::DiaPanelListRow* source = ActiveRow(refs, request.sourceIndex_, "target");
+    const workspace::DiaPanelListRow* destination = At(refs.panel.rows_, request.rowIndex_);
+    if (source == nullptr || !source->point_ || destination == nullptr || destination->sceneIndex_ != source->sceneIndex_) return;
+    const auto node = refs.editor.graph.nodes.find(source->id_);
+    if (node == refs.editor.graph.nodes.end() || !node->second.IsPoint()) return;
+    const rs::world::Guid stationId = DroppedStation(refs, *destination);
+    if (stationId == node->second.pointStationId) return;
+    PointRoutineAction(refs.editor, source->id_).SetStation(stationId);
 }
 
 void ToggleDoor(const Refs& refs, const Request& request) {
@@ -131,8 +151,5 @@ void ToggleDoor(const Refs& refs, const Request& request) {
 }
 
 void ChangeConnectionWait(const Refs& refs, const Request&) { NotifyNotImplemented(refs.queue, "接続待ちの変更"); }
-void ChangeOpening(const Refs& refs, const Request&) { NotifyNotImplemented(refs.queue, "分岐の開通先の切り替え"); }
-void EditCondition(const Refs& refs, const Request&) { NotifyNotImplemented(refs.queue, "条件の編集"); }
-void ChangeBranchHand(const Refs& refs, const Request&) { NotifyNotImplemented(refs.queue, "分岐の要素の変更"); }
 
 } // namespace rs::app::dia_panel_action

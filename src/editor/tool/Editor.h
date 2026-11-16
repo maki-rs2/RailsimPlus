@@ -188,6 +188,8 @@ public:
     rs::world::Guid hoveredPlatform = rs::world::NilGuid();
     // 同じく、ポイント一覧でマウスが乗っている行のnode。
     rs::world::Guid hoveredPointNode = rs::world::NilGuid();
+    // 同じく、分岐の条件の閉塞の一覧でマウスが乗っている行の閉塞(3D画面でそのレールを強調する)。
+    rs::world::Guid hoveredBlock = rs::world::NilGuid();
     // selectedPlacement/selectedSceneEntityと対称なクリアAPI(UI側がselectedNode/
     // selectedEdgeへ生代入するカプセル化違反を防ぐ)。
     // edge選択の変更は必ずここを通す(区間の選択添字は前のedgeの区間を指している

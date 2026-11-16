@@ -16,6 +16,7 @@
 #include "../../world/alignment/Alignment.h"
 #include "../../world/alignment/EdgeShapeBuild.h"
 #include "../../world/alignment/PlatformRegistry.h"
+#include "../../world/alignment/PointName.h"
 #include "../../world/alignment/TrackTraversal.h"
 #include "../../world/time/SolarModeNames.h"
 #include "Rs2CurveFit.h"
@@ -144,6 +145,8 @@ TrackGraph ImportTrackGraph(const Rs2Scene& scene, const std::string& installRoo
 
     const std::vector<std::string> repairs = rs::world::SanitizeTrackGraph(graph);
     warnings.insert(warnings.end(), repairs.begin(), repairs.end());
+    // RailSim II の PointInst に名前が無い分岐へ既定名を振る(名前があるものはそのまま)。
+    rs::world::AssignDefaultPointNames(graph);
     const std::vector<std::string> problems = rs::world::ValidateTrackGraph(graph);
     warnings.insert(warnings.end(), problems.begin(), problems.end());
 

@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#include "RoutineListEdit.h"
 #include "../../editor/tool/Editor.h"
 #include "../../editor/tool/PlatformCommand.h"
 
@@ -36,16 +37,6 @@ inline void ExecuteFormationRoutinesChange(rs::editor::Editor& editor, const rs:
     rs::editor::PlatformPropertyDelta delta;
     delta.formationRoutines = std::move(formationRoutines);
     editor.ExecutePlatformCommand(std::make_unique<rs::editor::SetPlatformPropertyCommand>(platformId, std::move(delta)));
-}
-
-// vector内の要素を取り出し、挿入後に toIndex の位置へ来るようにする。範囲外・同じ位置なら false。
-template <typename T>
-bool MoveWithin(std::vector<T>& values, std::size_t fromIndex, std::size_t toIndex) {
-    if (fromIndex >= values.size() || toIndex >= values.size() || fromIndex == toIndex) return false;
-    T moved = std::move(values[fromIndex]);
-    values.erase(values.begin() + static_cast<std::ptrdiff_t>(fromIndex));
-    values.insert(values.begin() + static_cast<std::ptrdiff_t>(toIndex), std::move(moved));
-    return true;
 }
 
 inline std::size_t TrainOriginalIndex(const rs::world::PlatformStopInfo& platform, std::size_t sortedIndex) {

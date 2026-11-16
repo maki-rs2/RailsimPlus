@@ -207,6 +207,7 @@ void SceneRenderer::SetGroupStopDistance(TrainId id, double value) { trainContro
 void SceneRenderer::ClearGroupStopTarget(TrainId id) { trainController_.ClearGroupStopTarget(id); }
 bool SceneRenderer::GroupArrivedAtStop(TrainId id) const { return trainController_.GroupArrivedAtStop(id); }
 rs::sim::DiaState SceneRenderer::GroupDiaState(TrainId id) const { return trainController_.GroupDiaState(id); }
+std::unordered_set<rs::world::Guid, rs::world::GuidHash> SceneRenderer::OccupiedBlocks() const { return trainController_.OccupiedBlocks(); }
 bool SceneRenderer::GroupDepartureAbsSeconds(TrainId id, double& outAbsSeconds) const { return trainController_.GroupDepartureAbsSeconds(id, outAbsSeconds); }
 bool SceneRenderer::ResolveCabinPivot(const rs::world::SceneRegistry& registry, TrainId trainId,
                                       bool travelReversed, bool& outTailCabin,

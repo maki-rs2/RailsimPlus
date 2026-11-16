@@ -6,7 +6,9 @@
 //
 #pragma once
 
+#include <functional>
 #include <string>
+#include <unordered_set>
 
 #include "../../world/alignment/Guid.h"
 
@@ -42,8 +44,14 @@ struct DiaPanelNavigation {
     float flyZ_ = 0.0f;
     bool selectPlatform_ = false;
     rs::world::Guid platformId_ = rs::world::NilGuid();
+    // 別シーンの分岐を開くとき。シーンを切り替えたあとに Editor::selectedNode へ選ぶ。
+    bool selectPoint_ = false;
+    rs::world::Guid nodeId_ = rs::world::NilGuid();
     int waitedFrames_ = 0;
 };
+
+// 今、列車が在線している閉塞を返す。走行していなければ空。分岐の開通先の切り替えが使う。
+using OccupiedBlocksSource = std::function<std::unordered_set<rs::world::Guid, rs::world::GuidHash>()>;
 
 // 操作の対象を束ねた参照。どれも呼び出し側が所有する。
 struct DiaPanelActionRefs {
@@ -51,6 +59,11 @@ struct DiaPanelActionRefs {
     rs::editor::Editor& editor;
     const workspace::DiaPanelPresentation& panel;
     DiaPanelNavigation& navigation;
+    const OccupiedBlocksSource& occupiedBlocksSource;
+
+    std::unordered_set<rs::world::Guid, rs::world::GuidHash> OccupiedBlocks() const {
+        return occupiedBlocksSource ? occupiedBlocksSource() : std::unordered_set<rs::world::Guid, rs::world::GuidHash>{};
+    }
 };
 
 namespace dia_panel_action {
@@ -82,5 +95,9 @@ void AddRunInfo(const Refs& refs, const Request& request);
 void DeleteRunInfo(const Refs& refs, const Request& request);
 void EditCondition(const Refs& refs, const Request& request);
 void ChangeBranchHand(const Refs& refs, const Request& request);
+void AddCondition(const Refs& refs, const Request& request);
+void DeleteCondition(const Refs& refs, const Request& request);
+void DisableCondition(const Refs& refs, const Request& request);
+void MovePoint(const Refs& refs, const Request& request);
 } // namespace dia_panel_action
 } // namespace rs::app

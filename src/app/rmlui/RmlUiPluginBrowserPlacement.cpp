@@ -31,12 +31,14 @@
 #include "../action/SceneSignalSidecarSource.h"
 #include "../action/SceneryPlacementAction.h"
 #include "../action/SignalBlockAction.h"
+#include "../action/ToastQueue.h"
 #include "../action/TrackPluginSetAction.h"
 #include "../action/TrackPluginSetText.h"
 #include "../action/TrackLayingAction.h"
 #include "../plugin_browser/PluginBrowserService.h"
 #include "../plugin_session/PluginSelector.h"
 #include "../settings/UserSettings.h"
+#include "../../world/alignment/SpeedSignalRegistry.h"
 #include "../../world/scene/SceneRegistry.h"
 
 namespace rs::app::rmlui {
@@ -68,11 +70,13 @@ void RmlUiPluginBrowserView::EnterTrackPlacementMode(std::optional<plugin_browse
 }
 
 // タブを開いたとき。敷設プラグインのブラウザだけ、開いた種別に合わせてモードを切り替える。
+// 種別を変えたら、前の種別で選んでいたノードの選択も外す。
 void RmlUiPluginBrowserView::ApplyTabPlacementMode(const plugin_browser::BrowserTab& tab) {
     if (plugin_browser::GetBrowserProfile(service_->State().Profile()).cardAction !=
         BrowserCardAction::ToggleSet) {
         return;
     }
+    if (editor_ != nullptr) editor_->ClearSelectedNode();
     EnterTrackPlacementMode(tab.favorites ? std::nullopt : std::optional(tab.kind));
 }
 
@@ -113,7 +117,15 @@ void RmlUiPluginBrowserView::OnPlace(const Rml::VariantList& arguments) {
             return;
         }
         operationError_ = action.SelectSignalPlugin(folder);
-        if (operationError_.empty()) action.ArmPlaceSpeedSignal();
+        if (!operationError_.empty()) return;
+        // 閉塞の境界に立つ信号は担当の閉塞が無いと置けない。配置待ちの間はレールのクリックが配置に回り、
+        // 閉塞を作るためのレール選択ができなくなるので、閉塞が1つも無いうちは配置待ちにせず案内だけ出す。
+        if (editor_->graph.blocks.empty() && rs::world::IsBlockBoundarySignal(editor_->signalKindToPlace)) {
+            if (toastQueue_ != nullptr)
+                toastQueue_->Post(ToastSeverity::Info, "先にレールを選んで閉塞を作ってください");
+            return;
+        }
+        action.ArmPlaceSpeedSignal();
         return;
     }
     // 配置プレビュー中のカードをもう一度押すと、選択を解除する(配置を終える)。

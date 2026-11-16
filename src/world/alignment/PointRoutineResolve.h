@@ -69,12 +69,18 @@ struct PointRoutineCursors {
     void RemoveTrain(TrainId trainId);
 };
 
-// trainId/trainTagIdsで層を解決し(ResolvePointConditionLayer)、その中の
+// trainId/formationId/trainTagIdsで層を解決し(ResolvePointConditionLayer)、その中の
 // 条件を配列順に評価して最初に一致(enabled==trueかつ判定式が真)したものの`hand`を
 // 返す。一致が無ければnullopt。TimeRangeはTimeOfDayInRangeで判定する。
 // BlockOccupancyはpreviousOccupiedBlocksとの重なりで判定する。
 std::optional<int> ResolvePointConditionHand(
     const TrackNode& node, TrainId trainId, const std::vector<int>& trainTagIds,
+    const std::unordered_set<Guid, GuidHash>& previousOccupiedBlocks,
+    double nowAbsSeconds);
+// 編成の層も見る版。formationIdがNilGuidなら編成の層は飛ばす。
+std::optional<int> ResolvePointConditionHand(
+    const TrackNode& node, TrainId trainId, const Guid& formationId,
+    const std::vector<int>& trainTagIds,
     const std::unordered_set<Guid, GuidHash>& previousOccupiedBlocks,
     double nowAbsSeconds);
 

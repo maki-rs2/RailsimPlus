@@ -15,7 +15,9 @@
 #include "../../platform/text/Encoding.h"
 #include "../../world/alignment/GuidJson.h"
 #include "../../world/scene/SceneRegistry.h"
+#include "../../world/time/EnvironmentPresets.h"
 #include "../../world/time/GameClock.h"
+#include "../../world/time/SolarPosition.h"
 #include "../camera/CameraControl.h"
 #include "../plugin_session/ActiveEnv.h"
 #include "../plugin_session/DefaultPluginCatalog.h"
@@ -166,14 +168,17 @@ LayoutActionResult LayoutPersistenceAction::RunNewLayout() {
     try {
         // 空のSceneを1つ持つレイアウトを、読込と同じ適用経路へ渡す。
         NormalizedLayout normalized;
-        // 適用は時計と太陽設定を丸ごと差し替えるため、既定値(1970年0時)で上書きされないよう現在の値を引き継ぐ。
-        normalized.gameClock = refs_.gameClock;
-        normalized.solarOverrides = refs_.solarOverrides;
+        // 新規レイアウトは起動直後と同じ時間の状態から始める(日時・倍率・自転と公転の設定)。
+        normalized.gameClock = rs::world::MakeInitialGameClock(refs_.environmentPreset);
+        normalized.solarOverrides = rs::world::SolarOverrides{};
         LayoutSceneCache emptyScene;
         emptyScene.guid = rs::world::GenerateGuid();
         emptyScene.name = MakeNewSceneName(normalized.scenes);
         normalized.scenes.push_back(std::move(emptyScene));
         LayoutActionResult result = ApplyLayout(std::move(normalized), rs::world::GenerateGuid(), {}, {});
+        // 空のSceneはカメラを持たず位置と向きは今のまま残るので、視野角だけ既定へ戻す。
+        refs_.camera.fly.fieldOfView = FlyCamera{}.fieldOfView;
+        refs_.camera.SnapToTarget();
 
         const std::string executableDirectoryUtf8 =
             rs::platform_text::WideToUtf8(UserSettings::ExecutableDirectory().wstring());

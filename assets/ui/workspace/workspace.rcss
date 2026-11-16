@@ -227,6 +227,10 @@ body {
     --time-pause-height: 12dp;
     --time-pause-bar-width: 3dp;
     --time-window-width: 280dp;
+    /* 日時の窓の「自転」「公転」の見出しの幅と、並んだボタンの左右の余白。窓の幅に選択肢が収まるよう、
+       ゲーム設定の行より詰める。 */
+    --time-window-label-width: 40dp;
+    --time-window-segment-pad-x: 8dp;
     --time-window-left: 68%;
     /* ウィンドウのタイトルバーの閉じるボタンの大きさ。上端・右端からの位置は
        --close-button-inset を使う。 */
@@ -2416,9 +2420,9 @@ button.rail-label-rename {
     display: none;
 }
 
-/* 番線カード(ダイヤモード、番線の画面上に追従、RmlUiPlatformCardView.cpp)。位置はdata-style-left/topで入れ、
+/* 番線と分岐のカード(ダイヤモード、番線・分岐の画面上に追従、RmlUiDiaCardView.cpp)。位置はdata-style-left/topで入れ、
    カードの矩形だけがポインタを受ける。 */
-.platform-card {
+.dia-card {
     position: absolute;
     z-index: var(--z-rail-label);
     box-sizing: border-box;
@@ -2428,12 +2432,51 @@ button.rail-label-rename {
     border: var(--border-width) var(--border-panel);
 }
 
-.platform-card.is-selected {
+.dia-card.is-selected {
     background-color: var(--accent-subtle);
     border-color: var(--accent);
 }
 
-button.platform-card-name {
+button.dia-card-name {
+    display: block;
+    min-height: 0dp;
+    padding: var(--pad-widget-y) var(--gap-x);
+    border-width: 0dp;
+    color: var(--text);
+}
+
+/* 名前の変更中は、名前の代わりに入力欄を出す(閉塞ラベルと同じ切り替え)。 */
+.dia-card-name-input {
+    display: none;
+    width: var(--rail-label-width);
+    box-sizing: border-box;
+}
+
+.dia-card.is-editing .dia-card-name {
+    display: none;
+}
+
+.dia-card.is-editing .dia-card-name-input {
+    display: block;
+}
+
+/* 分岐の左右の印(ダイヤモード、分かれる線のレール上に追従、RmlUiPointHandMarkView.cpp)。見た目はカードと同じ。 */
+.point-hand-mark {
+    position: absolute;
+    z-index: var(--z-rail-label);
+    box-sizing: border-box;
+    pointer-events: auto;
+    border-radius: var(--radius-small);
+    background-color: var(--bg-panel-side);
+    border: var(--border-width) var(--border-panel);
+}
+
+.point-hand-mark.is-selected {
+    background-color: var(--accent-subtle);
+    border-color: var(--accent);
+}
+
+button.point-hand-mark-button {
     display: block;
     min-height: 0dp;
     padding: var(--pad-widget-y) var(--gap-x);
@@ -2791,6 +2834,13 @@ button.row-action.dia-show {
     border-radius: var(--radius-small);
     color: var(--text-secondary);
     font-size: var(--font-size-small);
+}
+
+/* 一覧の分岐の行頭の印。 */
+.dia-point-icon {
+    flex: none;
+    margin-right: var(--pad-widget-y);
+    image-color: var(--text-secondary);
 }
 
 .dia-gray > .dia-platform {
@@ -3232,6 +3282,22 @@ button.time-clock {
     margin: 0dp var(--gap-x) 0dp var(--pad-widget-y);
 }
 
+.time-window .form-label {
+    width: var(--time-window-label-width);
+}
+
+/* 自転・公転の並んだボタンは、見出しの右の残りの幅いっぱいに広げる。 */
+.time-window .segmented {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+}
+
+.time-window .segment {
+    flex: 1 1 auto;
+    padding-left: var(--time-window-segment-pad-x);
+    padding-right: var(--time-window-segment-pad-x);
+}
+
 .time-window-buttons {
     justify-content: flex-end;
     margin-top: var(--gap-y);
@@ -3293,6 +3359,15 @@ button.scene-close-notch { position: absolute; left: 50%; top: var(--edge-notch-
 }
 
 /* 操作説明のキーの名前。角丸の枠で囲み、動作の文と見分ける。 */
+/* 操作説明の先頭の札(配置待ちなどの状態名)。モードボタンの選択中と同じ色で、今どの状態かを示す。 */
+.operation-hint-label {
+    margin-right: var(--operation-hint-item-gap);
+    padding: 0dp var(--pad-widget-y);
+    border-radius: var(--radius-small);
+    background-color: var(--accent);
+    color: var(--text-on-accent);
+}
+
 .keycap {
     margin-right: var(--pad-widget-y);
     padding: 0dp var(--pad-widget-y);

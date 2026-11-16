@@ -8,12 +8,15 @@
 #include "GpuInitFailureDialog.h"
 #include "LayoutResultReporter.h"
 #include "RenderTuningHotReload.h"
+#include "StartupFailureDialog.h"
 #include "UpdateNotification.h"
 #include "ViewerMode.h"
 
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
+#include <format>
+#include <string>
 #include <string_view>
 
 #include <spdlog/spdlog.h>
@@ -47,7 +50,15 @@ bool InitializeAppRuntime(AppRuntimeGlobals& globals, const AppCommandLine& cli,
     };
 
     // ウィンドウ生成(Win32メッセージポンプ・カメラ入力の委譲はMainWindowへ集約)。
-    if (!state.mainWindow.Create(globals.camera, viewerMode, 1280, 720)) return false;
+    if (!state.mainWindow.Create(globals.camera, viewerMode, 1280, 720)) {
+        if (!IsUnattendedRun(state.cli)) {
+            const std::string code = std::to_string(state.mainWindow.CreateError());
+            ShowStartupFailureDialog(state.localization,
+                                     std::vformat(state.localization.Text("app.startup_failed.reason_window"),
+                                                  std::make_format_args(code)));
+        }
+        return false;
+    }
     HWND hwnd = state.mainWindow.Handle();
     const double windowMs = sinceMs(tStartup0);
 
@@ -55,7 +66,7 @@ bool InitializeAppRuntime(AppRuntimeGlobals& globals, const AppCommandLine& cli,
     const StartupClock::time_point tGfx0 = StartupClock::now();
     if (!InitGraphicsAndImGui(globals.app, hwnd, state.mainWindow.Width(), state.mainWindow.Height(),
                               globals.fontRanges, viewerMode)) {
-        if (state.cli.smokeFrames == 0) ShowGpuInitFailureDialog(hwnd, state.localization, globals.app.Gpu().InitFailure());
+        if (!IsUnattendedRun(state.cli)) ShowGpuInitFailureDialog(state.localization, globals.app.Gpu().InitFailure());
         return false;
     }
     // プラグインビューワーモードは単体プラグイン表示のみで空背景が不要なため、
@@ -123,8 +134,7 @@ bool InitializeAppRuntime(AppRuntimeGlobals& globals, const AppCommandLine& cli,
     const StartupClock::time_point tPresets0 = StartupClock::now();
     state.environmentPresets.LoadEmbedded();
     state.activePreset = &state.environmentPresets.Default();
-    globals.gameClock.SetDateTime(rs::world::FromDateParts(state.activePreset->initialDate),
-                                  state.activePreset->initialSecondsOfDay);
+    globals.gameClock = rs::world::MakeInitialGameClock(*state.activePreset);
     // ビューアーモードは起動時の既定の日時のまま時計を止める(夜の月の位置と満ち欠けを毎回同じにするため)。
     if (viewerMode) globals.gameClock.SetTimeScale(0.0);
 
@@ -139,7 +149,8 @@ bool InitializeAppRuntime(AppRuntimeGlobals& globals, const AppCommandLine& cli,
                                                      state.modePanels.TrainPlacementUi(),
                                                      state.sceneRenderer, globals.gameClock,
                                                      globals.solarOverrides, state.userSettings,
-                                                     state.layoutDocument, state.autoRecoveryRoot, state.modePanels.WarpAuthoring(), globals.cabinCamera});
+                                                     state.layoutDocument, state.autoRecoveryRoot, state.modePanels.WarpAuthoring(), globals.cabinCamera,
+                                                     *state.activePreset});
 
     // 復元の画面を出すときは、選ぶまでレイアウトを開かない(開くレイアウトが異常終了の原因かもしれないため)。
     if (!state.recoveryChoicePending) {
@@ -302,6 +313,7 @@ void RunOneFrame(AppRuntimeGlobals& globals, AppRuntimeState& state, FrameLoopSt
     if (ShouldSkipStartupLoadFrame(loopState)) return;
 
     ++loopState.frame;
+    state.firstFrameRendered = true;
     if (state.cli.smokeFrames > 0 && loopState.frame >= state.cli.smokeFrames) {
         if (!smokeArtifactsWritten) {
             smokeArtifactsWritten = true;
@@ -377,24 +389,6 @@ void RunFrameLoop(AppRuntimeGlobals& globals, AppRuntimeState& state) {
     state.mainWindow.SetFovWheelHandler(nullptr);
     state.mainWindow.SetModalFrameCallback(nullptr);
     loopState.frameProfiler.Flush();
-}
-
-void ShutdownAppRuntime(AppRuntimeGlobals& globals, AppRuntimeState& state) {
-    GetParsedPluginCache().CancelPrefetch();
-    if (state.tracksCrashMarker && !state.deviceLostExit && !ClearCrashMarker(state.autoRecoveryRoot)) {
-        spdlog::warn("[autorecover] could not clear crash marker");
-    }
-    state.audioEngine.Shutdown();
-    if (UsesRmlUi(state.cli)) {
-        // RmlUiIntegration::Shutdown()はGPUがアイドルなことが前提なので、解放の前に完了を待つ。
-        globals.app.WaitForGpu();
-        globals.app.SetRmlUiIntegration(nullptr);
-        state.mainWindow.SetRmlUiIntegration(nullptr);
-        state.rmlUiIntegration.Shutdown();
-    }
-    ShutdownGraphicsAndImGui(globals.app);
-    state.mainWindow.Destroy();
-    spdlog::info("clean exit");
 }
 
 } // namespace rs::app

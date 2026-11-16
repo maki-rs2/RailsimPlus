@@ -87,6 +87,13 @@ void SceneTrainController::SetGroupStopDistance(TrainId trainId, double remainin
 void SceneTrainController::ClearGroupStopTarget(TrainId trainId) { runtime_.ClearGroupStopTarget(trainId); }
 bool SceneTrainController::GroupArrivedAtStop(TrainId trainId) const { return runtime_.GroupArrivedAtStop(trainId); }
 rs::sim::DiaState SceneTrainController::GroupDiaState(TrainId trainId) const { return dia_.GroupState(trainId); }
+std::unordered_set<rs::world::Guid, rs::world::GuidHash> SceneTrainController::OccupiedBlocks() const {
+    std::unordered_set<rs::world::Guid, rs::world::GuidHash> result;
+    for (const auto& [blockGuid, occupancy] : blockOccupancyTracker_.Current()) {
+        if (!occupancy.occupantTrainIds.empty()) result.insert(blockGuid);
+    }
+    return result;
+}
 bool SceneTrainController::GroupDepartureAbsSeconds(TrainId trainId, double& outAbsSeconds) const { return dia_.GroupDepartureAbsSeconds(trainId, outAbsSeconds); }
 int SceneTrainController::PlatformRoutineCursorIndex(const rs::world::Guid& platformId, const std::vector<rs::world::PlatformRoutineElement>& routine, int layerKey, TrainId trainId) const { return dia_.PlatformRoutineCursorIndex(platformId, routine, layerKey, trainId); }
 int SceneTrainController::AddTrainTag(const std::string& label) { return dia_.TagRegistry().AddTag(label); }

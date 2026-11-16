@@ -14,6 +14,12 @@
 
 namespace rs::world {
 
+GameClock MakeInitialGameClock(const EnvironmentPreset& preset) {
+    GameClock clock;
+    clock.SetDateTime(FromDateParts(preset.initialDate), preset.initialSecondsOfDay);
+    return clock;
+}
+
 bool EnvironmentPresets::LoadEmbedded() {
     if (ParseJsonText(reinterpret_cast<const char*>(rs::embedded::kEnvironmentPresetsJson),
                       rs::embedded::kEnvironmentPresetsJsonSize, "EnvironmentPresets")) return true;

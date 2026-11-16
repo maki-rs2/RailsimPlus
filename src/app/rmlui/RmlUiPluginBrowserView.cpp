@@ -100,6 +100,7 @@ void RmlUiPluginBrowserView::Attach(PluginBrowserService& service, rs::editor::E
     preview_ = &preview;
     selector_ = &selector;
     userSettings_ = &userSettings;
+    toastQueue_ = &queue;
     folder_.Attach(service.State(), queue);
 }
 

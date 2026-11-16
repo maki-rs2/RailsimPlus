@@ -29,6 +29,7 @@ private:
     size_t index_ = 0;
     bool removed_ = false;
     std::vector<rs::world::Guid> detachedPlatformIds_;
+    std::vector<rs::world::Guid> detachedPointIds_;
 };
 
 class AddPlatformCommand : public ICommand {

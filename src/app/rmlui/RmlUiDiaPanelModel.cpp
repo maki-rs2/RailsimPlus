@@ -45,6 +45,8 @@ void RegisterRows(Rml::DataModelConstructor& constructor) {
     condition.RegisterMember("kind", &DiaPanelCondition::kind_);
     condition.RegisterMember("summary", &DiaPanelCondition::summary_);
     condition.RegisterMember("open", &DiaPanelCondition::open_);
+    condition.RegisterMember("disabled", &DiaPanelCondition::disabled_);
+    condition.RegisterMember("hovered", &DiaPanelCondition::hovered_);
     condition.RegisterMember("start", &DiaPanelCondition::start_);
     condition.RegisterMember("end", &DiaPanelCondition::end_);
     condition.RegisterMember("blocks", &DiaPanelCondition::blocks_);
@@ -66,12 +68,17 @@ void RegisterHierarchy(Rml::DataModelConstructor& constructor) {
     layer.RegisterMember("summary", &DiaPanelLayer::summary_);
     layer.RegisterMember("empty", &DiaPanelLayer::empty_);
     constructor.RegisterArray<std::vector<DiaPanelLayer>>();
+    Rml::StructHandle<DiaPanelOpening> opening = constructor.RegisterStruct<DiaPanelOpening>();
+    opening.RegisterMember("label", &DiaPanelOpening::label_);
+    opening.RegisterMember("left", &DiaPanelOpening::left_);
+    opening.RegisterMember("right", &DiaPanelOpening::right_);
+    constructor.RegisterArray<std::vector<DiaPanelOpening>>();
     Rml::StructHandle<DiaPanelTarget> target = constructor.RegisterStruct<DiaPanelTarget>();
     target.RegisterMember("branch", &DiaPanelTarget::branch_);
     target.RegisterMember("selected", &DiaPanelTarget::selected_);
     target.RegisterMember("doorLeft", &DiaPanelTarget::doorLeft_);
     target.RegisterMember("doorRight", &DiaPanelTarget::doorRight_);
-    target.RegisterMember("opening", &DiaPanelTarget::opening_);
+    target.RegisterMember("openings", &DiaPanelTarget::openings_);
     target.RegisterMember("layers", &DiaPanelTarget::layers_);
     constructor.RegisterArray<std::vector<DiaPanelTarget>>();
     Rml::StructHandle<DiaPanelListRow> row = constructor.RegisterStruct<DiaPanelListRow>();
@@ -79,6 +86,7 @@ void RegisterHierarchy(Rml::DataModelConstructor& constructor) {
     row.RegisterMember("name", &DiaPanelListRow::name_);
     row.RegisterMember("target", &DiaPanelListRow::target_);
     row.RegisterMember("gray", &DiaPanelListRow::gray_);
+    row.RegisterMember("point", &DiaPanelListRow::point_);
     row.RegisterMember("highlighted", &DiaPanelListRow::highlighted_);
     row.RegisterMember("hovered", &DiaPanelListRow::hovered_);
     row.RegisterMember("editing", &DiaPanelListRow::editing_);
@@ -100,6 +108,7 @@ void RegisterHierarchy(Rml::DataModelConstructor& constructor) {
     panel.RegisterMember("overwriteChoices", &DiaPanelPresentation::overwriteChoices_);
     panel.RegisterMember("addingLayer", &DiaPanelPresentation::addingLayer_);
     panel.RegisterMember("addingOverwrite", &DiaPanelPresentation::addingOverwrite_);
+    panel.RegisterMember("addingCondition", &DiaPanelPresentation::addingCondition_);
 }
 
 } // namespace

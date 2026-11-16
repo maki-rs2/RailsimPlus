@@ -129,6 +129,8 @@ struct AppRuntimeState {
     // デバイスロストで終了する手順を済ませたか。立ったあとはフレームを回さず、異常終了マーカーも消さない
     // (次回の起動でバックアップの復元を出すため)。
     bool deviceLostExit = false;
+    // 最初のフレームを描き終えたか。これより前に例外で抜けたら「起動できませんでした」を出す。
+    bool firstFrameRendered = false;
     // 起動時に復元の画面を出すか。
     bool recoveryChoicePending = false;
 

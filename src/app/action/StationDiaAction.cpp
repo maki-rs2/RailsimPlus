@@ -9,7 +9,7 @@
 
 #include "../../editor/tool/PlatformCommand.h"
 #include "../../world/alignment/PlatformRegistry.h"
-#include "../../world/alignment/TrackTraversal.h"
+#include "../../world/alignment/PointHandLinks.h"
 
 namespace rs::app {
 namespace {
@@ -125,30 +125,6 @@ void StationDiaAction::RemoveSelectedPlatform() {
     editor_.ExecutePlatformCommand(std::make_unique<rs::editor::RemovePlatformCommand>(platformId));
 }
 
-namespace {
-
-// 分岐している面ごとの、左右それぞれの行き先。左右は列車が node のその面へ出ていくときの向き。
-std::vector<StationDiaPointSideViewModel> BuildPointSides(const rs::world::TrackGraph& graph,
-                                                          const rs::world::TrackNode& node) {
-    constexpr int kLeftHand = 0;
-    constexpr int kRightHand = 1;
-    std::vector<StationDiaPointSideViewModel> sides;
-    for (int side = 0; side < 2; ++side) {
-        if (!node.IsBranching(side)) continue;
-        StationDiaPointSideViewModel row;
-        row.leftLinkIndex =
-            node.LinkIndexOnSide(side, rs::world::ResolveHandToOrdinal(graph, node, side, kLeftHand));
-        row.rightLinkIndex =
-            node.LinkIndexOnSide(side, rs::world::ResolveHandToOrdinal(graph, node, side, kRightHand));
-        row.leftActive = node.IsLinkActive(row.leftLinkIndex);
-        row.rightActive = node.IsLinkActive(row.rightLinkIndex);
-        sides.push_back(row);
-    }
-    return sides;
-}
-
-}  // namespace
-
 StationDiaViewModel StationDiaAction::ViewModel() const {
     StationDiaViewModel viewModel;
     for (const std::pair<const rs::world::Guid, rs::world::TrackNode>& entry : editor_.graph.nodes) {
@@ -159,7 +135,9 @@ StationDiaViewModel StationDiaAction::ViewModel() const {
         pointRow.x = node.pos.x;
         pointRow.z = node.pos.z;
         pointRow.selected = editor_.selectedNode == entry.first;
-        pointRow.sides = BuildPointSides(editor_.graph, node);
+        for (const rs::world::PointSideLinks& side : rs::world::BuildPointSideLinks(editor_.graph, node)) {
+            pointRow.sides.push_back({side.leftLinkIndex, side.rightLinkIndex, side.leftActive, side.rightActive});
+        }
         viewModel.points.push_back(std::move(pointRow));
     }
     std::sort(viewModel.points.begin(), viewModel.points.end(),

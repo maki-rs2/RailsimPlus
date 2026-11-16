@@ -10,6 +10,9 @@
 #include "../action/LayoutPersistenceAction.h"
 #include "../action/MissingPluginRefreshGate.h"
 #include "../action/PluginRootAction.h"
+#include "../action/PointOpeningAction.h"
+#include "../action/PointRoutineAction.h"
+#include "../action/StationDiaAction.h"
 #include "../action/SceneEntitySwitchAction.h"
 #include "../action/SceneryPlacementAction.h"
 #include "../action/FormationAction.h"
@@ -52,7 +55,24 @@ void WorkspaceEditorBridge::Tick(rmlui::RmlUiIntegration& rmlUi, const rs::app::
         view->LayingSet().Attach(editor, services.pluginSelector, services.pluginBrowser);
         view->TemplateSave().Attach(editor, services.pluginSelector, PluginRootAction(services.userSettings).Roots());
         SceneRenderer& renderer = services.sceneRenderer;
-        view->PlatformCard().Attach([view](rs::world::Guid platformId) { view->DiaPanel().OpenPlatform(platformId); });
+        view->DiaCard().Attach(
+            [view](workspace::DiaCardKind kind, rs::world::Guid id) {
+                if (kind == workspace::DiaCardKind::Point) {
+                    view->DiaPanel().OpenPoint(id);
+                } else {
+                    view->DiaPanel().OpenPlatform(id);
+                }
+            },
+            [&editor](workspace::DiaCardKind kind, rs::world::Guid id, const std::string& name) {
+                if (kind == workspace::DiaCardKind::Point) {
+                    PointRoutineAction(editor, id).SetName(name);
+                } else {
+                    StationDiaAction(editor).RenamePlatform(id, name);
+                }
+            });
+        view->PointHandMark().Attach([view, &editor, &renderer](rs::world::Guid nodeId, int linkIndex) {
+            ChangePointOpening(view->Toasts(), editor, nodeId, linkIndex, renderer.OccupiedBlocks());
+        });
         view->RailLabel().Attach(
             [&editor, &renderer](rs::world::Guid guid, bool ensureSelected) {
                 if (ensureSelected && editor.selectedBlock == guid) return;
@@ -181,6 +201,7 @@ void WorkspaceEditorBridge::Tick(rmlui::RmlUiIntegration& rmlUi, const rs::app::
 
     // 運転台視点の間は固定UIを消す(Escの判定より前に知らせる)。
     view->SetCabinView(services.cabinCamera.active && !rs::world::GuidIsNil(services.cabinCamera.followedTrainId));
+    view->SetSignalPlacing(editor.signalBlockArmedAction == rs::editor::SignalBlockArmedAction::PlaceSpeedSignal);
 
     if (input.Triggered(rs::app::input::InputAction::WorkspaceBack)) {
         input::EscapeHandlers handlers{};
@@ -278,7 +299,9 @@ void WorkspaceEditorBridge::Tick(rmlui::RmlUiIntegration& rmlUi, const rs::app::
         ? SignalBlockAction(editor, signalSidecar, signalAspects).ViewModel() : SignalBlockViewModel{};
     view->RailLabel().Refresh(GetViewModeTraits(viewMode).signalBlock, editor.graph, signalBlockLink, signalPlacement,
                               editor.selectedBlock, services.layoutSession.activeIndex, deltaSeconds, document);
-    view->PlatformCard().Refresh(GetViewModeTraits(viewMode).stationDia, editor.graph, editor.selectedPlatform, document);
+    const bool diaMode = GetViewModeTraits(viewMode).stationDia;
+    view->DiaCard().Refresh(diaMode, editor, document);
+    view->PointHandMark().Refresh(diaMode, editor, document);
     if (trainProfile) {
         formationImages.EndFrame();
     } else {
@@ -325,7 +348,8 @@ void WorkspaceEditorBridge::UpdateTrainInfoCards(rmlui::RmlUiIntegration& rmlUi,
     if (view == nullptr) return;
     view->TrainInfoCard().UpdatePositions(viewProj, eye, screenWidth, screenHeight);
     view->RailLabel().UpdatePositions(viewProj, screenWidth, screenHeight);
-    view->PlatformCard().UpdatePositions(viewProj, screenWidth, screenHeight);
+    view->DiaCard().UpdatePositions(viewProj, screenWidth, screenHeight);
+    view->PointHandMark().UpdatePositions(viewProj, screenWidth, screenHeight);
     view->SignalPanel().UpdatePositions(viewProj, screenWidth, screenHeight);
 }
 

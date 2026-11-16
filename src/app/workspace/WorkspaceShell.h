@@ -99,6 +99,8 @@ struct WorkspaceSnapshot {
     bool modalVisible = false;
     // 運転台視点中か。このとき左右タブ・バナー・下部バーは出さず、運転台視点のパネルと戻るボタンを出す。
     bool cabinView = false;
+    // 信号の配置待ち中か(作業モードが信号のときだけ意味を持つ)。操作説明を配置中のものに替える。
+    bool signalPlacing = false;
 
     // NotchSideで添字付け(Tab()経由での参照を推奨)。
     std::array<EdgePanelSnapshot, kNotchSideCount> tabs{};
@@ -175,6 +177,8 @@ public:
 
     // 運転台視点中かを知らせる(視点の状態の正典はCabinViewCamera)。毎フレーム呼んでよい。
     void SetCabinView(bool active) { cabinView_ = active; }
+    // 信号の配置待ち中かを知らせる(状態の正典はEditorのsignalBlockArmedAction)。毎フレーム呼んでよい。
+    void SetSignalPlacing(bool active) { signalPlacing_ = active; }
 
     WorkspaceSnapshot Snapshot() const;
 
@@ -198,6 +202,7 @@ private:
     std::vector<OverlayKind> OpenOverlaysBackToFront() const;
 
     bool cabinView_ = false;
+    bool signalPlacing_ = false;
     Screen screen_ = Screen::Spectate;
     WorkMode workMode_ = WorkMode::Train;
     RailTab railTab_ = RailTab::Lay;

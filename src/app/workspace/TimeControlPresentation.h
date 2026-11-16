@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "GameSettingsPresentation.h"
+
 namespace rs::app::workspace {
 
 struct TimeControlTuning;
@@ -39,6 +41,11 @@ struct TimeControlPresentation {
     std::string dayDraft_;
     std::string hourDraft_;
     std::string minuteDraft_;
+    // 自転・公転の選択(名前で持つ)と、並んだボタンの選択肢。確定で日時と一緒に反映する。
+    std::string rotationDraft_;
+    std::string revolutionDraft_;
+    std::vector<GameSettingsChoice> rotations_;
+    std::vector<GameSettingsChoice> revolutions_;
 
     void RefreshDerived();
     void BeginScaleEdit();

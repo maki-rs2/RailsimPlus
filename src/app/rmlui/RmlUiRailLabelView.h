@@ -10,6 +10,7 @@
 #include <RmlUi/Core/DataModelHandle.h>
 
 #include "../../core/Math.h"
+#include "RmlUiInlineRename.h"
 #include "../workspace/RailLabelHover.h"
 #include "../workspace/RailLabelPresentation.h"
 
@@ -52,17 +53,12 @@ private:
     void OnSelectLabel(const std::string& id);
     void OnBeginRename(Rml::Event& event, const std::string& id);
     void OnCommitName(Rml::Event& event);
-    void OnKeyName(Rml::Event& event);
-    void EndEditing();
-    void FocusEditingInput();
 
     std::function<void(rs::world::Guid, bool)> selectBlock_;
     std::function<void(rs::world::Guid, const std::string&)> renameBlock_;
     std::function<void(rs::world::Guid)> chooseOwner_;
     std::function<bool()> cancelPending_;
-    rs::world::Guid editingBlock_ = rs::world::NilGuid();
-    std::string editingInitialName_;
-    bool pendingFocus_ = false;
+    RmlUiInlineRename rename_;
     std::optional<std::size_t> sceneIndex_;
     std::vector<workspace::RailLabelItem> items_;
     const rs::world::TrackGraph* graph_ = nullptr;

@@ -23,6 +23,7 @@
 #include "../input/InputBindings.h"
 #include "../input/InputSource.h"
 #include "../workspace/EnumIndex.h"
+#include "../workspace/GameSettingsPresentation.h"
 #include "../workspace/OperationHintCatalog.h"
 #include "../workspace/OverlayCatalog.h"
 #include "../workspace/ScreenCatalog.h"
@@ -82,6 +83,7 @@ struct WorkspaceViewModel {
     Rml::String bannerTitle;
     Rml::String bannerIcon; // バナーのモード名の左に出すアイコン(下部バーのモードボタンと同じ素材)
     Rml::String operationHint; // 右下の操作説明(出さないときは空)
+    Rml::String operationHintLabel; // 操作説明の先頭の札(配置待ちなどの状態名。出さないときは空)
     Rml::Vector<HintItem> operationHintItems; // 操作説明を項目(`キー:動作`)ごとに分けたもの。項目の間はRCSSで広く空ける
 
     EdgePanel leftTab;
@@ -120,6 +122,7 @@ void FillFromSnapshot(const WorkspaceSnapshot& snapshot, const std::vector<rs::a
     vm.modalVisible = snapshot.modalVisible;
     vm.cabinView = snapshot.cabinView;
     vm.operationHint = rs::app::workspace::OperationHintFor(snapshot);
+    vm.operationHintLabel = rs::app::workspace::OperationHintLabelFor(snapshot);
     vm.operationHintItems.clear();
     for (const rs::app::workspace::OperationHintItem& item : rs::app::workspace::SplitOperationHint(vm.operationHint)) {
         vm.operationHintItems.push_back({Rml::String(item.key), Rml::String(item.action)});
@@ -182,6 +185,12 @@ void RegisterViewModelTypes(Rml::DataModelConstructor& constructor) {
     constructor.RegisterArray<Rml::Vector<WorkspaceViewModel::ModeButton>>();
     // 文字列の配列。複数の子ビュー(敷設エディタ・プラグイン設定パネル)が使うので、ここで1回だけ登録する。
     constructor.RegisterArray<Rml::Vector<Rml::String>>();
+    // 並んだボタンの選択肢。ゲーム設定と日時の窓が使うので、ここで1回だけ登録する。
+    if (Rml::StructHandle<GameSettingsChoice> handle = constructor.RegisterStruct<GameSettingsChoice>()) {
+        handle.RegisterMember("key", &GameSettingsChoice::key);
+        handle.RegisterMember("label", &GameSettingsChoice::label);
+    }
+    constructor.RegisterArray<Rml::Vector<GameSettingsChoice>>();
 }
 
 } // namespace
@@ -205,6 +214,7 @@ bool RmlUiWorkspaceView::CreateDataModel(Rml::Context& context) {
     constructor.Bind("bannerTitle", &viewModel_->bannerTitle);
     constructor.Bind("bannerIcon", &viewModel_->bannerIcon);
     constructor.Bind("operationHint", &viewModel_->operationHint);
+    constructor.Bind("operationHintLabel", &viewModel_->operationHintLabel);
     constructor.Bind("operationHintItems", &viewModel_->operationHintItems);
     constructor.Bind("leftTab", &viewModel_->leftTab);
     constructor.Bind("rightTab", &viewModel_->rightTab);
@@ -240,7 +250,8 @@ bool RmlUiWorkspaceView::CreateDataModel(Rml::Context& context) {
     trainInfoCard_.RegisterModel(constructor);
     cabinHud_.RegisterModel(constructor);
     railLabel_.RegisterModel(constructor);
-    platformCard_.RegisterModel(constructor);
+    diaCard_.RegisterModel(constructor);
+    pointHandMark_.RegisterModel(constructor);
 
     modelHandle_ = constructor.GetModelHandle();
     // 起動直後(鑑賞)の値を入れておく(文書の読込時の表示に使う)。
@@ -291,6 +302,12 @@ void RmlUiWorkspaceView::ReturnToSpectate() {
 void RmlUiWorkspaceView::SetCabinView(bool active) {
     if (snapshot_.cabinView == active) return;
     shell_.SetCabinView(active);
+    RefreshViewModel();
+}
+
+void RmlUiWorkspaceView::SetSignalPlacing(bool active) {
+    if (snapshot_.signalPlacing == active) return;
+    shell_.SetSignalPlacing(active);
     RefreshViewModel();
 }
 

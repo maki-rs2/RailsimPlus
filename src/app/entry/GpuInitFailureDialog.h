@@ -17,7 +17,7 @@ class Localization;
 std::string GpuInitFailureReason(const Localization& text, const GpuInitFailure& failure);
 
 // GPU名と理由を載せたエラーのメッセージボックスを出す(OK を押すまで戻らない)。
-// ヘッドレス実行(--smoke)ではモーダルで止まらないよう、呼び出し側が出さないようにする。
-void ShowGpuInitFailureDialog(HWND owner, const Localization& text, const GpuInitFailure& failure);
+// ヘッドレス実行ではモーダルで止まらないよう、呼び出し側が IsUnattendedRun で出さないようにする。
+void ShowGpuInitFailureDialog(const Localization& text, const GpuInitFailure& failure);
 
 } // namespace rs::app

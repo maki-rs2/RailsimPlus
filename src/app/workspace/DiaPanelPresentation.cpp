@@ -27,7 +27,7 @@ void DiaPanelPresentation::SetActive(bool active) {
     screen_ = 0;
     targetIndex_ = layerIndex_ = elementIndex_ = dragIndex_ = -1;
     dragKind_.clear();
-    addingLayer_ = addingOverwrite_ = false;
+    addingLayer_ = addingOverwrite_ = addingCondition_ = false;
     breadcrumb_.clear();
 }
 
@@ -45,7 +45,7 @@ bool DiaPanelPresentation::OpenTarget(int index) {
     targets_[index].selected_ = true;
     for (DiaPanelListRow& row : rows_) row.highlighted_ = row.kind_ == "target" && row.target_ == index;
     screen_ = 1;
-    addingLayer_ = addingOverwrite_ = false;
+    addingLayer_ = addingOverwrite_ = addingCondition_ = false;
     UpdateBreadcrumb();
     RefreshChoices();
     return true;
@@ -64,7 +64,7 @@ bool DiaPanelPresentation::OpenLayer(int index) {
     target.layers_[index].selected_ = !wasOpen;
     elementIndex_ = -1;
     screen_ = 1;
-    addingLayer_ = addingOverwrite_ = false;
+    addingLayer_ = addingOverwrite_ = addingCondition_ = false;
     UpdateBreadcrumb();
     RefreshChoices();
     return true;
@@ -73,7 +73,7 @@ bool DiaPanelPresentation::OpenLayer(int index) {
 void DiaPanelPresentation::Back() {
     CloseRows();
     ClearHover();
-    addingLayer_ = addingOverwrite_ = false;
+    addingLayer_ = addingOverwrite_ = addingCondition_ = false;
     if (screen_ == 2) {
         elementIndex_ = -1;
         screen_ = 1;
@@ -104,6 +104,7 @@ void DiaPanelPresentation::CloseRows() {
     for (DiaPanelElement& element : layer->elements_) element.open_ = false;
     for (DiaPanelCondition& condition : layer->conditions_) condition.open_ = false;
     addingOverwrite_ = false;
+    addingCondition_ = false;
 }
 
 bool DiaPanelPresentation::OpenElement(int index) {
@@ -169,6 +170,7 @@ void DiaPanelPresentation::ClearHover() {
     for (DiaPanelTarget& target : targets_) {
         for (DiaPanelLayer& layer : target.layers_) {
             layer.hovered_ = false;
+            for (DiaPanelCondition& condition : layer.conditions_) condition.hovered_ = false;
             for (DiaPanelElement& element : layer.elements_) {
                 element.hovered_ = false;
                 for (DiaPanelField& time : element.times_) time.hovered_ = false;

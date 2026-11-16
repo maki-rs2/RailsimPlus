@@ -74,7 +74,8 @@ bool MainWindow::Create(CameraController& camera, bool viewerMode, UINT width, U
                             WS_OVERLAPPEDWINDOW, 100, 100, wr.right - wr.left,
                             wr.bottom - wr.top, nullptr, nullptr, wc_.hInstance, nullptr);
     if (!hwnd_) {
-        spdlog::error("CreateWindow failed");
+        createError_ = GetLastError();
+        spdlog::error("CreateWindow failed (error {})", createError_);
         return false;
     }
     ApplyTitleBarTheme();

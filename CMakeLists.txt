@@ -658,6 +658,9 @@ add_library(RailsimPlusCore STATIC
     src/world/alignment/PlatformChain.cpp
     src/world/alignment/PlatformRoutine.cpp
     src/world/alignment/PointRoutine.cpp
+    src/world/alignment/NumberedName.cpp
+    src/world/alignment/PointName.cpp
+    src/world/alignment/PointHandLinks.cpp
     src/world/alignment/PointRoutineResolve.cpp
     src/world/alignment/GuidJson.cpp
     src/world/alignment/TrackGraphSerialize.cpp
@@ -739,6 +742,7 @@ add_library(RailsimPlusCore STATIC
     src/editor/tool/SceneEntityCommand.cpp
     src/editor/tool/EdgeCommand.cpp
     src/editor/tool/PlatformCommand.cpp
+    src/editor/tool/PointDiaCommand.cpp
     src/editor/tool/BlockCommand.cpp
     src/editor/tool/BlockSignalCleanupCommand.cpp
     src/editor/tool/SpeedSignalCommand.cpp
@@ -830,6 +834,8 @@ add_library(RailsimPlusCore STATIC
     src/app/input/InputSource.cpp
     src/app/entry/ScreenshotFileName.cpp
     src/app/workspace/TrainInfoCardTuning.cpp
+    src/app/workspace/DiaCardCandidates.cpp
+    src/app/workspace/PointHandMarks.cpp
     src/app/workspace/RailLabelHover.cpp
     src/app/workspace/RailLabelHoverTuning.cpp
     src/app/workspace/RailLabelPresentation.cpp
@@ -952,7 +958,11 @@ add_library(RailsimPlusCore STATIC
     src/app/action/PlatformRoutineAction.cpp
     src/app/action/PlatformRoutineLayerAction.cpp
     src/app/action/PlatformRoutineViewModel.cpp
+    src/app/action/PointRoutineAction.cpp
+    src/app/action/PointOpeningAction.cpp
+    src/app/action/PointRoutineLayerAction.cpp
     src/app/action/DiaPanelPresentationBuilder.cpp
+    src/app/action/DiaPanelBranchBuilder.cpp
     src/app/action/NodePropertyAction.cpp
     src/app/action/TrackLayingAction.cpp
     src/app/action/TrackLayingText.cpp
@@ -1013,6 +1023,7 @@ add_executable(RailsimPlus
     src/platform/font/UiFont.cpp
     src/app/entry/main.cpp
     src/app/entry/AppRuntime.cpp
+    src/app/entry/AppRuntimeShutdown.cpp
     src/app/entry/FramePacer.cpp
     src/app/entry/OpenedPlugin.cpp
     src/app/entry/ViewerMode.cpp
@@ -1031,6 +1042,7 @@ add_executable(RailsimPlus
     src/app/entry/LayoutDocumentRecoveryChoice.cpp
     src/app/entry/AppRuntimeSettingsInit.cpp
     src/app/entry/GpuInitFailureDialog.cpp
+    src/app/entry/StartupFailureDialog.cpp
     src/app/gpu/App.cpp
     src/app/gpu/AppFramePasses.cpp
     src/app/gpu/GpuContext.cpp
@@ -1115,7 +1127,9 @@ add_executable(RailsimPlus
     src/app/rmlui/RmlUiAnchoredElementPlacement.cpp
     src/app/rmlui/RmlUiTrainInfoCardView.cpp
     src/app/rmlui/RmlUiCabinHudView.cpp
-    src/app/rmlui/RmlUiPlatformCardView.cpp
+    src/app/rmlui/RmlUiDiaCardView.cpp
+    src/app/rmlui/RmlUiInlineRename.cpp
+    src/app/rmlui/RmlUiPointHandMarkView.cpp
     src/app/rmlui/RmlUiRailLabelView.cpp
     src/app/rmlui/RmlUiFormationImages.cpp
     src/app/rmlui/RmlUiUpdatePhase.cpp
@@ -1188,6 +1202,7 @@ add_executable(RailsimPlus
     src/app/action/FormationAction.cpp
     src/app/action/DiaPanelAction.cpp
     src/app/action/DiaPanelRoutineAction.cpp
+    src/app/action/DiaPanelBranchAction.cpp
     src/app/action/SceneEntitySwitchAction.cpp
     src/app/plugin_session/SessionFrameStep.cpp
     src/app/ui/ImGuiPathPicker.cpp
