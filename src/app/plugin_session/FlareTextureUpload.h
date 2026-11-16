@@ -9,10 +9,13 @@
 #include "../../render/effects/LensFlarePass.h"
 #include "FlareTextureSlots.h"
 
+namespace rs::render { class ParticlePass; }
+
 namespace rs::app {
 
 // pass が準備できていなければ何もしない(割り当ては次回に持ち越す)。読めない・上げられない画像は警告を出し、
 // そのスロットを使う要素は描かれない。台帳が満杯になっていたら、警告を1回だけ出す。
 void UploadPendingFlareTextures(FlareTextureSlots& slots, rs::render::LensFlarePass& pass);
+void UploadPendingParticleTextures(TextureSlotRegistry& slots, rs::render::ParticlePass& pass);
 
 }  // namespace rs::app

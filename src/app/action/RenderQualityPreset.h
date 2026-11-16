@@ -32,6 +32,7 @@ struct RenderQualityValues {
     bool sunLensFlare = false;
     bool sunWhiteout = false;
     bool miscLensFlare = false;
+    bool miscParticle = true;
     bool bloom = false;
     bool volumetricFog = false;
     int antiAliasingIndex = 0;     // kAntiAliasingChoicesの添字

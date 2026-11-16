@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 
 #include "../../core/Math.h"
 #include "../../plugins/schema/EffectorSchema.h"
@@ -25,6 +26,7 @@ struct ParticleEmitterParams {
     double gravityMetersPerSecondSquared = 0.0;
     double turbulenceMetersPerSecond = 0.0;
     legacy_pi::ParticleBlendMode blendMode = legacy_pi::ParticleBlendMode::Alpha;
+    std::uint32_t textureSlot = 0;
 
     static ParticleEmitterParams FromDefinition(const legacy_pi::ParticleDef& definition);
 };

@@ -80,6 +80,7 @@ ParticleState ParticleEmission::Create(const ParticleEmitterParams& params,
                                                               maxAngularSpeedRadiansPerSecond);
     particle.dynamics = {params.airResistance, params.gravityMetersPerSecondSquared, params.turbulenceMetersPerSecond};
     particle.blendMode = params.blendMode;
+    particle.textureSlot = params.textureSlot;
     return particle;
 }
 

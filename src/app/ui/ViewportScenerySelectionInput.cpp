@@ -21,6 +21,7 @@ void HandleSceneEntitySelectionInput(const EditorViewportContext& ctx, const rs:
         HandleSceneryTransformGizmo(ctx, vpr, mouse);
         return;
     }
+    editor.sceneEntityGizmoHover = {};
     if (!sceneEntitySelectionEnabled) {
         editor.hoveredSceneEntityId = rs::world::NilGuid();
         editor.hoveredPlacementEdge = rs::world::NilGuid();

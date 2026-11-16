@@ -51,6 +51,7 @@ UserSettingsData MakeSafeModeRenderSettings(const UserSettingsData& settings) {
     safe.sunLensFlare = false;
     safe.sunWhiteout = false;
     safe.miscLensFlare = false;
+    safe.miscParticle = false;
     safe.bloom = false;
     safe.motionBlur = false;
     safe.volumetricFog = false;
@@ -128,6 +129,11 @@ void RenderSettingsAction::SetMiscLensFlare(bool enabled) {
     ApplyLensFlareSwitches();
 }
 
+void RenderSettingsAction::SetMiscParticle(bool enabled) {
+    refs_.userSettings.miscParticle = enabled;
+    SaveUserSettingsOrWarn(refs_.userSettings, "Failed to save user settings after particle selection.");
+}
+
 void RenderSettingsAction::SetBloom(bool enabled) {
     refs_.userSettings.bloom = enabled;
     refs_.app.SetPostProcessSettings(PostProcessSettingsFrom(refs_.userSettings));
@@ -192,6 +198,7 @@ RenderSettingsViewModel RenderSettingsAction::ViewModel() const {
     viewModel.sunLensFlare = refs_.userSettings.sunLensFlare;
     viewModel.sunWhiteout = refs_.userSettings.sunWhiteout;
     viewModel.miscLensFlare = refs_.userSettings.miscLensFlare;
+    viewModel.miscParticle = refs_.userSettings.miscParticle;
     viewModel.bloom = refs_.userSettings.bloom;
     viewModel.motionBlur = refs_.userSettings.motionBlur;
     viewModel.volumetricFog = refs_.userSettings.volumetricFog;

@@ -108,6 +108,7 @@ void WorkspaceEditorBridge::Tick(rmlui::RmlUiIntegration& rmlUi, const rs::app::
             view->PluginRoots().SetFirstRun();
             view->OpenOverlay(workspace::OverlayKind::PluginRoots);
         }
+        lastPluginRoots_ = services.userSettings.pluginRoots;
         pluginRootsAttached_ = true;
     }
     if (!missingPluginsAttached_) {
@@ -206,6 +207,15 @@ void WorkspaceEditorBridge::Tick(rmlui::RmlUiIntegration& rmlUi, const rs::app::
     }
 
     const workspace::WorkspaceSnapshot& snapshot = view->Snapshot();
+
+    // ルートが増えたとき(追加の経路は問わない)、何も編集していない新規のレイアウトなら作り直して、
+    // 既定プラグインと敷設プラグインを入れる。異常終了の復元を選ぶ前は何も開かないので触らない。
+    const std::vector<std::string>& currentRoots = services.userSettings.pluginRoots;
+    if (currentRoots.size() > lastPluginRoots_.size() && !snapshot.Overlay(workspace::OverlayKind::Recovery).open) {
+        services.layoutAction.NewLayoutIfPristine();
+    }
+    lastPluginRoots_ = currentRoots;
+
     const ViewMode previousViewMode = viewMode;
     viewMode = workspace::ToViewMode(snapshot);
     // モードを切り替えたら、情景の配置プレビュー(ブラウザで選んだ情景)を解除する。

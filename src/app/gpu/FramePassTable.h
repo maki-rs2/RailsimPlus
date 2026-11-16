@@ -73,6 +73,7 @@ enum class FramePassFlag : std::uint8_t {
     TemporalAa,          // TAA を解決する
     DepthOfField,        // 被写界深度を掛ける
     MotionBlur,          // モーションブラーを掛ける
+    Particle,            // 粒を足す
     LensFlare,           // レンズフレアを足す
     LuminanceMeter,      // ISO オートのために、シーンの明るさを測る
     RmlUi,               // RmlUi を描く
@@ -122,6 +123,7 @@ enum class FramePassId : std::uint8_t {
     TemporalAa,
     DepthOfField,
     MotionBlur,
+    Particle,
     LensFlare,
     LuminanceMeter,
     PostProcess,
@@ -200,6 +202,9 @@ inline constexpr std::array<FramePassDesc, static_cast<std::size_t>(FramePassId:
         {FramePassId::MotionBlur, "MotionBlur", Res({R::SceneHdr, R::Velocity, R::PrepassDepth}),
          Res({R::TaaResolved, R::DepthOfFieldOut}), Res({R::MotionBlurOut}),
          Req({F::HdrReady, F::MeshReady, F::Prepass, F::Velocity, F::MotionBlur})},
+        {FramePassId::Particle, "Particle", Res({R::SceneHdr, R::MainDepth}),
+         Res({R::TaaResolved, R::DepthOfFieldOut, R::MotionBlurOut}), Res({R::SceneHdr}),
+         Req({F::HdrReady, F::MeshReady, F::Particle})},
         {FramePassId::LensFlare, "LensFlare", Res({R::SceneHdr}), Res({R::TaaResolved, R::DepthOfFieldOut, R::MotionBlurOut, R::MainDepth}),
          Res({R::SceneHdr}), Req({F::HdrReady, F::LensFlare})},
         // ISO オートの測光。撮影カメラの露出を掛ける前のシーン(レンズフレアまで足したあと)を測る。何も書かない。

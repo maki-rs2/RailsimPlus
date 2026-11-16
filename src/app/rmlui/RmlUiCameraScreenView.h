@@ -36,6 +36,11 @@ public:
     const workspace::CameraScreenPresentation& Presentation() const { return presentation_; }
     // 入力欄の値をコードから書く(画面にも反映する)。入力欄の幅に収まらないときは変えずにfalse。
     bool SetFieldText(workspace::CameraScreenParameter parameter, std::string_view text);
+    // 焦点距離欄を焦点距離[mm]へ合わせる(欄の範囲に収める)。書けたら true。
+    bool SetFocalLength(double focalMm);
+    // 焦点距離欄を、縦の視野角が通常画面のホイール1ノッチぶん×notches 変わるように動かす。
+    // notches が正で視野角が狭くなる。変わったら true。
+    bool StepFocalLength(double notches);
     // ISOオート中に7セグへ出す、決まったISO。nullopt なら基準の値を出す。
     void SetAutoIso(std::optional<double> iso);
 

@@ -239,6 +239,8 @@ void AdvanceSimulation(FrameLoopState& loopState, FrameScratch& scratch);
 // SubmitTrainRenderSnapshot。
 void SyncAndTickScene(FrameLoopState& loopState, FrameScratch& scratch);
 
+void UpdateFrameParticles(FrameLoopState& loopState, bool loading);
+
 // --- AppRuntimeFrameRender.cpp ---
 
 // WASD移動・カメラビュー構築・敷設エディタのTick(ビューワーモードでは無効)。

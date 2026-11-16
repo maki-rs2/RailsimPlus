@@ -1,11 +1,6 @@
 #include "NotImplementedNotice.h"
 
-#include <string>
-
-#include "ToastQueue.h"
-
 namespace rs::app {
-void NotifyNotImplemented(ToastQueue& queue, std::string_view operation) {
-    queue.Post(ToastSeverity::Info, std::string(operation) + "は未実装です");
-}
+// 処理が結びついていない操作を押しても、通知は出さず何もしない。
+void NotifyNotImplemented(ToastQueue&, std::string_view) {}
 } // namespace rs::app

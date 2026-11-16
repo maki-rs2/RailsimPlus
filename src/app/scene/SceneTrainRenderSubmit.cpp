@@ -224,6 +224,8 @@ void SceneTrainController::SubmitCarSlot(SubmitFrame& frame, size_t slotIndex, S
                                              session.soundEffectStates);
     rs::app::UpdateHeadlightWorldPoses(session.headlightAttachments, partWorlds,
                                        rs::core::Mat4::Identity(), session.headlightStates);
+    rs::app::UpdateParticleWorldPoses(session.particleAttachments, partWorlds,
+                                      rs::core::Mat4::Identity(), session.particleStates);
     // 音源速度は「符号付き走行速度×軌道接線」で解析的に求める。位置差分は使わない:
     // この関数は描画フレームごとに1回走るのに対しcarSnapshotDeltaSecondsは
     // 1tick分であり、分子と分母が別の区間を測るので値が振動する。

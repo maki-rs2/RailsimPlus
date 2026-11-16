@@ -1191,7 +1191,8 @@
         </handle>
         <div class="float-window-body">
             <div class="form-line">上ほど優先。同じプラグインが複数のフォルダにあるときは、上のものを使う</div>
-            <div class="form-line float-window-note" data-if="pluginRootRows.size == 0">RailSim II のフォルダを「追加…」で選んでください。あとからゲーム設定でも変えられます。</div>
+            <div class="form-line float-window-note" data-if="pluginRootRows.size == 0">RailSim II のフォルダを「追加…」で選んでください。</div>
+            <div class="form-line float-window-note" data-if="pluginRootRows.size == 0">あとからゲーム設定でも変えられます。</div>
             <div class="form-row" data-for="root, index : pluginRootRows">
                 <div class="root-path" data-attr-title="root.path">{{ root.path }}</div>
                 <button class="icon root-button ic-move-up" title="上へ" data-attrif-disabled="!root.canUp"

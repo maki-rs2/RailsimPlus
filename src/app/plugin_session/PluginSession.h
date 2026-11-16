@@ -17,6 +17,7 @@
 
 #include "../../plugins/load/runtime/AnimationRuntime.h"
 #include "../../plugins/load/runtime/HeadlightWorldTracker.h"
+#include "../../plugins/load/runtime/ParticleWorldTracker.h"
 #include "../../plugins/load/runtime/MaterialRuntime.h"
 #include "../../plugins/load/runtime/MoverRuntime.h"
 #include "../../plugins/load/runtime/SoundEffectAttachment.h"
@@ -120,6 +121,8 @@ public:
     std::vector<rs::app::SoundEffectRuntimeState> soundEffectStates;
     std::vector<rs::app::HeadlightAttachment> headlightAttachments;
     std::vector<rs::app::HeadlightRuntimeState> headlightStates;
+    std::vector<rs::app::ParticleAttachment> particleAttachments;
+    std::vector<rs::app::ParticleRuntimeState> particleStates;
     std::vector<rs::legacy_plugin::PartMaterialRuntime> materialRuntimes;
     std::vector<rs::legacy_plugin::PartAnimationRuntime> animationRuntimes;
     size_t movablePartCount = 0;

@@ -82,6 +82,9 @@ void PluginSession::BuildRuntimes() {
     headlightAttachments.clear();
     rs::app::BuildHeadlightAttachments(plugin.def, loadedFolderUtf8, headlightAttachments);
     headlightStates.assign(headlightAttachments.size(), rs::app::HeadlightRuntimeState{});
+    particleAttachments.clear();
+    rs::app::BuildParticleAttachments(plugin.def, loadedFolderUtf8, particleAttachments);
+    particleStates.assign(particleAttachments.size(), rs::app::ParticleRuntimeState{});
 
     materialRuntimes.clear();
     materialRuntimes.resize(plugin.def.parts.size());

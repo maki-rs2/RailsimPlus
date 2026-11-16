@@ -452,6 +452,10 @@
     "ja": "灯具のフレア",
     "en": "Light flare"
   },
+  "render_settings.misc_particle": {
+    "ja": "パーティクル",
+    "en": "Particles"
+  },
   "game_settings.tab.input": {
     "ja": "操作",
     "en": "Controls"

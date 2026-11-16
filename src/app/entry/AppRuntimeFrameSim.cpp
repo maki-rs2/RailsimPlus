@@ -16,6 +16,7 @@
 #include <spdlog/spdlog.h>
 
 #include "../plugin_session/PluginRootResolver.h"
+#include "../plugin_session/FlareTextureUpload.h"
 #include "../plugin_session/PluginSkyLighting.h"
 #include "../plugin_session/RailSoundLookup.h"
 #include "../../platform/text/Encoding.h"
@@ -327,6 +328,7 @@ void SyncAndTickScene(FrameLoopState& loopState, FrameScratch& scratch) {
     // (FrameLoopState::syncJobActiveLastFrame)。
     const bool placedSoundsMuted =
         state.sceneRenderer.SyncJobActive() || loopState.syncJobActiveLastFrame;
+    UpdateFrameParticles(loopState, placedSoundsMuted);
     if (loopState.placedSoundSceneGeneration != globals.editor.SceneGeneration()) {
         loopState.placedSoundDumpFrame = 0;
         loopState.placedSoundSceneGeneration = globals.editor.SceneGeneration();
@@ -355,6 +357,7 @@ void SyncAndTickScene(FrameLoopState& loopState, FrameScratch& scratch) {
                   state.sceneRenderer.Slots(),
                   staticHeadlightSource,
                   state.flareTextureSlots, globals.app.LensFlare()));
+    UploadPendingParticleTextures(state.particleTextureSlots, globals.app.Particles());
     state.audioEngine.SyncPlacedSounds(placedSoundRequests,
                                        scratch.eye, listenerForward, listenerUp,
                                        static_cast<double>(loopState.io.DeltaTime) *

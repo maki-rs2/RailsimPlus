@@ -126,6 +126,8 @@ void PluginSwitchTable::CollectSwitchTables(const rs::legacy_pi::PluginDefinitio
     for (const auto& se : def.soundEffects) scanChain(se.trig.chain);
     // 灯具の発動条件も同じ。テールランプの出し分け(_FRONT等)だけでスイッチを参照するプラグインがある。
     for (const rs::legacy_pi::HeadlightDef& headlight : def.headlights) scanChain(headlight.trig.chain);
+    // パーティクルの発動条件も同じ(蒸気・煙は _VELOCITY などだけで出し分ける)。
+    for (const rs::legacy_pi::ParticleDef& particle : def.particles) scanChain(particle.trig.chain);
 
     // 表(kSystemSwitchAxes)にも DefineSwitch にも無い"_名前"は、値を供給する経路が無く
     // 常に0のままになる。綴り違いか、本アプリが対応していないRailSim IIのスイッチなので警告する。

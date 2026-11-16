@@ -9,6 +9,7 @@
 #include "../../render/postprocess/TonemapMath.h"
 #include "../../render/resource/RenderTuning.h"
 #include "../../render/resource/ShaderCache.h"
+#include "../../sim/particle/ParticleTuning.h"
 #include "../rmlui/RmlUiIntegration.h"
 #include "InitSteps.h"
 
@@ -172,6 +173,9 @@ bool App::Init(HWND hwnd, UINT width, UINT height, bool viewerBackground) {
         // 太陽のレンズフレアと白飛び(作れなければ出さないだけ)。
         {"lensFlare", Importance::Optional,
          [&] { return renderer_.InitLensFlare(rhiDevice(), rhiSrvHeap(), rhiQueue(), kSrvLayout.lensFlare); }},
+        {"particle", Importance::Optional,
+         [&] { return renderer_.InitParticles(rhiDevice(), rhiSrvHeap(), rhiQueue(), kSrvLayout.particle,
+                                                 rs::sim::ParticleTuning::Embedded().maxParticles); }},
         // 標準の空の遠景(画像が読めなければ遠景なしで動く)。
         {"landscape", Importance::Optional,
          [&] { return renderer_.Landscape().Init(rhiDevice(), rhiSrvHeap(), rhiQueue(), kSrvLayout.landscape); }},

@@ -71,6 +71,7 @@ bool CameraScreenField::Wheel(double delta) {
     const int next = step_ + (delta < 0.0 ? 1 : -1);
     if (next < 0 || static_cast<std::size_t>(next) >= steps_.size()) return false;
     step_ = next;
+    exactValue_.reset();
     text_ = steps_[step_];
     draft_ = text_;
     RefreshDigits();
@@ -93,6 +94,7 @@ bool CameraScreenField::SetText(std::string_view value) {
         if (std::find(steps_.begin(), steps_.end(), kCameraScreenAutoText) == steps_.end()) return false;
         value = kCameraScreenAutoText;
     }
+    exactValue_.reset();
     text_ = value;
     draft_ = text_;
     const auto match = std::find(steps_.begin(), steps_.end(), text_);

@@ -130,6 +130,8 @@ private:
     bool sceneryYawStepAttached_ = false;
     bool formationListAttached_ = false;
     bool diaPanelAttached_ = false;
+    // 前のフレームのルート(増えたかどうかの比較用)。
+    std::vector<std::string> lastPluginRoots_;
 };
 
 } // namespace rs::app

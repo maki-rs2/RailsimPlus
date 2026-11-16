@@ -267,6 +267,12 @@ void RenderFrameAndCapture(FrameLoopState& loopState, FrameScratch& scratch) {
     globals.app.SetDepthOfFieldCamera(photo.dofCamera);
     globals.app.SetPhotoExposureMultiplier(photo.exposureMultiplier);
     globals.app.SetLuminanceMeter(photo.luminanceMeter);
+    const CameraView& particleView = scratch.view;
+    const rs::core::DVec3 particleCamera = {particleView.eye[0], particleView.eye[1], particleView.eye[2]};
+    const rs::core::DVec3 particleTarget = {particleView.target[0], particleView.target[1], particleView.target[2]};
+    globals.app.SetParticles({state.particleSystem.Pool(), particleCamera,
+                              rs::core::Sub(particleTarget, particleCamera), state.particleSystem.Pool().Capacity()},
+                             state.userSettings.miscParticle);
     globals.app.Render(scratch.view, state.sceneRenderer.SyncJobActive());
     if (globals.app.DeviceLost()) {
         HandleDeviceLost(loopState);

@@ -56,6 +56,8 @@ public:
     // 列車音・環境音のカテゴリ音量(0〜1)。
     void SetUserTrainVolume(float volume);
     void SetUserEnvironmentVolume(float volume);
+    // 操作の効果音(PlaySound)の音量(0〜1)。
+    void SetUserEffectsVolume(float volume);
 
 private:
     // OpenAL側が失われたとき、音源とバッファの管理を削除せずに空にする。
@@ -71,6 +73,7 @@ private:
     bool hasListenerPreviousPos_ = false;
     float userTrainVolume_ = 1.0f;
     float userEnvironmentVolume_ = 1.0f;
+    float userEffectsVolume_ = 1.0f;
 };
 
 } // namespace rs::sim

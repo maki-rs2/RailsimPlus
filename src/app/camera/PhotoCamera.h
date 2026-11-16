@@ -7,7 +7,7 @@
 
 #include "../workspace/CameraScreenSteps.h"
 
-namespace rs::app::workspace { struct CameraScreenPresentation; }
+namespace rs::app::workspace { struct CameraScreenField; struct CameraScreenPresentation; }
 
 namespace rs::app {
 
@@ -81,6 +81,16 @@ double FocalLengthFromFovY(double fovYRadians, double frameHeightMm);
 // 入力欄の段(文字列)のうち、value に対数で最も近いものの番号。変換できない段があるか、段が空なら -1。
 int NearestPhotoStepIndex(workspace::CameraScreenParameter parameter, const std::vector<std::string>& steps,
                           double value);
+
+// 焦点距離欄を focalMm[mm]へ合わせる。欄の段の最小〜最大に収め、欄の表示は整数 mm に丸める。
+// 丸める前の値は欄の exactValue_ が持ち、MakePhotoCamera はそれを読む。書けなかったときは false。
+bool SetFocalLengthMm(workspace::CameraScreenField& field, double focalMm);
+
+// 焦点距離欄を、縦の視野角が fovStepRadians × notches だけ変わるように動かす(ホイール用)。
+// notches が正で視野角が狭くなる(焦点距離が長くなる)。視野角は高さ frameHeightMm[mm]のフレームで求める。
+// 段の最小〜最大で止まる。値が変わったら true。
+bool StepFocalLengthByFov(workspace::CameraScreenField& field, double notches, double fovStepRadians,
+                          double frameHeightMm);
 
 // ファインダーを出るときの通常画面の視野角[rad]。入るときに入力欄へ書いた焦点距離 writtenFocalMm のままなら
 // nullopt(視野角は元のまま)。ユーザーが変えていたら、その焦点距離を通常画面のフレームの高さで換算して

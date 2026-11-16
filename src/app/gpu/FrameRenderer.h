@@ -61,6 +61,7 @@
 #include "../../render/shadow/ShadowQuality.h"
 #include "../../render/wboit/WboitPass.h"
 #include "../camera/CameraView.h"
+#include "../../render/particle/ParticlePass.h"
 #include "../diagnostics/CpuRenderBreakdown.h"
 #include "CameraMath.h"
 #include "FramePassTable.h"
@@ -283,6 +284,12 @@ public:
     // レンズフレア・白飛びの効果スイッチ(起動時の読込直後と設定変更時に呼ぶ)。即時に反映する。
     void SetLensFlareSwitches(const rs::render::LensFlareSwitches& switches) { lensFlareSwitches_ = switches; }
     void SetHeadlightLights(std::vector<rs::render::HeadlightLight> lights) { headlights_ = std::move(lights); }
+    rs::render::ParticlePass& Particles() { return particlePass_; }
+    bool InitParticles(const rs::rhi::Device& device, const rs::rhi::SrvHeap& srvHeap,
+                       const rs::rhi::CommandQueue& queue, std::uint32_t firstSrvIndex, std::size_t maxParticles);
+    void SetParticles(const rs::render::ParticleFrameInput& input, bool enabled);
+    void RecordParticles(const rs::rhi::CommandList& commandList, rs::rhi::CpuDescriptor rtv,
+                         std::uint32_t frameIndex);
     // トーンマップの後に、rtv(表示用のUNORM形式)へ太陽のフレアと白飛びを足す。描くものが無ければ何もしない。
     // frameIndex は実行中のフレームと重ならない側の書き込み先を選ぶ番号。
     // includeSun が偽のときは太陽のフレアと白飛びを足さず、灯具のフレアだけを描く。
@@ -534,6 +541,10 @@ private:
     rs::render::LensFlareSwitches lensFlareSwitches_;      // SetLensFlareSwitches参照
     std::vector<rs::render::HeadlightLight> headlights_;  // 灯具のレンズフレア(SetHeadlightLights)
     bool                              headlightOverflowWarned_ = false;
+    rs::render::ParticlePass           particlePass_;
+    rs::render::ParticleBatchBuilder   particleBatch_;
+    bool                              particlesEnabled_ = false;
+    bool                              particleOverflowWarned_ = false;
     rs::rhi::SrvHeap                  lensFlareSrvHeap_; // 深度のSRVを書き直す(リサイズ)ためのヒープ
     rs::render::Overlay2DPass         overlay2DPass_;
     bool                              skyEnabled_ = true; // SetSkyEnabled参照

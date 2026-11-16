@@ -168,6 +168,10 @@ UserSettingsData UserSettings::Load(const std::filesystem::path& path) {
         if (audioEnvironmentVolume != document.end() && audioEnvironmentVolume->is_number()) {
             data.audioEnvironmentVolume = UserSettingsData::ClampAudioVolume(audioEnvironmentVolume->get<float>());
         }
+        const nlohmann::json::const_iterator audioEffectsVolume = document.find("audioEffectsVolume");
+        if (audioEffectsVolume != document.end() && audioEffectsVolume->is_number()) {
+            data.audioEffectsVolume = UserSettingsData::ClampAudioVolume(audioEffectsVolume->get<float>());
+        }
         const nlohmann::json::const_iterator atmosphericPerspective = document.find("atmosphericPerspective");
         if (atmosphericPerspective != document.end() && atmosphericPerspective->is_boolean()) {
             data.atmosphericPerspective = atmosphericPerspective->get<bool>();
@@ -198,7 +202,8 @@ UserSettingsData UserSettings::Load(const std::filesystem::path& path) {
         };
         const SwitchField lensFlareFields[] = {{"sunLensFlare", &data.sunLensFlare},
                                                {"sunWhiteout", &data.sunWhiteout},
-                                               {"miscLensFlare", &data.miscLensFlare}};
+                                               {"miscLensFlare", &data.miscLensFlare},
+                                               {"miscParticle", &data.miscParticle}};
         for (const SwitchField& entry : lensFlareFields) {
             const nlohmann::json::const_iterator found = document.find(entry.key);
             if (found != document.end() && found->is_boolean()) *entry.field = found->get<bool>();
@@ -282,6 +287,7 @@ bool UserSettings::Save(const std::filesystem::path& path, const UserSettingsDat
                                      {"audioMasterVolume", UserSettingsData::ClampAudioVolume(data.audioMasterVolume)},
                                      {"audioTrainVolume", UserSettingsData::ClampAudioVolume(data.audioTrainVolume)},
                                      {"audioEnvironmentVolume", UserSettingsData::ClampAudioVolume(data.audioEnvironmentVolume)},
+                                     {"audioEffectsVolume", UserSettingsData::ClampAudioVolume(data.audioEffectsVolume)},
                                      {"atmosphericPerspective", data.atmosphericPerspective},
                                      {"heightFog", data.heightFog},
                                      {"tonemap", data.tonemapMode},
@@ -290,6 +296,7 @@ bool UserSettings::Save(const std::filesystem::path& path, const UserSettingsDat
                                      {"sunLensFlare", data.sunLensFlare},
                                      {"sunWhiteout", data.sunWhiteout},
                                      {"miscLensFlare", data.miscLensFlare},
+                                     {"miscParticle", data.miscParticle},
                                      {"bloom", data.bloom},
                                      {"motionBlur", data.motionBlur},
                                      {"volumetricFog", data.volumetricFog},

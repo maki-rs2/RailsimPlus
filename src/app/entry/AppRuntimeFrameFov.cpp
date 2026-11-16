@@ -12,13 +12,9 @@ namespace rs::app {
 namespace {
 using workspace::CameraScreenParameter;
 
-// ファインダーへ入る。入力欄の焦点距離を、通常画面の視野角に近い段へ合わせる。
+// ファインダーへ入る。入力欄の焦点距離を、通常画面の視野角から換算した値へ合わせる(段には丸めない)。
 void EnterFinder(FrameLoopState& loopState, rmlui::RmlUiCameraScreenView& screen, float fieldOfView) {
-    const std::size_t index = static_cast<std::size_t>(CameraScreenParameter::FocalLength);
-    const std::vector<std::string>& steps = screen.Presentation().fields_[index].steps_;
-    const double focalMm = FocalLengthFromFovY(fieldOfView, kNormalViewFrameHeightMm);
-    const int nearest = NearestPhotoStepIndex(CameraScreenParameter::FocalLength, steps, focalMm);
-    if (nearest >= 0) screen.SetFieldText(CameraScreenParameter::FocalLength, steps[static_cast<std::size_t>(nearest)]);
+    screen.SetFocalLength(FocalLengthFromFovY(fieldOfView, kNormalViewFrameHeightMm));
     // 書けなかったときも、いまの入力欄の値を基準にする(そのまま出れば視野角は変わらない)。
     loopState.photoFinderEntryFocalMm = MakePhotoCamera(screen.Presentation()).focalLengthMm;
 }

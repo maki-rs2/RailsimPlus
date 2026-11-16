@@ -45,6 +45,8 @@ SessionPose UpdateSessionPose(PluginSession& session, const SessionPoseInput& in
                                     session.soundEffectStates);
     UpdateHeadlightWorldPoses(session.headlightAttachments, pose.dynamicWorlds, input.entityWorld,
                               session.headlightStates);
+    UpdateParticleWorldPoses(session.particleAttachments, pose.dynamicWorlds, input.entityWorld,
+                              session.particleStates);
 
     // 組立表示は複数パーツから成り、各頂点はpartIndexでパーツ行列を引く。パーツごとの行列を
     // assemblyPlacements と同じ並びで作る(配置の行列を掛けたワールド行列と、平行移動を除いた法線行列)。

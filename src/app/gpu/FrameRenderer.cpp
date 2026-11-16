@@ -226,6 +226,26 @@ D3D12_CPU_DESCRIPTOR_HANDLE FrameRenderer::DepthDsv() const {
     return meshPipeline_.DepthDsv();
 }
 
+void FrameRenderer::SetParticles(const rs::render::ParticleFrameInput& input, bool enabled) {
+    particlesEnabled_ = enabled && particlePass_.Ready();
+    if (!particlesEnabled_) return;
+    const std::size_t dropped = particleBatch_.Build(
+        input.pool, input.cameraPosition, input.cameraForward,
+        [this](std::uint32_t slot) { return particlePass_.HasTexture(slot); },
+        input.maxParticles);
+    if (dropped > 0 && !particleOverflowWarned_) {
+        particleOverflowWarned_ = true;
+        spdlog::warn("[particle] render limit exceeded; {} farther particles are not drawn", dropped);
+    }
+}
+
+bool FrameRenderer::InitParticles(const rs::rhi::Device& device, const rs::rhi::SrvHeap& srvHeap,
+                                   const rs::rhi::CommandQueue& queue, std::uint32_t firstSrvIndex,
+                                   std::size_t maxParticles) {
+    if (!particlePass_.Init(device, srvHeap, queue, firstSrvIndex, maxParticles)) return false;
+    return meshPipeline_.WriteDepthSrv(srvHeap, particlePass_.DepthSrvIndex());
+}
+
 void FrameRenderer::BuildEnvironment() {
     rs::render::EnvironmentSrvIndices envSrv;
     envSrv.diffuse = ibl_.DiffuseSrvIndex();
@@ -300,6 +320,7 @@ void FrameRenderer::OnResize(ID3D12Device* device, UINT width, UINT height) {
     targetHeight_ = height;
     // 深度の資源が新しくなったので、レンズフレアが読むSRVを書き直す。
     if (lensFlare_.Ready()) meshPipeline_.WriteDepthSrv(lensFlareSrvHeap_, lensFlare_.DepthSrvIndex());
+    if (particlePass_.Ready()) meshPipeline_.WriteDepthSrv(mainSrvHeap_, particlePass_.DepthSrvIndex());
     EnsureSizedResources();
     prevViewProjValid_ = false; // 前フレームと画面の大きさが違うので、前の viewProj は使わない(前 = 今)
 }

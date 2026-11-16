@@ -1,4 +1,4 @@
 {
-  "releaseApiUrl": "",
+  "releaseApiUrl": "https://api.github.com/repos/maki-rs2/RailsimPlus/releases/latest",
   "releasePageUrl": ""
 }

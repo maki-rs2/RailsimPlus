@@ -53,6 +53,12 @@ void DrawGameSettingsPanel(const GameSettingsPanelContext& ctx) {
             ctx.action.SetAudioEnvironmentVolume(environmentVolumePercent / UserSettingsData::kVolumePercentScale);
         }
         volumeCommit = ImGui::IsItemDeactivatedAfterEdit() || volumeCommit;
+        float effectsVolumePercent = viewModel.audioEffectsVolume * UserSettingsData::kVolumePercentScale;
+        if (ImGui::SliderFloat("効果音", &effectsVolumePercent, UserSettingsData::kMinAudioVolumePercent,
+                               UserSettingsData::kMaxAudioVolumePercent, "%.0f %%")) {
+            ctx.action.SetAudioEffectsVolume(effectsVolumePercent / UserSettingsData::kVolumePercentScale);
+        }
+        volumeCommit = ImGui::IsItemDeactivatedAfterEdit() || volumeCommit;
         if (volumeCommit) ctx.action.CommitAudioCategoryVolumes();
 
         if (!ctx.state.audioOutputDevicesFetched) {

@@ -16,6 +16,7 @@
 #include "RmlUiDataEventArgs.h"
 #include "RmlUiUpdatePhase.h"
 #include "../action/CameraScreenAction.h"
+#include "../camera/CameraTuning.h"
 #include "../camera/PhotoCamera.h"
 #include "../action/ToastQueue.h"
 #include "../locale/Localization.h"
@@ -108,6 +109,26 @@ std::optional<workspace::CameraFinderRect> RmlUiCameraScreenView::ActiveFinder()
 bool RmlUiCameraScreenView::SetFieldText(CameraScreenParameter parameter, std::string_view text) {
     const std::size_t index = static_cast<std::size_t>(parameter);
     if (index >= presentation_.fields_.size() || !presentation_.fields_[index].SetText(text)) return false;
+    modelHandle_.DirtyVariable("camera");
+    return true;
+}
+
+bool RmlUiCameraScreenView::SetFocalLength(double focalMm) {
+    CameraScreenField& field = presentation_.fields_[static_cast<std::size_t>(CameraScreenParameter::FocalLength)];
+    if (!SetFocalLengthMm(field, focalMm)) return false;
+    modelHandle_.DirtyVariable("camera");
+    return true;
+}
+
+bool RmlUiCameraScreenView::StepFocalLength(double notches) {
+    CameraScreenField& field = presentation_.fields_[static_cast<std::size_t>(CameraScreenParameter::FocalLength)];
+    // 実際に写るフレームの高さ(出力の縦横比で変わる)で視野角を求める。ファインダーが無ければ通常画面と同じ高さ。
+    const double aspect =
+        presentation_.finder_.height_ > 0.0 ? presentation_.finder_.width_ / presentation_.finder_.height_ : 0.0;
+    const double frameHeightMm = aspect > 0.0 ? PhotoFrameForAspect(aspect).heightMm : kNormalViewFrameHeightMm;
+    if (!StepFocalLengthByFov(field, notches, CameraTuning::Embedded().fovYWheelStepRadians, frameHeightMm)) {
+        return false;
+    }
     modelHandle_.DirtyVariable("camera");
     return true;
 }
@@ -216,13 +237,18 @@ void RmlUiCameraScreenView::OnAction(Rml::Event& event, const Rml::VariantList& 
     ScenePanelPresentation& bookmarks = presentation_.bookmarks_;
     using namespace camera_screen_action;
     if (kind == "wheel" && index >= 0 && static_cast<std::size_t>(index) < presentation_.fields_.size()) {
-        CameraScreenField& field = presentation_.fields_[index];
-        field.Wheel(event.GetParameter<double>("wheel_delta_y", 0.0));
+        const double delta = event.GetParameter<double>("wheel_delta_y", 0.0);
+        if (index == static_cast<int>(CameraScreenParameter::FocalLength)) {
+            // 焦点距離は段でなく連続で動かす(ホイールを上に回すと長くなる)。
+            if (delta != 0.0) StepFocalLength(delta < 0.0 ? 1.0 : -1.0);
+        } else {
+            presentation_.fields_[index].Wheel(delta);
+        }
     } else if (kind == "step" && index >= 0 && static_cast<std::size_t>(index) < presentation_.fields_.size()) {
         // 矢印ボタンはホイールと同じ段を1つ動かす(右=上げる)。左のパネルの欄も同じ値を持つので一緒に変わる。
-        CameraScreenField& field = presentation_.fields_[index];
         const int direction = EventArgumentAt<int>(arguments, 2, 0);
-        field.Wheel(direction > 0 ? -1.0 : 1.0);
+        if (index == static_cast<int>(CameraScreenParameter::FocalLength)) StepFocalLength(direction > 0 ? 1.0 : -1.0);
+        else presentation_.fields_[index].Wheel(direction > 0 ? -1.0 : 1.0);
     } else if (kind == "resolution") {
         const std::string value = event.GetParameter<Rml::String>("value", std::to_string(presentation_.resolution_));
         if (presentation_.SetResolution(value)) SetResolution(queue_, value);

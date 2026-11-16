@@ -352,6 +352,10 @@ rs_embed_config_json(
     kParticleTuningJson
     EmbeddedParticleTuning.h)
 rs_embed_config_json(
+    "${CMAKE_SOURCE_DIR}/assets/config/particle_render_tuning.json"
+    kParticleRenderTuningJson
+    EmbeddedParticleRenderTuning.h)
+rs_embed_config_json(
     "${CMAKE_SOURCE_DIR}/assets/config/camera_tuning.json"
     kCameraTuningJson
     EmbeddedCameraTuning.h)
@@ -521,6 +525,9 @@ add_library(RailsimPlusCore STATIC
     src/plugins/load/runtime/SoundEffectWorldTracker.cpp
     src/plugins/load/runtime/HeadlightAttachment.cpp
     src/plugins/load/runtime/HeadlightWorldTracker.cpp
+    src/plugins/load/runtime/AttachmentWorldPose.cpp
+    src/plugins/load/runtime/ParticleAttachment.cpp
+    src/plugins/load/runtime/ParticleWorldTracker.cpp
     src/plugins/load/TrainAssembly.cpp
     src/plugins/load/TrainAssemblyHeads.cpp
     src/render/mesh/MeshAssembler.cpp
@@ -603,6 +610,10 @@ add_library(RailsimPlusCore STATIC
     src/render/effects/VolumetricFogSkyPass.cpp
     src/render/effects/LensFlarePass.cpp
     src/render/effects/LensFlarePassPipeline.cpp
+    src/render/particle/ParticleBatchBuilder.cpp
+    src/render/particle/ParticlePass.cpp
+    src/render/particle/ParticlePassPipeline.cpp
+    src/render/particle/ParticleRenderTuning.cpp
     src/render/effects/SunFlareFrame.cpp
     src/render/effects/HeadlightFlare.cpp
     src/render/shadow/CascadeFit.cpp
@@ -804,6 +815,7 @@ add_library(RailsimPlusCore STATIC
     src/app/plugin_session/SunFlareSetup.cpp
     src/app/plugin_session/SunFlareController.cpp
     src/app/plugin_session/FlareTextureSlots.cpp
+    src/app/plugin_session/TextureSlotRegistry.cpp
     src/app/plugin_session/FlareTextureUpload.cpp
     src/app/plugin_session/LensFlareStyleConvert.cpp
     src/app/plugin_session/PluginSkyLighting.cpp
@@ -944,6 +956,7 @@ add_executable(RailsimPlus
     src/app/entry/LayoutResultReporter.cpp
     src/app/entry/AppRuntimeFrameUi.cpp
     src/app/entry/AppRuntimeFrameSim.cpp
+    src/app/entry/AppRuntimeParticle.cpp
     src/app/entry/AppRuntimeFrameFov.cpp
     src/app/entry/AppRuntimeFramePhoto.cpp
     src/app/entry/AppRuntimeFrameRender.cpp
@@ -1193,6 +1206,7 @@ add_executable(RailsimPlus
       src/app/scene/SceneSceneryPicker.cpp
       src/app/scene/TrainPickBox.cpp
     src/app/scene/PlacedSoundRequestCollector.cpp
+    src/app/scene/ParticleRequestCollector.cpp
     src/app/scene/HeadlightCollector.cpp
     src/app/scene/SceneSlotPool.cpp
     src/app/scene/SurfaceBoundsTracker.cpp
@@ -1353,6 +1367,7 @@ add_executable(RailsimPlusTests
     tests/SoundEffectWorldTrackerTests.cpp
     tests/PlacedSoundSourcePoolTests.cpp
     tests/ParticleSimulationTests.cpp
+    tests/ParticleBatchBuilderTests.cpp
     tests/TriggerChainTests.cpp
     tests/PluginSelectorTests.cpp
     tests/ToastQueueTests.cpp
@@ -1420,6 +1435,7 @@ add_executable(RailsimPlusTests
     src/core/Frustum.cpp
     src/app/gpu/SceneSlotCulling.cpp
     src/app/scene/SceneSlotPool.cpp
+    src/app/scene/ParticleRequestCollector.cpp
     src/app/scene/SceneTrainGroupCollector.cpp
     src/app/scene/SceneCabinPivot.cpp
     src/app/scene/SceneStopConstraintPhase.cpp

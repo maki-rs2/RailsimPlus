@@ -60,6 +60,8 @@ struct UserSettingsData {
     // 列車音(車輪音・編成車両のSoundEffect)と環境音(情景のSoundEffect)の音量倍率(0〜1)。
     float audioTrainVolume = 1.0f;
     float audioEnvironmentVolume = 1.0f;
+    // 操作の効果音(UI音)の音量倍率(0〜1)。
+    float audioEffectsVolume = 1.0f;
     // 大気遠近(遠くのメッシュが空の色にかすむ効果)を使うか(settings.datには"atmosphericPerspective"で保存)。
     // 読めないときは真。起動時の --setting atmosphericPerspective で上書きできる。
     bool atmosphericPerspective = true;
@@ -79,6 +81,7 @@ struct UserSettingsData {
     bool sunLensFlare = true;
     bool sunWhiteout = true;
     bool miscLensFlare = true;
+    bool miscParticle = true;
     // ブルーム(明るい光のまわりの滲み)を掛けるか(settings.datには"bloom"で保存)。読めないときは真。
     bool bloom = true;
     // モーションブラー(動くものの流れる滲み)を掛けるか(settings.datには"motionBlur"で保存)。読めないときは偽。

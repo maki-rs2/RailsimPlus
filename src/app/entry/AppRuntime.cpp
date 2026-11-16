@@ -91,6 +91,7 @@ bool InitializeAppRuntime(AppRuntimeGlobals& globals, const AppCommandLine& cli,
     state.audioEngine.SetUserMasterVolume(state.userSettings.audioMasterVolume);
     state.audioEngine.SetUserTrainVolume(state.userSettings.audioTrainVolume);
     state.audioEngine.SetUserEnvironmentVolume(state.userSettings.audioEnvironmentVolume);
+    state.audioEngine.SetUserEffectsVolume(state.userSettings.audioEffectsVolume);
     state.audioEngine.Init();
     state.uiSound.Load(state.audioEngine);
     const double audioMs = sinceMs(tAudio0);
@@ -347,6 +348,15 @@ void RunFrameLoop(AppRuntimeGlobals& globals, AppRuntimeState& state) {
         return loopState.placementHeight.AdjustByWheel(notches);
     });
 
+    // ファインダー中の Shift+ホイールは、焦点距離の入力欄を動かす(通常画面の視野角と同じ刻み)。
+    state.mainWindow.SetFovWheelHandler([&](float notches) {
+        if (!loopState.photoFinderActive) return false;
+        rmlui::RmlUiWorkspaceView* const workspaceView = state.rmlUiIntegration.WorkspaceView();
+        if (workspaceView == nullptr) return false;
+        workspaceView->CameraScreen().StepFocalLength(notches);
+        return true;
+    });
+
     // ウィンドウの×は、ワークスペースでは未保存の警告を通す(ImGui版の画面にはその画面が無い)。
     if (state.cli.rmluiWorkspace) {
         state.mainWindow.SetCloseRequestHandler([&]() { loopState.layoutDocument.RequestClose(); });
@@ -364,6 +374,7 @@ void RunFrameLoop(AppRuntimeGlobals& globals, AppRuntimeState& state) {
 
     state.mainWindow.SetCloseRequestHandler(nullptr);
     state.mainWindow.SetCtrlWheelHandler(nullptr);
+    state.mainWindow.SetFovWheelHandler(nullptr);
     state.mainWindow.SetModalFrameCallback(nullptr);
     loopState.frameProfiler.Flush();
 }
@@ -375,9 +386,7 @@ void ShutdownAppRuntime(AppRuntimeGlobals& globals, AppRuntimeState& state) {
     }
     state.audioEngine.Shutdown();
     if (UsesRmlUi(state.cli)) {
-        // RmlUiIntegration::Shutdown()はGPUが完全にアイドルであることを前提にする
-        // (RmlUiRenderInterface.h冒頭コメント参照)。ShutdownGraphicsAndImGuiがデバイス/
-        // キューを解放する前に、ここで明示的に完了を待ってから解放する。
+        // RmlUiIntegration::Shutdown()はGPUがアイドルなことが前提なので、解放の前に完了を待つ。
         globals.app.WaitForGpu();
         globals.app.SetRmlUiIntegration(nullptr);
         state.mainWindow.SetRmlUiIntegration(nullptr);

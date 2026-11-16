@@ -59,6 +59,7 @@ struct GameSettingsModel {
     int volumePercent = 100;
     int trainVolumePercent = 100;
     int environmentVolumePercent = 100;
+    int effectsVolumePercent = 100;
     std::string audioDevice = "0"; // 選択位置(audioDeviceLabelsの添字)の文字
     std::vector<std::string> audioDeviceLabels;
     std::string pluginRoots;
@@ -73,7 +74,6 @@ struct GameSettingsModel {
 };
 
 struct GameSettingsPresentation {
-    int effectsVolumePercent_ = 100;
     std::string fullscreen_;
     std::string label_;
     std::string note_;

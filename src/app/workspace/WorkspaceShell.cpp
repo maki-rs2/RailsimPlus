@@ -196,18 +196,21 @@ WorkspaceSnapshot WorkspaceShell::Snapshot() const {
         entry.z = static_cast<int>(rank) + 1;
     }
     // モーダル同士は一番手前の1つだけ見せる(ゲーム設定を重ねている間は主メニューを隠す)。
+    // 操作を止める重ね表示(blocksInput)が見えているときも、モーダルと同じく幕を出して操作を止める。
     bool frontModalFound = false;
+    bool inputBlocked = false;
     for (std::size_t i = open.size(); i > 0; --i) {
         const OverlayKind kind = open[i - 1];
         OverlaySnapshot& entry = snapshot.overlays[EnumIndex(kind)];
         if (!GetOverlayTraits(kind).modal) {
             entry.visible = true;
+            inputBlocked = inputBlocked || GetOverlayTraits(kind).blocksInput;
         } else if (!frontModalFound) {
             entry.visible = true;
             frontModalFound = true;
         }
     }
-    snapshot.modalVisible = frontModalFound;
+    snapshot.modalVisible = frontModalFound || inputBlocked;
 
     return snapshot;
 }

@@ -53,6 +53,9 @@ public:
     // Ctrl+ホイールの受け取り先。ホイールのノッチ数を受け取り、使ったらtrueを返す
     // (falseならカメラのズームへ回す)。RunFrameLoopがループ開始時に登録し、終了時にnullptr指定で解除する。
     void SetCtrlWheelHandler(std::function<bool(float)> handler) { ctrlWheelHandler_ = std::move(handler); }
+    // Shift+ホイールの受け取り先(ファインダー中の焦点距離)。ノッチ数を受け取り、使ったらtrueを返す
+    // (falseなら通常画面の視野角の調整へ回す)。登録と解除は SetCtrlWheelHandler と同じ。
+    void SetFovWheelHandler(std::function<bool(float)> handler) { fovWheelHandler_ = std::move(handler); }
     // WM_CLOSE(ウィンドウの×やAlt+F4)を受けたときに呼ぶ関数を登録する。登録があるとウィンドウは閉じない。
     void SetCloseRequestHandler(std::function<void()> handler);
     // 登録を外してウィンドウを閉じる。
@@ -89,6 +92,7 @@ private:
 
     std::function<void()> modalFrameCallback_;
     std::function<bool(float)> ctrlWheelHandler_;
+    std::function<bool(float)> fovWheelHandler_;
     std::function<void()> closeRequestHandler_;
     bool inSizeMove_ = false;   // WM_ENTERSIZEMOVE〜WM_EXITSIZEMOVEの間true
     bool inModalFrame_ = false; // RunModalFrame実行中の再入防止フラグ

@@ -64,6 +64,8 @@ public:
     rs::render::LensFlarePass& LensFlare() { return renderer_.LensFlare(); }
     rs::render::SunFlareSettings& SunFlare() { return renderer_.SunFlare(); }
     void SetHeadlightLights(std::vector<rs::render::HeadlightLight> lights) { renderer_.SetHeadlightLights(std::move(lights)); }
+    rs::render::ParticlePass& Particles() { return renderer_.Particles(); }
+    void SetParticles(const rs::render::ParticleFrameInput& input, bool enabled) { renderer_.SetParticles(input, enabled); }
 
     ID3D12Device* Device() const { return gpu_.Device(); }
     ID3D12DescriptorHeap* SrvHeap() const { return gpu_.SrvHeap(); }

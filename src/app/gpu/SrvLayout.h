@@ -16,6 +16,7 @@
 #include "GpuContext.h"
 #include "SrvHeapReserver.h"
 #include "../../render/effects/LensFlarePass.h"
+#include "../../render/particle/ParticlePass.h"
 #include "../../render/postprocess/AmbientOcclusionPass.h"
 #include "../../render/postprocess/DepthOfFieldPass.h"
 #include "../../render/postprocess/LuminanceMeterPass.h"
@@ -152,6 +153,7 @@ struct SrvLayout {
     UINT shadowMap = 0;
     // 太陽のレンズフレア(先頭がシーンの深度、続いてテクスチャ)。
     UINT lensFlare = 0;
+    UINT particle = 0;
     // 大気遠近のLUT。
     UINT aerialPerspective = 0;
     // ブルーム・FXAAの作業用RT。
@@ -198,6 +200,7 @@ constexpr SrvLayout BuildSrvLayout() {
     layout.skyBody = heap.Reserve("skyBody", rs::render::SkyBodyPass::kSrvCount);
     layout.shadowMap = heap.Reserve("shadowMap", 1);
     layout.lensFlare = heap.Reserve("lensFlare", rs::render::LensFlarePass::kSrvCount);
+    layout.particle = heap.Reserve("particle", rs::render::ParticlePass::kSrvCount);
     layout.aerialPerspective = heap.Reserve("aerialPerspective", 1);
     layout.postProcess = heap.Reserve("postProcess", rs::render::PostProcessChain::kSrvCount);
     layout.ambientOcclusion = heap.Reserve("ambientOcclusion", rs::render::AmbientOcclusionPass::kSrvCount);

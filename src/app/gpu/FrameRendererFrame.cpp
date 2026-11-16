@@ -37,6 +37,7 @@ void FrameRenderer::PrepareFrame(const CameraView& cam, rs::rhi::CpuDescriptor r
     // またはskipMeshPass=true(読込ジョブ進行中、半端な読込状態のままUIだけ描く画面)の間は描かない。
     flags.Set(FramePassFlag::DrawSky, ShouldDrawSky(skipMeshPass));
     flags.Set(FramePassFlag::LensFlare, ShouldDrawLensFlare(skipMeshPass));
+    flags.Set(FramePassFlag::Particle, particlesEnabled_ && !particleBatch_.Instances().empty());
     // ISO オートの測光は、HDR のシーンだけを読む。空だけのシーンも測るので、メッシュの有無には依らない。
     // 読込ジョブ進行中(半端な状態のシーン)は測らない。
     flags.Set(FramePassFlag::LuminanceMeter, luminanceMeterEnabled_ && !skipMeshPass && luminanceMeter_.Ready());

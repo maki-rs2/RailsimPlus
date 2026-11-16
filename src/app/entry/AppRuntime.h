@@ -36,8 +36,10 @@
 #include "../plugin_session/ActiveEnv.h"
 #include "../plugin_session/EnvCubeController.h"
 #include "../plugin_session/FlareTextureSlots.h"
+#include "../../render/particle/ParticlePass.h"
 #include "../plugin_session/SunFlareController.h"
 #include "../scene/HeadlightCollector.h"
+#include "../../sim/particle/ParticleSystem.h"
 #include "../plugin_session/PluginSelector.h"
 #include "../plugin_session/PluginSession.h"
 #include "../plugin_session/LayoutSession.h"
@@ -174,6 +176,8 @@ struct AppRuntimeState {
     // レンズフレアの画像のスロットの台帳(太陽と灯具で共用)と、描く灯具の収集。
     FlareTextureSlots                   flareTextureSlots;
     HeadlightCollector                  headlightCollector;
+    rs::sim::ParticleSystem              particleSystem;
+    TextureSlotRegistry                 particleTextureSlots{rs::render::kMaxParticleTextures};
     // render_tuning.json の保存を見つける監視器。Debugビルド(RS_TUNING_HOT_RELOAD)のフレームループが
     // 最初のフレームで作る。Releaseでは作らない。
     std::optional<rs::platform_file::StableFileWatcher> renderTuningWatcher;

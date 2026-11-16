@@ -192,6 +192,9 @@ void App::RecordFramePass(FramePassId id, FramePassContext& ctx) {
     case FramePassId::MotionBlur:
         ctx.sceneTarget = renderer_.ResolveMotionBlur(commandList, *ctx.sceneTarget, timer);
         break;
+    case FramePassId::Particle:
+        renderer_.RecordParticles(commandList, ctx.sceneTarget->Rtv(), ctx.ft.frameIndex);
+        break;
     // レンズフレア: リニアHDRのシーンターゲットへ足す(トーンマップの前)。F12・PNGのキャプチャにも写る。
     // 読込ジョブ進行中(半端な状態のシーンを描かない間)は出さない。太陽のフレアと白飛びは、
     // 空を描かない間(ビューアー等)は足さない。灯具のフレアは空に関係なく出す。

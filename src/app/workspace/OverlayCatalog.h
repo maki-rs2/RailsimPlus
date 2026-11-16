@@ -31,6 +31,9 @@ struct OverlayTraits {
     // 左タブがプラグインブラウザの画面にいる間だけ開いておけるか。trueの行は、ブラウザの無い画面
     // (ブラウザを持たない作業モード・鑑賞・環境画面・カメラ画面)へ移ると遷移の後始末で閉じる。
     bool requiresPluginBrowser;
+    // 見えている間、ほかのUIとビューポートの操作を止めるか(全画面の幕を出す)。モーダル系列の行は
+    // 常に止めるので、ここはモーダルでない行だけが使う。省略したらfalse。
+    bool blocksInput = false;
 };
 
 // OverlayKindの列挙順に並べる。同じ層は開いた順で手前が決まる。
@@ -48,8 +51,8 @@ inline constexpr OverlayTraits kOverlayCatalog[] = {
     // 手前(層3)に出す非モーダル(モーダル系列に入れないので、主メニュー・ゲーム設定は隠れない)。RMLでは
     // モーダル層の中の、幕より手前に置く。×かEscで閉じ、ブラウザの無い画面へ移ったときも閉じる
     // (ブラウザのあるモード同士の切替では開いたまま)。開く操作は後始末を起こさないので、ブラウザの無い
-    // 画面でもゲーム設定から開ける。
-    {OverlayKind::PluginRoots, 3, false, "pluginRoots", true, true, true},
+    // 画面でもゲーム設定から開ける。見えている間は、幕を出してほかのUIとビューポートの操作を止める。
+    {OverlayKind::PluginRoots, 3, false, "pluginRoots", true, true, true, true},
     // 右上の警告バッジから開く、見つからないプラグインの一覧。バッジはどの画面にも出るので、
     // ブラウザの有無に関わらず開いたままにできる。
     {OverlayKind::MissingPlugins, 0, false, "missingPlugins", true, true, false},

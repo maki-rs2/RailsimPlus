@@ -17,7 +17,7 @@ double ParticleState::RadiusMeters() const {
 ParticlePool::ParticlePool(std::size_t capacity)
     : positions_(capacity), velocities_(capacity), agesSeconds_(capacity), lifetimesSeconds_(capacity),
       initialRadiiMeters_(capacity), finalRadiiMeters_(capacity), colors_(capacity), anglesRadians_(capacity),
-      angularVelocitiesRadiansPerSecond_(capacity), dynamics_(capacity), blendModes_(capacity) {}
+      angularVelocitiesRadiansPerSecond_(capacity), dynamics_(capacity), blendModes_(capacity), textureSlots_(capacity) {}
 
 bool ParticlePool::Add(const ParticleState& particle) {
     if (size_ == Capacity()) return false;
@@ -36,7 +36,7 @@ ParticleState ParticlePool::Get(std::size_t index) const {
     assert(index < Capacity());
     return {positions_[index], velocities_[index], agesSeconds_[index], lifetimesSeconds_[index],
             initialRadiiMeters_[index], finalRadiiMeters_[index], colors_[index], anglesRadians_[index],
-            angularVelocitiesRadiansPerSecond_[index], dynamics_[index], blendModes_[index]};
+            angularVelocitiesRadiansPerSecond_[index], dynamics_[index], blendModes_[index], textureSlots_[index]};
 }
 
 void ParticlePool::Set(std::size_t index, const ParticleState& particle) {
@@ -52,6 +52,7 @@ void ParticlePool::Set(std::size_t index, const ParticleState& particle) {
     angularVelocitiesRadiansPerSecond_[index] = particle.angularVelocityRadiansPerSecond;
     dynamics_[index] = particle.dynamics;
     blendModes_[index] = particle.blendMode;
+    textureSlots_[index] = particle.textureSlot;
 }
 
 } // namespace rs::sim

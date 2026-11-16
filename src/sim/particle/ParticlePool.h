@@ -25,6 +25,7 @@ struct ParticleState {
     double angularVelocityRadiansPerSecond = 0.0;
     ParticleDynamics dynamics;
     legacy_pi::ParticleBlendMode blendMode = legacy_pi::ParticleBlendMode::Alpha;
+    std::uint32_t textureSlot = 0;
 
     double Alpha() const;
     double RadiusMeters() const;
@@ -54,6 +55,7 @@ private:
     std::vector<double> angularVelocitiesRadiansPerSecond_;
     std::vector<ParticleDynamics> dynamics_;
     std::vector<legacy_pi::ParticleBlendMode> blendModes_;
+    std::vector<std::uint32_t> textureSlots_;
 };
 
 } // namespace rs::sim

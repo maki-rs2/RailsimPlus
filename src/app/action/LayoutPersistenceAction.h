@@ -87,6 +87,10 @@ public:
     // 現在のレイアウトを空にして、既定プラグイン(DefaultPluginCatalog)を原点へ置く。
     // 起動時(何も開かないとき)と「新規レイアウト」操作で共用する。
     LayoutActionResult NewLayout();
+    // 保存先も表示名も無く、編集もしていない新規のレイアウトのときだけ、NewLayout()をやり直す。
+    // ルートが空のまま起動して既定プラグインを置けなかったあと、ルートを足したときに使う。
+    // 読込予約・読込中・編集済み・ファイルから開いたレイアウトでは何もしない。やり直したときだけ真。
+    bool NewLayoutIfPristine();
     // Surfaceを原点に置いた新しいSceneを末尾へ追加し、そのSceneへ切り替える。
     LayoutActionResult AddScene(const std::string& surfaceFolderUtf8);
     // thumbnailBase64はinfo.thumbnailへ入れる文字列(nullptrなら入れない)。

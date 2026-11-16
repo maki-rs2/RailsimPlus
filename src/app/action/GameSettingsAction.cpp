@@ -107,6 +107,11 @@ void GameSettingsAction::SetAudioEnvironmentVolume(float volume) {
     refs_.audioEngine.SetUserEnvironmentVolume(refs_.userSettings.audioEnvironmentVolume);
 }
 
+void GameSettingsAction::SetAudioEffectsVolume(float volume) {
+    refs_.userSettings.audioEffectsVolume = UserSettingsData::ClampAudioVolume(volume);
+    refs_.audioEngine.SetUserEffectsVolume(refs_.userSettings.audioEffectsVolume);
+}
+
 void GameSettingsAction::CommitAudioCategoryVolumes() {
     SaveUserSettingsOrWarn(refs_.userSettings, "Failed to save user settings after audio volume change.");
 }
@@ -133,6 +138,7 @@ GameSettingsViewModel GameSettingsAction::ViewModel() const {
     viewModel.audioMasterVolume = refs_.userSettings.audioMasterVolume;
     viewModel.audioTrainVolume = refs_.userSettings.audioTrainVolume;
     viewModel.audioEnvironmentVolume = refs_.userSettings.audioEnvironmentVolume;
+    viewModel.audioEffectsVolume = refs_.userSettings.audioEffectsVolume;
     return viewModel;
 }
 

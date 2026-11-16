@@ -152,6 +152,15 @@ LayoutActionResult LayoutPersistenceAction::NewLayout() {
     return result;
 }
 
+bool LayoutPersistenceAction::NewLayoutIfPristine() {
+    if (HasPendingLoad() || refs_.sceneRenderer.SyncJobActive()) return false;
+    const LayoutDocumentState& document = refs_.document;
+    if (!document.savedPathUtf8.empty() || !document.displayNameUtf8.empty()) return false;
+    if (document.IsDirty(refs_.editor.DocumentRevision(), refs_.sceneRegistry.PersistentRevision())) return false;
+    NewLayout();
+    return true;
+}
+
 LayoutActionResult LayoutPersistenceAction::RunNewLayout() {
     if (refs_.sceneRenderer.SyncJobActive()) return LayoutActionResult::Failure(LayoutActionStatus::Busy, {});
     try {

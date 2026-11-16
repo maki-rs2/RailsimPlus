@@ -36,6 +36,7 @@ RenderQualityValues ReadValues(const nlohmann::json& node) {
     values.sunLensFlare = node.at("sunLensFlare").get<bool>();
     values.sunWhiteout = node.at("sunWhiteout").get<bool>();
     values.miscLensFlare = node.at("miscLensFlare").get<bool>();
+    values.miscParticle = node.at("miscParticle").get<bool>();
     values.bloom = node.at("bloom").get<bool>();
     values.volumetricFog = node.at("volumetricFog").get<bool>();
     values.antiAliasingIndex =
@@ -82,6 +83,7 @@ RenderQualityValues QualityValuesOf(const RenderSettingsViewModel& viewModel) {
     values.sunLensFlare = viewModel.sunLensFlare;
     values.sunWhiteout = viewModel.sunWhiteout;
     values.miscLensFlare = viewModel.miscLensFlare;
+    values.miscParticle = viewModel.miscParticle;
     values.bloom = viewModel.bloom;
     values.volumetricFog = viewModel.volumetricFog;
     values.antiAliasingIndex = viewModel.antiAliasingIndex;
@@ -110,6 +112,7 @@ bool ApplyRenderQualityPreset(RenderSettingsAction& action, const RenderSettings
     if (target.sunLensFlare != now.sunLensFlare) action.SetSunLensFlare(target.sunLensFlare);
     if (target.sunWhiteout != now.sunWhiteout) action.SetSunWhiteout(target.sunWhiteout);
     if (target.miscLensFlare != now.miscLensFlare) action.SetMiscLensFlare(target.miscLensFlare);
+    if (target.miscParticle != now.miscParticle) action.SetMiscParticle(target.miscParticle);
     if (target.bloom != now.bloom) action.SetBloom(target.bloom);
     if (target.volumetricFog != now.volumetricFog) action.SetVolumetricFog(target.volumetricFog);
     if (target.antiAliasingIndex != now.antiAliasingIndex) action.SetAntiAliasingIndex(target.antiAliasingIndex);

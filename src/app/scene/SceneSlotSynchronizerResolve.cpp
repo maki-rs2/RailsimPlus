@@ -109,6 +109,7 @@ void SceneSlotSynchronizer::ResolveExactReviveOne(SyncContext& ctx, const rs::wo
         s.session.soundEffectStates.assign(s.session.soundEffectAttachments.size(),
                                            SoundEffectRuntimeState{});
         s.session.headlightStates.assign(s.session.headlightAttachments.size(), HeadlightRuntimeState{});
+        s.session.particleStates.assign(s.session.particleAttachments.size(), ParticleRuntimeState{});
         if (entity.category == rs::world::SceneEntityCategory::Car) {
             // Sceneに再び映るようになった瞬間は車両中心が無関係な座標系へ飛ぶため、
             // 振り子Tiltの位置履歴を捨てる(TrainVehicle.h TiltDriverState規約、

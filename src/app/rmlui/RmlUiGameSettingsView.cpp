@@ -40,6 +40,7 @@ constexpr const char* kThemesKey = "gsThemes";
 constexpr const char* kVolumePercentKey = "gsVolumePercent";
 constexpr const char* kTrainVolumePercentKey = "gsTrainVolumePercent";
 constexpr const char* kEnvironmentVolumePercentKey = "gsEnvironmentVolumePercent";
+constexpr const char* kEffectsVolumePercentKey = "gsEffectsVolumePercent";
 constexpr const char* kAudioDeviceKey = "gsAudioDevice";
 constexpr const char* kAudioDeviceLabelsKey = "gsAudioDeviceLabels";
 constexpr const char* kPluginRootsKey = "gsPluginRoots";
@@ -78,11 +79,6 @@ void RmlUiGameSettingsView::RegisterModel(Rml::DataModelConstructor& constructor
         handle.RegisterMember("label", &GameSettingsChoice::label);
     }
     constructor.RegisterArray<Rml::Vector<GameSettingsChoice>>();
-    constructor.Bind("gsEffectsVolume", &presentation_.effectsVolumePercent_);
-    constructor.BindEventCallback("gs_effects_volume", [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList&) {
-        if (IsInsideContextUpdate()) return;
-        game_settings_action::SetEffectsVolume(queue_, event.GetParameter<int>("value", 0));
-    });
     constructor.Bind("gsFullscreen", &presentation_.fullscreen_);
     constructor.Bind("gsFullscreenLabel", &presentation_.label_);
     constructor.Bind("gsFullscreenNote", &presentation_.note_);
@@ -131,6 +127,7 @@ void RmlUiGameSettingsView::RegisterModel(Rml::DataModelConstructor& constructor
     constructor.Bind(kVolumePercentKey, &model_->volumePercent);
     constructor.Bind(kTrainVolumePercentKey, &model_->trainVolumePercent);
     constructor.Bind(kEnvironmentVolumePercentKey, &model_->environmentVolumePercent);
+    constructor.Bind(kEffectsVolumePercentKey, &model_->effectsVolumePercent);
     constructor.BindFunc("gsVolumeMinPercent", [](Rml::Variant& value) {
         value = UserSettingsData::kMinAudioVolumePercent;
     });
@@ -160,26 +157,35 @@ void RmlUiGameSettingsView::RegisterModel(Rml::DataModelConstructor& constructor
     constructor.BindEventCallback("gs_set_theme", [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& a) {
         OnSetUiTheme(a);
     });
-    constructor.BindEventCallback("gs_volume_change", [this](Rml::DataModelHandle, Rml::Event& event,
+    constructor.BindEventCallback("gs_volume_change", [this](Rml::DataModelHandle handle, Rml::Event& event,
                                                                const Rml::VariantList& arguments) {
         if (!refs_.has_value()) return;
         const Rml::String category = FirstEventArgument<Rml::String>(arguments, Rml::String());
         const float percent = event.GetParameter<float>("value", -1.0f);
         if (percent < 0.0f) return;
         GameSettingsAction action(*refs_);
-        const bool isOverall = category == "overall";
-        const bool isTrain = category == "train";
-        const float currentVolume = isOverall ? action.ViewModel().audioMasterVolume
-                                              : isTrain ? action.ViewModel().audioTrainVolume
-                                                        : action.ViewModel().audioEnvironmentVolume;
-        const int nextPercent = VolumeToPercent(PercentToVolume(percent));
-        if (VolumeToPercent(currentVolume) == nextPercent) return;
-        if (isOverall) action.SetAudioMasterVolume(PercentToVolume(percent));
-        else if (isTrain) action.SetAudioTrainVolume(PercentToVolume(percent));
-        else action.SetAudioEnvironmentVolume(PercentToVolume(percent));
-        int& displayedPercent = isOverall ? model_->volumePercent
-                                          : isTrain ? model_->trainVolumePercent : model_->environmentVolumePercent;
-        displayedPercent = nextPercent;
+        const GameSettingsViewModel viewModel = action.ViewModel();
+        const float volume = PercentToVolume(percent);
+        const int nextPercent = VolumeToPercent(volume);
+        // 表示(スライダー横の数値)は、値を書き換えたうえで必ず再描画を依頼する。
+        // 書き換えだけだと、Tickでの比較が一致して再描画されず、数値が古いまま残る。
+        if (category == "overall") {
+            if (VolumeToPercent(viewModel.audioMasterVolume) == nextPercent) return;
+            action.SetAudioMasterVolume(volume);
+            UpdateVariable(handle, kVolumePercentKey, model_->volumePercent, nextPercent);
+        } else if (category == "train") {
+            if (VolumeToPercent(viewModel.audioTrainVolume) == nextPercent) return;
+            action.SetAudioTrainVolume(volume);
+            UpdateVariable(handle, kTrainVolumePercentKey, model_->trainVolumePercent, nextPercent);
+        } else if (category == "effects") {
+            if (VolumeToPercent(viewModel.audioEffectsVolume) == nextPercent) return;
+            action.SetAudioEffectsVolume(volume);
+            UpdateVariable(handle, kEffectsVolumePercentKey, model_->effectsVolumePercent, nextPercent);
+        } else {
+            if (VolumeToPercent(viewModel.audioEnvironmentVolume) == nextPercent) return;
+            action.SetAudioEnvironmentVolume(volume);
+            UpdateVariable(handle, kEnvironmentVolumePercentKey, model_->environmentVolumePercent, nextPercent);
+        }
         volumeUncommitted_ = true;
     });
     constructor.BindEventCallback("gs_volume_commit",
@@ -262,6 +268,7 @@ void RmlUiGameSettingsView::Tick(bool windowVisible, float framesPerSecond) {
     UpdateVariable(modelHandle_, kVolumePercentKey, model_->volumePercent, VolumeToPercent(viewModel.audioMasterVolume));
     UpdateVariable(modelHandle_, kTrainVolumePercentKey, model_->trainVolumePercent, VolumeToPercent(viewModel.audioTrainVolume));
     UpdateVariable(modelHandle_, kEnvironmentVolumePercentKey, model_->environmentVolumePercent, VolumeToPercent(viewModel.audioEnvironmentVolume));
+    UpdateVariable(modelHandle_, kEffectsVolumePercentKey, model_->effectsVolumePercent, VolumeToPercent(viewModel.audioEffectsVolume));
 
     audioDeviceNames_ = BuildAudioDeviceNames(enumeratedDevices_, viewModel.audioOutputDevice);
     UpdateVariable(modelHandle_, kAudioDeviceLabelsKey, model_->audioDeviceLabels,

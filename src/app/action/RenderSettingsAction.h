@@ -26,6 +26,7 @@ struct RenderSettingsViewModel {
     bool sunLensFlare = true;         // 太陽のフレア
     bool sunWhiteout = true;          // 太陽の白飛び
     bool miscLensFlare = true;        // 灯具のフレア
+    bool miscParticle = true;
     bool bloom = true;                // ブルーム
     bool motionBlur = false;          // モーションブラー
     bool volumetricFog = false;       // ボリュメトリックフォグ
@@ -62,6 +63,7 @@ public:
     void SetSunLensFlare(bool enabled);
     void SetSunWhiteout(bool enabled);
     void SetMiscLensFlare(bool enabled);
+    void SetMiscParticle(bool enabled);
     void SetBloom(bool enabled);
     void SetMotionBlur(bool enabled);
     void SetVolumetricFog(bool enabled);

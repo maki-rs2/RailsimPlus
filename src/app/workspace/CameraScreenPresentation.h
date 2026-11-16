@@ -26,6 +26,9 @@ struct CameraScreenField {
     std::string unit_; // 入力欄の右に出す単位(無ければ空)
     std::vector<std::string> steps_;
     int step_ = 0;
+    // 段に縛られず連続で動かす欄(焦点距離)の、丸める前の値。text_ には丸めた値が入る。
+    // 入力やコードから text_ を書き直すと捨てる。
+    std::optional<double> exactValue_;
     std::vector<CameraScreenDigit> digits_;
     // 自動(text_ が AUTO)のときに7セグへ出す、決まった値の文字列。空なら基準の値を出す。
     std::string autoDisplay_;

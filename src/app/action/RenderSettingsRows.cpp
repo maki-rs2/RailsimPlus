@@ -150,6 +150,10 @@ const RenderSettingRow kRows[] = {
      .labelKey = "render_settings.misc_lens_flare",
      .get = [](const RenderSettingsViewModel& v) { return v.miscLensFlare ? 1 : 0; },
      .set = [](RenderSettingsAction& a, int x) { a.SetMiscLensFlare(x != 0); }},
+    {.key = "misc_particle", .kind = RenderSettingKind::Toggle, .sectionKey = kSectionLensFlare,
+     .labelKey = "render_settings.misc_particle",
+     .get = [](const RenderSettingsViewModel& v) { return v.miscParticle ? 1 : 0; },
+     .set = [](RenderSettingsAction& a, int x) { a.SetMiscParticle(x != 0); }},
 };
 
 // RmlUiの描画タブの上から並べる行(残りは表の並びで続ける)。画質プリセットの次から。

@@ -1,0 +1,9 @@
+{
+  "stretchSeconds": 0.05,
+  "maxStretchRatio": 6.0,
+  "softDepthMeters": 0.5,
+  "nearFadeStartMeters": 0.3,
+  "nearFadeEndMeters": 1.5,
+  "ambientScale": 1.0,
+  "sunScale": 1.0
+}

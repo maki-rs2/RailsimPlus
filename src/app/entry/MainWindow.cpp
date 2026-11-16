@@ -244,6 +244,8 @@ LRESULT MainWindow::HandleMessage(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             const bool ctrlDown = input::MatchesPointerBinding(PointerAction::EditorHeight, modifiers);
             if (ctrlDown && ctrlWheelHandler_ && ctrlWheelHandler_(wheelSteps)) {
                 // 高さ調整が受け取った(カメラのズームへは回さない)。
+            } else if (shiftDown && fovWheelHandler_ && fovWheelHandler_(wheelSteps)) {
+                // ファインダー中は、焦点距離の欄が受け取った。
             } else {
                 camera_->OnWheel(wheelSteps, shiftDown);
             }

@@ -59,7 +59,7 @@ bool AudioEngine::LoadSound(const std::string& id, const std::wstring& wavPath) 
 
 void AudioEngine::PlaySound(const std::string& id, float volume, float pitch, float pan) {
     if (!deviceContext_.IsValid()) return;
-    sourceManager_.PlaySound(id, volume, pitch, pan);
+    sourceManager_.PlaySound(id, volume * userEffectsVolume_, pitch, pan);
 }
 
 void AudioEngine::SyncPlacedSounds(const std::vector<PlacedSoundRequest>& requests,
@@ -118,6 +118,10 @@ void AudioEngine::SetUserTrainVolume(float volume) {
 
 void AudioEngine::SetUserEnvironmentVolume(float volume) {
     userEnvironmentVolume_ = std::clamp(volume, 0.0f, 1.0f);
+}
+
+void AudioEngine::SetUserEffectsVolume(float volume) {
+    userEffectsVolume_ = std::clamp(volume, 0.0f, 1.0f);
 }
 
 } // namespace rs::sim

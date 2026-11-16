@@ -31,6 +31,38 @@ namespace {
 constexpr float kPlacementPreviewAlpha = 0.45f;
 } // namespace
 
+static_assert(rs::render::ParticlePass::kRingSize == kFrameCount);
+
+void FrameRenderer::RecordParticles(const rs::rhi::CommandList& commandList, rs::rhi::CpuDescriptor rtv,
+                                    std::uint32_t frameIndex) {
+    const ScopedAccumulate rendererScope(cpuBreakdown_.rendererMs);
+    if (!particlesEnabled_ || particleBatch_.Instances().empty()) return;
+    rs::render::ParticleFrame frame;
+    frame.view = frame_.viewProj.view;
+    // 粒の位置はカメラ相対なので、ビューの平行移動を二重に掛けない。
+    frame.view.m[12] = frame.view.m[13] = frame.view.m[14] = 0.0f;
+    frame.viewProj = rs::core::Mat4::Mul(frame.view, frame_.viewProj.proj);
+    frame.instances = particleBatch_.Instances();
+    frame.width = frame_.width;
+    frame.height = frame_.height;
+    frame.frameIndex = frameIndex;
+    frame.depthProjection[0] = frame_.viewProj.proj.m[10];
+    frame.depthProjection[1] = frame_.viewProj.proj.m[14];
+    const rs::render::MeshConstants& constants = frame_.constants;
+    frame.iblDiffuseIntensity = constants.iblParams[1];
+    std::memcpy(frame.lightDir, constants.lightDir, sizeof(frame.lightDir));
+    std::memcpy(frame.pluginDirectional, constants.pluginDirectional, sizeof(frame.pluginDirectional));
+    std::memcpy(frame.pluginAmbient, constants.pluginAmbient, sizeof(frame.pluginAmbient));
+    std::memcpy(frame.moonLight, constants.moonLight, sizeof(frame.moonLight));
+    frame.diffuseCubeSrvIndex = constants.iblIndex[0];
+    frame.transmittanceSrvIndex = constants.iblIndex[3];
+    frame.iblEnabled = constants.iblFlags[0] != 0u;
+    std::memcpy(frame.adaptation, constants.adaptation, sizeof(frame.adaptation));
+    meshPipeline_.TransitionDepth(commandList, true);
+    particlePass_.Record(commandList, rtv, rs::rhi::CpuDescriptor{meshPipeline_.DepthDsvReadOnly().ptr}, frame);
+    meshPipeline_.TransitionDepth(commandList, false);
+}
+
 
 // FrameRenderer の描画コマンド記録(2D注記・ハイライト・WBOIT/ソート/後段不透明の各パス)。
 

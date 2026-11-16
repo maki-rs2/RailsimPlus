@@ -61,6 +61,7 @@ struct GameSettingsViewModel {
     float audioMasterVolume = 1.0f;
     float audioTrainVolume = 1.0f;
     float audioEnvironmentVolume = 1.0f;
+    float audioEffectsVolume = 1.0f;
 };
 
 class GameSettingsAction {
@@ -90,6 +91,7 @@ public:
     void CommitAudioMasterVolume();
     void SetAudioTrainVolume(float volume);
     void SetAudioEnvironmentVolume(float volume);
+    void SetAudioEffectsVolume(float volume);
     void CommitAudioCategoryVolumes();
     GameSettingsViewModel ViewModel() const;
 

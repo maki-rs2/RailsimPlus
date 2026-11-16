@@ -183,9 +183,10 @@ body {
     --plugin-settings-left: 36dp;
     /* プラグイン設定パネルのスイッチ一覧の高さの上限(越えたら一覧の中だけ縦にスクロールする)。 */
     --plugin-settings-body-max-height: 360dp;
-    /* ルート管理ウィンドウの幅(画面幅に対する比率)と、最初の左端の位置(左タブ --edge-tab-width(22%) の右隣に少し間をあける)。 */
-    --plugin-roots-width: 31%;
-    --plugin-roots-left: 24%;
+    /* ルート管理ウィンドウの幅(画面幅に対する比率)と、最初の左端・上端の位置。 */
+    --plugin-roots-width: 44%;
+    --plugin-roots-left: 28%; /* (100% - 幅44%) / 2 で左右の中央 */
+    --plugin-roots-top: 35%;  /* 高さは中身で変わるので、縦はおおよその中央 */
     /* ルート管理ウィンドウの行の右端のボタンの大きさ。 */
     --root-button-size: 28dp;
     /* ゲーム設定の項目名の列の幅。 */
@@ -209,8 +210,8 @@ body {
     --modal-window-width: 50%;
     --modal-window-min-width: 560dp;
     --modal-window-max-width: 800dp;
-    /* 下部バーの今のシーン名の入れ物の最大幅と、両脇の切り替え矢印との間隔。 */
-    --scene-name-box-max-width: 240dp;
+    /* 下部バーの今のシーン名の入れ物の幅(固定)。 */
+    --scene-name-box-width: 160dp;
     --scene-list-max-height: 30vh;
     --scene-card-width: 100%;
     /* ブラウザの中サイズのカードと同じ4:3の絵の目安。幅160dp × 3/4。 */
@@ -741,9 +742,9 @@ img.laying-set-preview {
     height: var(--pad-window);
 }
 
-/* ルート管理ウィンドウ: 最初は左タブの右隣(バナーの下)。 */
+/* ルート管理ウィンドウ: 最初は画面の中央あたり(ドラッグで動かせる)。 */
 .float-window-pluginroots {
-    top: var(--banner-height);
+    top: var(--plugin-roots-top);
     left: var(--plugin-roots-left);
     width: var(--plugin-roots-width);
 }
@@ -3080,11 +3081,11 @@ button.dia-layer-link, button.dia-element-link {
     min-width: 0dp;
 }
 
-/* 今のシーン名の入れ物(押すとシーン一覧を開閉する)。前後の切り替え矢印とは間を空ける。 */
+/* 今のシーン名の入れ物(押すとシーン一覧を開閉する)。縮むと名前が全部隠れて押せなくなるので、
+   幅は固定にして、はみ出した名前は省略記号で隠す。 */
 button.scene-name-box {
-    flex: 0 1 auto;
-    min-width: 0dp;
-    max-width: var(--scene-name-box-max-width);
+    flex: 0 0 auto;
+    width: var(--scene-name-box-width);
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;

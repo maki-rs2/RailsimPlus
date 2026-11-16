@@ -45,6 +45,11 @@ PhotoCamera MakePhotoCamera(const workspace::CameraScreenPresentation& screen) {
         if (const std::optional<double> value = ParsePhotoValue(parameter, screen.fields_[index].text_)) target = *value;
     };
     read(CameraScreenParameter::FocalLength, camera.focalLengthMm);
+    // 焦点距離は連続で動かすので、丸める前の値があればそれを使う(表示は整数 mm)。
+    const std::size_t focalIndex = static_cast<std::size_t>(CameraScreenParameter::FocalLength);
+    if (focalIndex < screen.fields_.size() && screen.fields_[focalIndex].exactValue_) {
+        camera.focalLengthMm = *screen.fields_[focalIndex].exactValue_;
+    }
     read(CameraScreenParameter::Aperture, camera.aperture);
     read(CameraScreenParameter::ShutterSpeed, camera.shutterSeconds);
     read(CameraScreenParameter::Iso, camera.iso);
@@ -124,6 +129,38 @@ int NearestPhotoStepIndex(CameraScreenParameter parameter, const std::vector<std
         values.push_back(*parsed);
     }
     return rs::core::NearestLogStepIndex(values, value);
+}
+
+namespace {
+// 焦点距離欄の段の最小と最大。欄が連続で動く範囲になる。
+std::optional<std::pair<double, double>> FocalLengthRange(const workspace::CameraScreenField& field) {
+    if (field.steps_.empty()) return std::nullopt;
+    const std::optional<double> low = ParsePositive(field.steps_.front());
+    const std::optional<double> high = ParsePositive(field.steps_.back());
+    if (!low || !high || *low >= *high) return std::nullopt;
+    return std::pair{*low, *high};
+}
+} // namespace
+
+bool SetFocalLengthMm(workspace::CameraScreenField& field, double focalMm) {
+    const std::optional<std::pair<double, double>> range = FocalLengthRange(field);
+    if (!range || !std::isfinite(focalMm)) return false;
+    const double clamped = std::clamp(focalMm, range->first, range->second);
+    if (!field.SetText(std::to_string(std::lround(clamped)))) return false;
+    field.exactValue_ = clamped;
+    return true;
+}
+
+bool StepFocalLengthByFov(workspace::CameraScreenField& field, double notches, double fovStepRadians,
+                          double frameHeightMm) {
+    if (!std::isfinite(notches) || notches == 0.0 || !std::isfinite(fovStepRadians)) return false;
+    const std::optional<double> current = field.exactValue_ ? field.exactValue_ : ParsePositive(field.text_);
+    if (!current) return false;
+    constexpr double kFovMargin = 1e-3; // 視野角が 0 や π になって焦点距離が決まらなくなるのを避ける
+    const double fov = 2.0 * std::atan(frameHeightMm * 0.5 / *current) - notches * fovStepRadians;
+    const double next = FocalLengthFromFovY(std::clamp(fov, kFovMargin, std::numbers::pi - kFovMargin), frameHeightMm);
+    if (!SetFocalLengthMm(field, next)) return false;
+    return *field.exactValue_ != *current;
 }
 
 std::optional<float> FieldOfViewOnFinderExit(double writtenFocalMm, double currentFocalMm, float minFovYRadians,
