@@ -76,7 +76,15 @@ void RmlUiPluginBrowserView::OnPlace(const Rml::VariantList& arguments) {
     if (cardAction == BrowserCardAction::SelectSignal) {
         SceneSignalSidecarSource sidecarSource(*sceneRenderer_);
         SceneSignalAspectSource aspectSource(*sceneRenderer_);
-        operationError_ = SignalBlockAction(*editor_, sidecarSource, aspectSource).SelectSignalPlugin(folder);
+        SignalBlockAction action(*editor_, sidecarSource, aspectSource);
+        // 配置待ち中のカードをもう一度押すと、配置待ちをやめる(情景と同じ)。
+        if (editor_->signalBlockArmedAction == rs::editor::SignalBlockArmedAction::PlaceSpeedSignal &&
+            editor_->signalPluginFolder == folder) {
+            action.Disarm();
+            return;
+        }
+        operationError_ = action.SelectSignalPlugin(folder);
+        if (operationError_.empty()) action.ArmPlaceSpeedSignal();
         return;
     }
     // 配置プレビュー中のカードをもう一度押すと、選択を解除する(配置を終える)。

@@ -58,7 +58,8 @@ bool PlatformRoutineAction::AddTagRoutine(int tagId) {
         return false;
     }
     std::vector<rs::world::PlatformTagRoutine> updated = platform->tagRoutines;
-    updated.push_back({tagId, {}});
+    // 追加した層は、既定値の要素を1つ持った状態で始める(空の層にしない)。
+    updated.push_back({tagId, std::vector<rs::world::PlatformRoutineElement>(1)});
     ExecuteTagRoutinesChange(editor_, platformId_, std::move(updated));
     return true;
 }
@@ -111,7 +112,7 @@ bool PlatformRoutineAction::AddFormationRoutine(const rs::world::Guid& formation
         return false;
     }
     std::vector<rs::world::PlatformFormationRoutine> updated = platform->formationRoutines;
-    updated.push_back({formationId, {}});
+    updated.push_back({formationId, std::vector<rs::world::PlatformRoutineElement>(1)});
     ExecuteFormationRoutinesChange(editor_, platformId_, std::move(updated));
     return true;
 }

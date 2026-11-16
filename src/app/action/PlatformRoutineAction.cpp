@@ -189,6 +189,17 @@ void PlatformRoutineAction::ResetElementStopOffset(const RoutineLayerRef& layer,
                   });
 }
 
+void PlatformRoutineAction::SetElementStopOffset(const RoutineLayerRef& layer, std::size_t elementIndex,
+                                                 double normalized) {
+    const double clamped = std::clamp(normalized, -1.0, 1.0);
+    ChangeRoutine(editor_, platformId_, layer,
+                  [elementIndex, clamped](std::vector<rs::world::PlatformRoutineElement>& routine) {
+                      if (elementIndex < routine.size()) {
+                          routine[elementIndex].stopOffsetNormalized = clamped;
+                      }
+                  });
+}
+
 void PlatformRoutineAction::AddRunInfoChange(const RoutineLayerRef& layer, std::size_t elementIndex,
                                              rs::world::RunInfoChange::Field field) {
     ChangeRoutine(editor_, platformId_, layer,

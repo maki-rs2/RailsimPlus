@@ -41,6 +41,8 @@ public:
     // 3D画面で選ばれた番線へ左タブを移す。ダイヤモードでないときは何もしない。
     void Tick();
     void Refresh();
+    // 開いているシーンの番線の画面を開く(3D画面の番線カードから)。見つからなければ何もしない。
+    void OpenPlatform(const rs::world::Guid& platformId);
     // Escで1段階戻る(要素編集 → 番線 → 一覧)。一覧にいるとき・パネルを開いていないときは何もせずfalse。
     bool CloseTransient();
 

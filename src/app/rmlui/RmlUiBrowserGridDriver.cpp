@@ -11,6 +11,8 @@ namespace {
 
 // workspace.rmlのスクロールするグリッドのid。
 constexpr const char* kGridId = "browser-grid";
+// テンプレートのカードを並べるグリッドのid。ブラウザのグリッドが隠れている間は、こちらで幅を測る。
+constexpr const char* kTemplateGridId = "browser-template-grid";
 
 } // namespace
 
@@ -28,7 +30,14 @@ BrowserGridFrame RmlUiBrowserGridDriver::Update(Rml::ElementDocument& document,
     // カードの幅を決める。流した幅で描かれるまでの測定値(列数・行の高さ)は古いので使わない。
     const Rml::Context* const context = document.GetContext();
     const float dpRatio = context != nullptr ? context->GetDensityIndependentPixelRatio() : 1.0f;
-    const BrowserCardSizing sizing = cardSizer_.Update(metrics, traits);
+    // ブラウザのグリッドが隠れている間(テンプレートのページ・列車の一覧のページ)は、見えているテンプレートのグリッドで幅を決める。
+    // 行の高さの観測は、ブラウザのグリッドを測った値だけを使う。
+    BrowserGridMetrics sizingMetrics = metrics;
+    if (metrics.innerWidth <= 0.0f) {
+        Rml::Element* const templateGrid = document.GetElementById(kTemplateGridId);
+        if (templateGrid != nullptr) sizingMetrics = MeasureBrowserGrid(*templateGrid);
+    }
+    const BrowserCardSizing sizing = cardSizer_.Update(sizingMetrics, traits);
 
     // 測った行の高さを覚え、上の行の高さが変わった分だけスクロールをずらしてから窓を出す。
     plugin_browser::BrowserRowObservation observation;

@@ -26,6 +26,25 @@ std::optional<RailLabelAnchor> ResolveAnchor(const rs::world::TrackGraph& graph,
 
 } // namespace
 
+std::optional<RailLabelAnchor> BlockMidpointAnchor(const rs::world::TrackGraph& graph, const rs::world::Block& block) {
+    double total = 0.0;
+    for (const rs::world::Guid& edgeId : block.edges) {
+        const auto found = graph.edges.find(edgeId);
+        if (found != graph.edges.end()) total += rs::world::EdgeLength(found->second);
+    }
+    double remaining = total * 0.5;
+    std::optional<RailLabelAnchor> last;
+    for (const rs::world::Guid& edgeId : block.edges) {
+        const auto found = graph.edges.find(edgeId);
+        if (found == graph.edges.end()) continue;
+        const double length = rs::world::EdgeLength(found->second);
+        last = RailLabelAnchor{edgeId, std::min(remaining, length)};
+        if (remaining <= length) break;
+        remaining -= length;
+    }
+    return last;
+}
+
 RailLabelHover::RailLabelHover(double graceSeconds) : graceSeconds_(graceSeconds) {}
 
 std::vector<RailLabel> RailLabelHover::Update(const rs::world::TrackGraph& graph, const RailLabelHoverInput& input) {

@@ -488,8 +488,10 @@ button.mode-button.is-selected:focus-visible {
    まま該当モードを離れた場合等)無が優先されるようにする。 */
 .edge-frame {
     position: absolute;
-    top: var(--banner-height);
-    bottom: var(--bottom-bar-height); /* 下部バーの上端に合わせる */
+    /* バナーと下部バーの線(--border-width、1dp)の分だけ食い込ませ、境目に隙間が出ないようにする。
+       RCSSにはcalc()が無いので、--banner-height(64dp)・--bottom-bar-height(48dp)を変えたらここも直す。 */
+    top: 63dp;
+    bottom: 47dp;
     z-index: var(--z-edge);
     width: var(--edge-tab-width);
     background-color: var(--bg-panel-side); /* 半透明(ハイコントラストは不透明) */
@@ -1579,6 +1581,16 @@ button.browser-filter-clear {
 
 .browser-filter-option { margin-top: var(--gap-y); }
 
+/* ドアの左・右は、残りの幅を半分ずつ使う(文字の幅が0になって重ならないようにする)。 */
+.dia-door-check {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+}
+
+.dia-door-check .dia-row-label {
+    flex: none;
+}
+
 button.browser-filter-choice {
     flex: 1 1 0dp;
     margin: var(--gap-y) var(--gap-x) 0dp 0dp;
@@ -1912,6 +1924,8 @@ button.browser-card-duplicate {
     border-top: var(--border-width) var(--border);
 }
 
+.formation-list-header { font-size: var(--font-size-heading); color: var(--text); }
+
 .formation-list-count { margin-left: var(--gap-x); color: var(--text-secondary); font-size: var(--font-size-small); }
 
 .formation-section > * {
@@ -2036,6 +2050,8 @@ img.formation-card-icon-image {
 /* 名前の編集中だけ、名前の代わりに入力欄を出す。 */
 input.formation-card-name-input {
     display: none;
+    width: 100%;
+    min-width: 0dp;
 }
 
 .formation-card.is-editing .formation-card-name {
@@ -2383,6 +2399,31 @@ button.rail-label-rename {
 
 .rail-label.is-editing button.rail-label-rename {
     display: none;
+}
+
+/* 番線カード(ダイヤモード、番線の画面上に追従、RmlUiPlatformCardView.cpp)。位置はdata-style-left/topで入れ、
+   カードの矩形だけがポインタを受ける。 */
+.platform-card {
+    position: absolute;
+    z-index: var(--z-rail-label);
+    box-sizing: border-box;
+    pointer-events: auto;
+    border-radius: var(--radius-small);
+    background-color: var(--bg-panel-side);
+    border: var(--border-width) var(--border-panel);
+}
+
+.platform-card.is-selected {
+    background-color: var(--accent-subtle);
+    border-color: var(--accent);
+}
+
+button.platform-card-name {
+    display: block;
+    min-height: 0dp;
+    padding: var(--pad-widget-y) var(--gap-x);
+    border-width: 0dp;
+    color: var(--text);
 }
 
 /* ---- 編成情報カード(列車モード、先頭車の画面上に追従、RmlUiTrainInfoCardView.cpp) ------------
@@ -2797,6 +2838,11 @@ button.dia-inspector-close {
     padding: var(--gap-y);
     background-color: var(--bg-child);
     border-radius: var(--radius-small);
+}
+
+/* 選択肢のボタンどうしの隙間。 */
+.dia-picker > button {
+    margin: 0dp var(--gap-x) var(--gap-y) 0dp;
 }
 
 .dia-detail .form-field, .dia-detail .segmented {
@@ -3304,6 +3350,26 @@ button.signal-card-name {
     vertical-align: middle;
     border-radius: var(--tag-chip-dot-size);
     border: var(--border-width) var(--text-accent);
+}
+
+/* 編成カードのタグ追加ボタンと追加欄。追加欄は、付けられるタグのチップと新規タグ名の入力欄を並べる。 */
+button.tag-chip-add {
+    color: var(--text-secondary);
+    background-color: var(--bg-child);
+    cursor: pointer;
+}
+
+.tag-picker {
+    display: block;
+    margin-bottom: var(--gap-y);
+}
+
+input.tag-new-input {
+    display: inline-block;
+    width: 120dp;
+    height: var(--tag-chip-height);
+    padding-top: 0dp;
+    font-size: var(--font-size-small);
 }
 
 button.tag-chip-remove {

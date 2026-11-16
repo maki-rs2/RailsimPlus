@@ -45,7 +45,7 @@ constexpr ActionBinding kActions[] = {
     {"AddDepartureTime", dia_panel_action::AddDepartureTime},
     {"DeleteDepartureTime", dia_panel_action::DeleteDepartureTime},
     {"ChangeConnectionWait", dia_panel_action::ChangeConnectionWait},
-    {"ResetStopPosition", dia_panel_action::ResetStopPosition}, {"ChangeRunInfo", dia_panel_action::ChangeRunInfo},
+    {"ResetStopPosition", dia_panel_action::ResetStopPosition}, {"ChangeStopPosition", dia_panel_action::ChangeStopPosition}, {"ChangeRunInfo", dia_panel_action::ChangeRunInfo},
     {"AddRunInfo", dia_panel_action::AddRunInfo}, {"DeleteRunInfo", dia_panel_action::DeleteRunInfo},
     {"EditCondition", dia_panel_action::EditCondition},
     {"ChangeBranchHand", dia_panel_action::ChangeBranchHand}};
@@ -199,6 +199,16 @@ void RmlUiDiaPanelView::OpenTarget(int targetIndex) {
     navigation_.platformId_ = target.platformId_;
 }
 
+void RmlUiDiaPanelView::OpenPlatform(const rs::world::Guid& platformId) {
+    for (std::size_t index = 0; index < presentation_.targets_.size(); ++index) {
+        const DiaPanelTarget& target = presentation_.targets_[index];
+        if (target.platformId_ != platformId || target.sceneIndex_ != presentation_.activeScene_) continue;
+        OpenTarget(static_cast<int>(index));
+        modelHandle_.DirtyVariable("dia");
+        return;
+    }
+}
+
 void RmlUiDiaPanelView::OnUi(Rml::Event& event, const Rml::VariantList& arguments) {
     event.StopPropagation();
     const std::string kind = EventArgumentAt<std::string>(arguments, 0, "");
@@ -314,6 +324,8 @@ void RmlUiDiaPanelView::OnAction(Rml::Event& event, const Rml::VariantList& argu
         }
         break;
     }
+    // 書換える項目を選んだら、選択肢の一覧は閉じる。
+    if (name == "AddRunInfo") presentation_.addingOverwrite_ = false;
     // 操作で値が変わらなかったとき(読めない入力など)も、入力欄を元の値へ戻すため作り直す。
     forceRebuild_ = true;
     modelHandle_.DirtyVariable("dia");

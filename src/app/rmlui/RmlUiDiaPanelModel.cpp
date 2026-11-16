@@ -35,6 +35,8 @@ void RegisterRows(Rml::DataModelConstructor& constructor) {
     element.RegisterMember("platforms", &DiaPanelElement::platforms_);
     element.RegisterMember("maximum", &DiaPanelElement::maximum_);
     element.RegisterMember("stopPosition", &DiaPanelElement::stopPosition_);
+    element.RegisterMember("stopCustom", &DiaPanelElement::stopCustom_);
+    element.RegisterMember("stopOffset", &DiaPanelElement::stopOffset_);
     element.RegisterMember("overwrites", &DiaPanelElement::overwrites_);
     element.RegisterMember("hand", &DiaPanelElement::hand_);
     element.RegisterMember("next", &DiaPanelElement::next_);

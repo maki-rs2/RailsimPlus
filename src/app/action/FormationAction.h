@@ -138,7 +138,8 @@ public:
 
     void SetPlacementReversedHead(bool reversed);
 
-    void AddTrainTag(const std::string& label);
+    // 追加したタグのid。
+    int AddTrainTag(const std::string& label);
     void RemoveTrainTag(int tagId);
     // タグの持ち主は編成の定義。同じ編成から置いた列車はすべて同じタグになる。
     void SetFormationTagAssigned(const rs::world::Guid& formationId, int tagId, bool assigned);

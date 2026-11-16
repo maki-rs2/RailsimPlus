@@ -414,7 +414,7 @@
             <!-- 保存済みのテンプレート(レールは敷設、情景は駅・施設、列車は編成)。編成と敷設のカードには、撮れた画像を出す(撮れるまでは無地)。
                  編成のカードの右上は両数、左下の警告は見つからない車両があること。列車は編成編集パネルの`+`へドラッグすると、その車両をすべて入れる。
                  レールはカードを押すと敷設プラグインセットへ読み込む。情景は押しても未実装の通知だけ。 -->
-            <div class="browser-template-grid" data-if="templateTabVisible && browserTemplatesOpen">
+            <div id="browser-template-grid" class="browser-template-grid" data-if="templateTabVisible && browserTemplatesOpen">
                 <div class="form-line empty-hint" data-if="browserTemplates.size == 0">テンプレートがありません</div>
                 <div class="browser-card browser-template-card" data-for="card : browserTemplates" data-style-width="browserCardWidth"
                      data-event-click="template_card_click(card.name)"
@@ -451,9 +451,16 @@
                                 <img class="formation-card-icon-image" data-if="card.icon != ''" data-attr-src="card.icon" />
                             </div>
                             <div class="formation-card-titles">
-                                <!-- タグ欄(編成名の上)。番線のタグと同じ部品で、マウスを乗せると右に`×`が出て外せる。 -->
-                                <div class="tag-row" data-if="card.tags.size > 0">
+                                <!-- タグ欄(編成名の上)。番線のタグと同じ部品で、マウスを乗せると右に`×`が出て外せる。末尾の`+タグ`でタグの追加欄を開く
+                                     (まだ付いていないタグを選ぶか、新しいタグ名を入れてEnter)。 -->
+                                <div class="tag-row">
                                     <span class="tag-chip" data-for="tag : card.tags"><span class="tag-chip-dot"></span>{{ tag.label }}<button class="tag-chip-remove ic-close" title="タグを外す" data-event-click="remove_formation_tag(card.id, tag.id)"></button></span>
+                                    <button class="flat tag-chip tag-chip-add" title="タグを追加" data-event-click="toggle_formation_tag_picker(card.id)">+ タグ</button>
+                                </div>
+                                <div class="tag-picker" data-if="formationTagPickerId == card.id">
+                                    <button class="flat tag-chip" data-for="tag : card.freeTags" data-event-click="assign_formation_tag(card.id, tag.id)"><span class="tag-chip-dot"></span>{{ tag.label }}</button>
+                                    <input type="text" class="tag-new-input" data-event-click="stop_card_click" data-event-dblclick="stop_card_click"
+                                           data-event-change="create_formation_tag(card.id)" />
                                 </div>
                                 <div class="formation-card-name">{{ card.name }}</div>
                                 <input type="text" class="formation-card-name-input" data-event-click="stop_card_click"
@@ -581,8 +588,7 @@
                                             <span>秒</span>
                                         </div>
                                         <div data-if="element.departure == 'time'">
-                                            <button class="flat link" data-event-click="dia_ui('times', ei)">発車時刻 {{ element.times.size }}件</button>
-                                            <div data-if="element.timesOpen">
+                                            <div>
                                                 <div class="dia-row" data-for="time, ti : element.times"
                                                      data-event-mouseover="dia_hover('time', ei, true, ti)" data-event-mouseout="dia_hover('time', ei, false, ti)">
                                                     <input class="form-field dia-row-label" type="text" data-value="time.draft"
@@ -616,7 +622,13 @@
                                 <span class="dia-field-label">停止位置</span>
                                 <div class="dia-field-value">
                                     <div>{{ element.stopPosition }}</div>
-                                    <button class="flat link" data-event-click="dia_action('ResetStopPosition', ei)">番線の既定に戻す</button>
+                                    <div class="dia-row">
+                                        <span class="form-unit">手前</span>
+                                        <input type="range" class="form-field-fill" min="-1" max="1" step="0.01" data-attr-value="element.stopOffset"
+                                               data-event-change="dia_action('ChangeStopPosition', ei, -1, '')" />
+                                        <span class="form-unit">奥</span>
+                                    </div>
+                                    <button class="flat link" data-if="element.stopCustom" data-event-click="dia_action('ResetStopPosition', ei)">番線の既定に戻す</button>
                                 </div>
                             </div>
                             <div class="dia-section-title">運行情報の書換</div>
@@ -644,7 +656,7 @@
 
 <!-- 編成編集パネル(列車モードで、プラグインブラウザのページを出している間だけ。結線はRmlUiFormationListView.cpp・RmlUiFormationCarsView.cpp)。選択中の編成の車両を
      先頭車が左で横に並べ、折り返す。`+`は先頭の前・車両の間(各車両の前=スロットi)・末尾の後ろ(スロットcarCount)。0両のときは1つだけ。 -->
-<div class="formation-panel" data-if="formationPanelVisible && formationCards.size > 0" data-class-is-dragging="formationDragging">
+<div class="formation-panel" data-if="formationPanelVisible && formationCards.size > 0 && trainTabPage == 'browser'" data-class-is-dragging="formationDragging">
     <div data-for="card : formationCards">
         <div data-if="card.selected && trainTabPage == 'browser'">
             <div class="formation-panel-head">
@@ -726,6 +738,15 @@
             </div>
             <button class="flat link" data-event-click="signal_panel_action('delete', si)">信号を削除</button>
         </div>
+    </div>
+</div>
+
+<!-- 番線カード(ダイヤモードだけ。結線はRmlUiPlatformCardView.cpp)。停車できる番線の中ほどの画面上へ名前を出し、
+     押すと左タブがその番線の画面へ移る。画面内の番線だけを、画面の中心に近い順に上限まで出す。 -->
+<div data-for="card : platformCards">
+    <div class="platform-card" data-attr-data-platform-id="card.id" data-class-is-selected="card.selected"
+         data-style-left="card.left" data-style-top="card.top">
+        <button class="flat platform-card-name" title="番線の画面を開く" data-event-click="open_platform_card(card.id)">{{ card.name }}</button>
     </div>
 </div>
 
@@ -1401,9 +1422,11 @@
                 </div>
                 <div class="form-row">
                     <div class="form-label">{{ gsText.effectsVolume }}</div>
-                    <input type="range" class="form-field-fill" min="0" max="100" step="1" data-attr-value="gsEffectsVolume"
-                           data-event-change="gs_effects_volume" />
-                    <div class="form-unit">{{ gsEffectsVolume }} %</div>
+                    <input type="range" class="form-field-fill" data-attr-min="gsVolumeMinPercent" data-attr-max="gsVolumeMaxPercent" step="1" data-attr-value="gsEffectsVolumePercent"
+                           data-event-change="gs_volume_change('effects')" data-event-dragend="gs_volume_commit"
+                           data-event-mouseup="gs_volume_commit" data-event-blur="gs_volume_commit"
+                           data-event-keyup="gs_volume_commit" />
+                    <div class="form-unit">{{ gsEffectsVolumePercent }} %</div>
                 </div>
             </div>
 

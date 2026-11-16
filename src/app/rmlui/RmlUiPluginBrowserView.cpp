@@ -249,6 +249,7 @@ void RmlUiPluginBrowserView::Refresh(Rml::ElementDocument& document) {
     RefreshSceneryTransform();
 
     if (continuousPlacement_ != nullptr) {
+        editor_->signalPlacementContinuous = *continuousPlacement_;
         UpdateVariable(modelHandle_, kSceneryContinuousKey, model_->continuousShown, *continuousPlacement_);
     }
     if (snapToRail_ != nullptr) {

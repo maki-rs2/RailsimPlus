@@ -63,7 +63,6 @@ private:
     rs::world::Guid editingBlock_ = rs::world::NilGuid();
     std::string editingInitialName_;
     bool pendingFocus_ = false;
-    workspace::RailLabelHover hover_;
     std::optional<std::size_t> sceneIndex_;
     std::vector<workspace::RailLabelItem> items_;
     const rs::world::TrackGraph* graph_ = nullptr;

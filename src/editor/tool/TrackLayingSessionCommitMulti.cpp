@@ -173,6 +173,8 @@ void TrackLayingSession::CommitMultiTrackNodes(Editor& ed) {
     }
 
     if (!ed.ExecuteCommand(std::move(composite))) return;
+    // 敷設が1区間終わったら、ノードの選択を外す(続きの敷設は placeStartNode_ が持つ)。
+    ed.ClearSelectedNode();
     ed.NotePlaced();
 
     // 確定後: 終端到達なので敷設をリセットする。

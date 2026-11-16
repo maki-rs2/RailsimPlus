@@ -62,6 +62,8 @@ struct FormationCardModel {
     Rml::String icon;
     Rml::Vector<FormationCarModel> cars;
     Rml::Vector<FormationTagModel> tags;
+    // まだ付いていないタグ(追加の候補)。
+    Rml::Vector<FormationTagModel> freeTags;
     bool operator==(const FormationCardModel&) const = default;
 };
 
@@ -72,6 +74,8 @@ struct FormationListModel {
     bool placementReversedHead = false;
     // 名前を編集中のカードのid。編集中でなければ空。
     Rml::String editingId;
+    // タグの追加欄を開いているカードのid。閉じていれば空。
+    Rml::String tagPickerId;
 };
 
 namespace {
@@ -82,6 +86,7 @@ constexpr const char* kPanelVisibleKey = "formationPanelVisible";
 constexpr const char* kCardsKey = "formationCards";
 constexpr const char* kPlacementReversedHeadKey = "placementReversedHead";
 constexpr const char* kEditingIdKey = "formationEditingId";
+constexpr const char* kTagPickerIdKey = "formationTagPickerId";
 
 // 編成一覧の外枠と、名前の編集中の入力欄を見つけるためのセレクタ(workspace.rmlのクラス名)。
 constexpr const char* kSectionClass = "formation-section";
@@ -115,6 +120,7 @@ void RegisterModelTypes(Rml::DataModelConstructor& constructor) {
         handle.RegisterMember("icon", &FormationCardModel::icon);
         handle.RegisterMember("cars", &FormationCardModel::cars);
         handle.RegisterMember("tags", &FormationCardModel::tags);
+        handle.RegisterMember("freeTags", &FormationCardModel::freeTags);
     }
     constructor.RegisterArray<Rml::Vector<FormationCardModel>>();
 }
@@ -133,6 +139,10 @@ Rml::Vector<FormationCardModel> ToCardModels(const FormationViewModel& viewModel
         card.selected = def.selected;
         card.placed = def.placed;
         for (const TrainTagViewModel& tag : def.tags) card.tags.push_back({tag.id, tag.label});
+        for (const TrainTagViewModel& tag : viewModel.tags) {
+            const bool assigned = std::ranges::any_of(def.tags, [&](const TrainTagViewModel& own) { return own.id == tag.id; });
+            if (!assigned) card.freeTags.push_back({tag.id, tag.label});
+        }
         card.cars.reserve(def.cars.size());
         for (std::size_t carIndex = 0; carIndex < def.cars.size(); ++carIndex) {
             const FormationCarViewModel& car = def.cars[carIndex];
@@ -169,6 +179,7 @@ void RmlUiFormationListView::RegisterModel(Rml::DataModelConstructor& constructo
     constructor.Bind(kCardsKey, &model_->cards);
     constructor.Bind(kPlacementReversedHeadKey, &model_->placementReversedHead);
     constructor.Bind(kEditingIdKey, &model_->editingId);
+    constructor.Bind(kTagPickerIdKey, &model_->tagPickerId);
 
     constructor.BindEventCallback(
         "select_formation", [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& arguments) {
@@ -199,6 +210,38 @@ void RmlUiFormationListView::RegisterModel(Rml::DataModelConstructor& constructo
             const std::optional<rs::world::Guid> guid = ParseCardId(FirstEventArgument<Rml::String>(arguments, Rml::String()));
             const int tagId = EventArgumentAt<int>(arguments, 1, -1);
             if (guid.has_value() && tagId >= 0) FormationAction(*refs_).SetFormationTagAssigned(*guid, tagId, false);
+        });
+    // タグの追加欄の開閉(同じカードをもう一度押すと閉じる)。
+    constructor.BindEventCallback(
+        "toggle_formation_tag_picker", [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList& arguments) {
+            event.StopPropagation();
+            const Rml::String cardId = FirstEventArgument<Rml::String>(arguments, Rml::String());
+            model_->tagPickerId = model_->tagPickerId == cardId ? Rml::String() : cardId;
+            modelHandle_.DirtyVariable(kTagPickerIdKey);
+        });
+    // 既にあるタグをその編成へ付ける。
+    constructor.BindEventCallback(
+        "assign_formation_tag", [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList& arguments) {
+            event.StopPropagation();
+            if (!refs_) return;
+            const std::optional<rs::world::Guid> guid = ParseCardId(FirstEventArgument<Rml::String>(arguments, Rml::String()));
+            const int tagId = EventArgumentAt<int>(arguments, 1, -1);
+            if (guid.has_value() && tagId >= 0) FormationAction(*refs_).SetFormationTagAssigned(*guid, tagId, true);
+        });
+    // 新しいタグを作って、その編成へ付ける(Enterで確定)。
+    constructor.BindEventCallback(
+        "create_formation_tag", [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList& arguments) {
+            event.StopPropagation();
+            if (!refs_ || !event.GetParameter<bool>("linebreak", false)) return;
+            Rml::ElementFormControl* const control = rmlui_dynamic_cast<Rml::ElementFormControl*>(event.GetCurrentElement());
+            const std::optional<rs::world::Guid> guid = ParseCardId(FirstEventArgument<Rml::String>(arguments, Rml::String()));
+            if (control == nullptr || !guid.has_value()) return;
+            const std::string label = control->GetValue();
+            control->SetValue("");
+            if (label.empty()) return;
+            FormationAction action(*refs_);
+            const int tagId = action.AddTrainTag(label);
+            if (tagId >= 0) action.SetFormationTagAssigned(*guid, tagId, true);
         });
     constructor.BindEventCallback(
         "begin_rename_formation", [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList& arguments) {
@@ -378,6 +421,7 @@ void RmlUiFormationListView::Refresh(bool sectionVisible, bool panelVisible, Rml
     if (!sectionVisible) {
         pendingFocus_ = false;
         UpdateVariable(modelHandle_, kEditingIdKey, model_->editingId, Rml::String());
+        UpdateVariable(modelHandle_, kTagPickerIdKey, model_->tagPickerId, Rml::String());
     }
     if (!panelVisible) return;
 

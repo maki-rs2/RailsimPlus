@@ -63,6 +63,8 @@ DiaPanelElement MakeElement(const rs::world::PlatformRoutineElement& source) {
         element.times_.push_back({"", FormatDiaTime(time), {}});
     }
     element.stopPosition_ = StopPositionText(source);
+    element.stopCustom_ = source.stopOffsetNormalized.has_value();
+    element.stopOffset_ = source.stopOffsetNormalized.value_or(0.0);
     for (const rs::world::RunInfoChange& change : source.runInfoChanges) {
         DiaPanelField field;
         field.label_ = DiaRunInfoFieldLabel(change.field);
@@ -174,6 +176,13 @@ void AddPlatformRow(SceneRowContext& context, const rs::world::PlatformStopInfo&
                                         context.sceneIndex));
 }
 
+// 停車できて、レールを持つ番線が1つでもあるか。
+bool HasStoppablePlatformWithRail(const rs::world::TrackGraph& graph, const rs::world::Guid& stationId) {
+    return std::any_of(graph.platforms.begin(), graph.platforms.end(), [&stationId](const rs::world::PlatformStopInfo& platform) {
+        return platform.stationId == stationId && platform.stoppable && !platform.railEdges.empty();
+    });
+}
+
 void AddScene(SceneRowContext& context, bool showSceneRow) {
     DiaPanelPresentation& panel = context.panel;
     const rs::world::TrackGraph& graph = *context.scene.graph;
@@ -186,6 +195,9 @@ void AddScene(SceneRowContext& context, bool showSceneRow) {
     }
     const int stationDepth = showSceneRow ? 1 : 0;
     for (const rs::world::StationInfo& station : graph.stations) {
+        // 取り込んだ駅(sourceAddressを持つ)のうち、停車できる番線にレールが無いものは出さない。
+        // 手動で作った駅(sourceAddressが空)は、番線が空でも出す。
+        if (!station.sourceAddress.empty() && !HasStoppablePlatformWithRail(graph, station.id)) continue;
         DiaPanelListRow row;
         row.kind_ = "station";
         row.name_ = station.name;

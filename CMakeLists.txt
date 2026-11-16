@@ -1040,6 +1040,7 @@ add_executable(RailsimPlus
     src/app/rmlui/RmlUiAnchoredElementPlacement.cpp
     src/app/rmlui/RmlUiTrainInfoCardView.cpp
     src/app/rmlui/RmlUiCabinHudView.cpp
+    src/app/rmlui/RmlUiPlatformCardView.cpp
     src/app/rmlui/RmlUiRailLabelView.cpp
     src/app/rmlui/RmlUiFormationImages.cpp
     src/app/rmlui/RmlUiUpdatePhase.cpp

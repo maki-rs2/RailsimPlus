@@ -23,7 +23,6 @@
 #include "../../world/alignment/BlockRegistry.h"
 #include "../ui/SignalBlockViewportLink.h"
 #include "../action/SignalBlockAction.h"
-#include "../workspace/RailLabelHoverTuning.h"
 
 namespace rs::app::rmlui {
 
@@ -65,20 +64,9 @@ constexpr double kLabelGapDp = 6.0;           // = --gap-y
 constexpr double kAnchorGapDp = 8.0;          // = --gap-x。レールのクリックを奪わないすき間
 constexpr double kEdgeMarginDp = 8.0;         // = --gap-x
 
-bool PointerOverLabel(Rml::ElementDocument* document) {
-    if (document == nullptr || document->GetContext() == nullptr) return false;
-    for (Rml::Element* element = document->GetContext()->GetHoverElement(); element != nullptr;
-         element = element->GetParentNode()) {
-        if (element->GetOwnerDocument() == document && element->IsClassSet("rail-label")) return true;
-    }
-    return false;
-}
-
 } // namespace
 
-RmlUiRailLabelView::RmlUiRailLabelView()
-    : hover_(workspace::RailLabelHoverTuning::Embedded().graceSeconds),
-      model_(std::make_unique<RailLabelsModel>()) {}
+RmlUiRailLabelView::RmlUiRailLabelView() : model_(std::make_unique<RailLabelsModel>()) {}
 RmlUiRailLabelView::~RmlUiRailLabelView() = default;
 
 void RmlUiRailLabelView::Attach(std::function<void(rs::world::Guid, bool)> selectBlock,
@@ -197,13 +185,12 @@ void RmlUiRailLabelView::EndEditing() {
 void RmlUiRailLabelView::Refresh(bool active, const rs::world::TrackGraph& graph,
                                 const SignalBlockViewportLink& link, const SignalBlockViewModel& placement,
                                 const rs::world::Guid& selectedBlock,
-                                std::size_t sceneIndex, double deltaSeconds, Rml::ElementDocument* document) {
+                                std::size_t sceneIndex, double /*deltaSeconds*/, Rml::ElementDocument* document) {
     if (!modelHandle_) return;
     graph_ = &graph;
     document_ = document;
     if (!active || sceneIndex_ != sceneIndex) {
         EndEditing();
-        hover_ = workspace::RailLabelHover(workspace::RailLabelHoverTuning::Embedded().graceSeconds);
     }
     if (!rs::world::GuidIsNil(editingBlock_) && rs::world::FindBlock(graph, editingBlock_) == nullptr) EndEditing();
     if (pendingFocus_) FocusEditingInput();
@@ -211,16 +198,14 @@ void RmlUiRailLabelView::Refresh(bool active, const rs::world::TrackGraph& graph
     items_.clear();
     if (active && placement.candidateAnchor) {
         EndEditing();
-        hover_ = workspace::RailLabelHover(workspace::RailLabelHoverTuning::Embedded().graceSeconds);
         items_ = workspace::BuildRailLabelCandidateItems(graph, *placement.candidateAnchor, placement.ownerCandidates);
     } else if (active) {
-        workspace::RailLabelHoverInput input;
-        input.hoveredRail = link.hoveredRail;
-        input.pointerOverLabel = PointerOverLabel(document);
-        input.selectedBlock = selectedBlock;
-        input.editingLabel = editingBlock_;
-        input.deltaSeconds = deltaSeconds;
-        const std::vector<workspace::RailLabel> labels = hover_.Update(graph, input);
+        // 閉塞のラベルは、信号モードの間は常に、閉塞の中点の画面上へ出す。
+        std::vector<workspace::RailLabel> labels;
+        for (const rs::world::Block& block : graph.blocks) {
+            const std::optional<workspace::RailLabelAnchor> anchor = workspace::BlockMidpointAnchor(graph, block);
+            if (anchor.has_value()) labels.push_back({block.guid, *anchor});
+        }
         items_ = workspace::BuildRailLabelItems(graph, labels, selectedBlock, link.connectivity);
     }
     Rml::Vector<RailLabelModel> labels;

@@ -7,6 +7,7 @@
 
 namespace rs::world {
 struct TrackGraph;
+struct Block;
 }
 
 namespace rs::app::workspace {
@@ -30,6 +31,9 @@ struct RailLabel {
     rs::world::Guid block = rs::world::NilGuid();
     RailLabelAnchor anchor;
 };
+
+// 閉塞の中点(閉塞のレールを並びの順に全長でたどって、半分の長さになる点)。レールが無い閉塞はnullopt。
+std::optional<RailLabelAnchor> BlockMidpointAnchor(const rs::world::TrackGraph& graph, const rs::world::Block& block);
 
 class RailLabelHover {
 public:

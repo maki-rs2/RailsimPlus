@@ -240,6 +240,7 @@ bool RmlUiWorkspaceView::CreateDataModel(Rml::Context& context) {
     trainInfoCard_.RegisterModel(constructor);
     cabinHud_.RegisterModel(constructor);
     railLabel_.RegisterModel(constructor);
+    platformCard_.RegisterModel(constructor);
 
     modelHandle_ = constructor.GetModelHandle();
     // 起動直後(鑑賞)の値を入れておく(文書の読込時の表示に使う)。

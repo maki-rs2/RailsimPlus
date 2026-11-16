@@ -52,6 +52,7 @@ void WorkspaceEditorBridge::Tick(rmlui::RmlUiIntegration& rmlUi, const rs::app::
         view->LayingSet().Attach(editor, services.pluginSelector, services.pluginBrowser);
         view->TemplateSave().Attach(editor, services.pluginSelector, PluginRootAction(services.userSettings).Roots());
         SceneRenderer& renderer = services.sceneRenderer;
+        view->PlatformCard().Attach([view](rs::world::Guid platformId) { view->DiaPanel().OpenPlatform(platformId); });
         view->RailLabel().Attach(
             [&editor, &renderer](rs::world::Guid guid, bool ensureSelected) {
                 if (ensureSelected && editor.selectedBlock == guid) return;
@@ -262,6 +263,7 @@ void WorkspaceEditorBridge::Tick(rmlui::RmlUiIntegration& rmlUi, const rs::app::
         ? SignalBlockAction(editor, signalSidecar, signalAspects).ViewModel() : SignalBlockViewModel{};
     view->RailLabel().Refresh(GetViewModeTraits(viewMode).signalBlock, editor.graph, signalBlockLink, signalPlacement,
                               editor.selectedBlock, services.layoutSession.activeIndex, deltaSeconds, document);
+    view->PlatformCard().Refresh(GetViewModeTraits(viewMode).stationDia, editor.graph, editor.selectedPlatform, document);
     if (trainProfile) {
         formationImages.EndFrame();
     } else {
@@ -308,6 +310,7 @@ void WorkspaceEditorBridge::UpdateTrainInfoCards(rmlui::RmlUiIntegration& rmlUi,
     if (view == nullptr) return;
     view->TrainInfoCard().UpdatePositions(viewProj, eye, screenWidth, screenHeight);
     view->RailLabel().UpdatePositions(viewProj, screenWidth, screenHeight);
+    view->PlatformCard().UpdatePositions(viewProj, screenWidth, screenHeight);
     view->SignalPanel().UpdatePositions(viewProj, screenWidth, screenHeight);
 }
 

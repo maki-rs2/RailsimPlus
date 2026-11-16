@@ -2,6 +2,8 @@
 // DiaPanelRoutineAction.cpp - ダイヤの左タブの操作のうち、層・要素・発車時刻・運行情報の書換を扱う
 //
 #include <algorithm>
+#include <cmath>
+#include <cstdlib>
 
 #include "DiaPanelActionResolve.h"
 #include "../workspace/DiaPanelFormat.h"
@@ -157,6 +159,18 @@ void ResetStopPosition(const Refs& refs, const Request& request) {
     WithElement(refs, request, request.rowIndex_,
                 [](PlatformRoutineAction& action, const RoutineLayerRef& ref, const PlatformRoutineElement& element, std::size_t index) {
                     if (element.stopOffsetNormalized.has_value()) action.ResetElementStopOffset(ref, index);
+                });
+}
+
+void ChangeStopPosition(const Refs& refs, const Request& request) {
+    char* end = nullptr;
+    const double value = std::strtod(request.value_.c_str(), &end);
+    if (end == request.value_.c_str()) return;
+    WithElement(refs, request, request.rowIndex_,
+                [value](PlatformRoutineAction& action, const RoutineLayerRef& ref, const PlatformRoutineElement& element, std::size_t index) {
+                    // 同じ値への変更は積まない(値の書き戻しでもchangeが届くため)。
+                    if (element.stopOffsetNormalized.has_value() && std::abs(*element.stopOffsetNormalized - value) < 1e-6) return;
+                    action.SetElementStopOffset(ref, index, value);
                 });
 }
 

@@ -38,6 +38,10 @@ struct DiaPanelElement {
     std::vector<DiaPanelChoice> platforms_;
     std::string maximum_;
     std::string stopPosition_;
+    // 要素で停止位置を指定しているか。指定していなければスライダーは0(中央)に置く。
+    bool stopCustom_ = false;
+    // 要素の停止位置(正規化[-1,+1]。未指定のときは0)。
+    double stopOffset_ = 0.0;
     std::vector<DiaPanelField> overwrites_;
     std::string hand_;
     // 層の中で次に使う要素(先頭の有効な要素)。走行中のカーソルは見ない。

@@ -137,9 +137,10 @@ void FormationAction::SetPlacementReversedHead(bool reversed) {
     refs_.uiState.reversedHead = reversed;
 }
 
-void FormationAction::AddTrainTag(const std::string& label) {
-    refs_.sceneRenderer.AddTrainTag(label);
+int FormationAction::AddTrainTag(const std::string& label) {
+    const int tagId = refs_.sceneRenderer.AddTrainTag(label);
     refs_.document.MarkEdited();
+    return tagId;
 }
 
 void FormationAction::RemoveTrainTag(int tagId) {

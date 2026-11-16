@@ -90,6 +90,8 @@ public:
     void AddDepartureTimeSorted(const RoutineLayerRef& layer, std::size_t elementIndex);
     // 要素の停止位置を、番線の既定へ戻す(要素の指定を外す)。
     void ResetElementStopOffset(const RoutineLayerRef& layer, std::size_t elementIndex);
+    // 要素の停止位置を正規化[-1,+1](-1=番線の手前端 / 0=中央 / +1=奥端)で指定する。範囲外は丸める。
+    void SetElementStopOffset(const RoutineLayerRef& layer, std::size_t elementIndex, double normalized);
     // 運行情報の書換。同じ項目は1つだけ持つので、すでにあれば追加しない。
     void AddRunInfoChange(const RoutineLayerRef& layer, std::size_t elementIndex, rs::world::RunInfoChange::Field field);
     void SetRunInfoChange(const RoutineLayerRef& layer, std::size_t elementIndex, std::size_t changeIndex, std::string value);

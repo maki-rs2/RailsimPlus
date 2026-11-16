@@ -76,6 +76,7 @@ void AddDepartureTime(const Refs& refs, const Request& request);
 void DeleteDepartureTime(const Refs& refs, const Request& request);
 void ChangeConnectionWait(const Refs& refs, const Request& request);
 void ResetStopPosition(const Refs& refs, const Request& request);
+void ChangeStopPosition(const Refs& refs, const Request& request);
 void ChangeRunInfo(const Refs& refs, const Request& request);
 void AddRunInfo(const Refs& refs, const Request& request);
 void DeleteRunInfo(const Refs& refs, const Request& request);

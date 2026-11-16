@@ -103,6 +103,8 @@ void TrackLayingSession::CommitArc(Editor& ed, const Vec3& p1, const Guid& snapp
 
     if (!ed.ExecuteCommand(std::move(composite))) return;
     ed.NotePlaced();
+    // 敷設が1区間終わったら、ノードの選択を外す(続きの敷設は placeStartNode_ が持つ)。
+    ed.ClearSelectedNode();
 
     centerlineStartNode_ = newCenterlineEndNode; // N<2または非valid時はNilへ戻り鎖が途切れる
 

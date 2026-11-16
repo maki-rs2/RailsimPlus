@@ -97,15 +97,31 @@ public:
     struct SceneEntityGizmoDragState {
         bool active = false;
         bool rotation = false;
+        // 中央の円のドラッグ。視点に垂直な平面の上で、3軸を同時に動かす。
+        bool free = false;
         int axisIndex = 0;
         rs::core::Vec3 pivot;
         rs::core::Vec3 axis;
+        rs::core::Vec3 planeNormal;
+        rs::core::Vec3 startPlanePoint;
+        // 回転の向き。+1なら、画面上で反時計回りにドラッグすると正の回転になる。
+        double rotationSign = 1.0;
+        // 画面に出す、いま動かしている量。軸の移動はm、回転はラジアン、中央のドラッグは3軸のオフセット[m]。
+        double currentDelta = 0.0;
+        rs::core::Vec3 currentFreeOffset;
         rs::core::Vec2 screenCenter;
         rs::core::Vec2 screenAxis;
         rs::core::Vec2 startMouse;
         float worldPerPixel = 0.0f;
         double startScreenAngle = 0.0;
         std::vector<rs::world::SceneEntity> before;
+    };
+    // カーソルが当たっているギズモの部品。描画のホバー表示に使う。
+    struct SceneEntityGizmoHoverState {
+        bool valid = false;
+        bool center = false;
+        bool rotation = false;
+        int axisIndex = 0;
     };
     // ピッキング半径の既定値[px]（PickNode/PickEdge/PickEdgeSの既定引数）。
     static constexpr float kDefaultNodePickRadiusPx = 8.0f;
@@ -152,6 +168,8 @@ public:
     rs::world::Guid selectedPlatform = rs::world::NilGuid();
     rs::world::Guid selectedBlock = rs::world::NilGuid();
     SignalBlockArmedAction signalBlockArmedAction = SignalBlockArmedAction::None;
+    // 信号を置いたあとも配置待ちを続けるか(情景の連続配置と同じ設定。RmlUiのブラウザが毎フレーム書く)。
+    bool signalPlacementContinuous = false;
     // 信号の配置待ち中のホバー結果(向きも含む)。
     SpeedSignalHover speedSignalHover;
     std::optional<SpeedSignalHover> speedSignalPending;
@@ -265,6 +283,7 @@ public:
     rs::world::Guid hoveredSceneEntityId = rs::world::NilGuid();
     rs::world::Guid selectedSceneEntityId = rs::world::NilGuid();
     SceneEntityGizmoDragState sceneEntityGizmoDrag;
+    SceneEntityGizmoHoverState sceneEntityGizmoHover;
     bool HasSelectedSceneEntity() const { return !selectedSceneEntityIds_.Empty(); }
     bool IsSceneEntitySelected(const rs::world::Guid& id) const { return selectedSceneEntityIds_.Contains(id); }
     const std::vector<rs::world::Guid>& SelectedSceneEntities() const { return selectedSceneEntityIds_.Items(); }

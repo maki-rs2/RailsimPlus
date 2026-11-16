@@ -256,7 +256,13 @@ SignalPlaceOutcome SignalBlockAction::PlaceSpeedSignalAt(const rs::world::Guid& 
     if (editor_.ExecutePlatformCommand(std::make_unique<rs::editor::AddSpeedSignalCommand>(signal)))
         editor_.NotePlaced();
     editor_.lastPlacedTravel = rs::editor::PlacedTravel{edge, signal.direction};
-    Disarm();
+    // 連続配置のときは配置待ちのまま、仮止めとホバーだけ片づける。
+    if (editor_.signalPlacementContinuous) {
+        editor_.CancelSpeedSignalPending();
+        editor_.speedSignalHover = {};
+    } else {
+        Disarm();
+    }
     outcome.placed = true;
     return outcome;
 }
