@@ -6,6 +6,27 @@
 
 namespace rs::app {
 
+void ApplyFormationCarSpec(PluginSelector& selector, size_t defIndex, size_t carIndex, const std::string& folder,
+                           bool reverse, const std::vector<int32_t>& switchOptions, bool checkSwitchCount,
+                           std::vector<std::string>& warnings) {
+    if (reverse) {
+        selector.SetFormationCarReversed(defIndex, carIndex, true);
+    }
+    if (switchOptions.empty()) return;
+    selector.SetFormationCarSwitchOptions(defIndex, carIndex, switchOptions);
+    if (!checkSwitchCount) return;
+    // 保存済みスイッチ確定値の件数とプラグイン側のDefineSwitch件数が
+    // 食い違うと、位置対応がずれて意図しない見た目になる。件数は読込時に
+    // FormationCarへキャッシュ済みなので、ここで再読込はしない。
+    const size_t pluginSwitchCount = selector.Formations()[defIndex].cars[carIndex].pluginSwitchCount;
+    if (pluginSwitchCount != switchOptions.size()) {
+        warnings.push_back(
+            "スイッチ確定値の件数が一致しません(保存=" +
+            std::to_string(switchOptions.size()) +
+            " / プラグイン=" + std::to_string(pluginSwitchCount) + "): " + folder);
+    }
+}
+
 bool AddFormationCar(PluginSelector& selector, size_t defIndex, const std::string& folder,
                      bool reverse, const std::vector<int32_t>& switchOptions,
                      std::vector<std::string>& warnings) {
@@ -29,25 +50,7 @@ bool AddFormationCar(PluginSelector& selector, size_t defIndex, const std::strin
         return false;
     }
     const size_t carIndex = selector.Formations()[defIndex].cars.size() - 1;
-    if (reverse) {
-        selector.SetFormationCarReversed(defIndex, carIndex, true);
-    }
-    if (!switchOptions.empty()) {
-        selector.SetFormationCarSwitchOptions(defIndex, carIndex, switchOptions);
-        if (!resolved) return false;  // 件数はプラグイン側が分からないので照合しない
-
-        // 保存済みスイッチ確定値の件数とプラグイン側のDefineSwitch件数が
-        // 食い違うと、位置対応がずれて意図しない見た目になる。件数はAddPath時に
-        // FormationCarへキャッシュ済みなので、ここで再読込はしない。
-        const size_t pluginSwitchCount =
-            selector.Formations()[defIndex].cars[carIndex].pluginSwitchCount;
-        if (pluginSwitchCount != switchOptions.size()) {
-            warnings.push_back(
-                "スイッチ確定値の件数が一致しません(保存=" +
-                std::to_string(switchOptions.size()) +
-                " / プラグイン=" + std::to_string(pluginSwitchCount) + "): " + folder);
-        }
-    }
+    ApplyFormationCarSpec(selector, defIndex, carIndex, folder, reverse, switchOptions, resolved, warnings);
     return resolved;
 }
 

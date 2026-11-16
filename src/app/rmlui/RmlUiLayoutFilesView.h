@@ -33,9 +33,9 @@ struct LayoutFilesModel;
 enum class LayoutFilesMode { Load, SaveAs };
 
 struct LayoutFilesCommand {
-    enum class Kind { LoadFile, SaveName, Close };
+    enum class Kind { LoadFile, NewLayout, SaveName, Close };
     Kind kind = Kind::LoadFile;
-    std::string value; // LoadFile=ファイルのパス、SaveName=入力された名前
+    std::string value; // LoadFile=ファイルのパス、SaveName=入力された名前(NewLayoutは使わない)
 };
 
 class RmlUiLayoutFilesView {

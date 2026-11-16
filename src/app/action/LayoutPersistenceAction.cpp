@@ -171,6 +171,7 @@ LayoutActionResult LayoutPersistenceAction::RunNewLayout() {
         normalized.solarOverrides = refs_.solarOverrides;
         LayoutSceneCache emptyScene;
         emptyScene.guid = rs::world::GenerateGuid();
+        emptyScene.name = MakeNewSceneName(normalized.scenes);
         normalized.scenes.push_back(std::move(emptyScene));
         LayoutActionResult result = ApplyLayout(std::move(normalized), rs::world::GenerateGuid(), {}, {});
 

@@ -59,6 +59,9 @@ public:
     // 描画のあとに呼ぶ。読み戻しを要求していれば、サムネイルを作って保存する。
     void AfterRender(App& app, LayoutPersistenceAction& action, const Localization& localization);
 
+    // 名前が空なら「無題」の文言にする(ダイアログと復元の画面で共通)。
+    static std::string NameOrUntitled(const std::string& name, const Localization& localization);
+
 private:
     void Apply(const workspace::LayoutFlowStep& step, const LayoutDocumentServices& services);
     // 読込の予約中・読込中か。この間に来た読込・保存の要求は無視する(読込ジョブの途中は Busy で断られる)。
@@ -84,7 +87,7 @@ private:
     // 一覧の画面を閉じてから読み込むため、次のTickまで待たせる読込。読込は数秒メインのスレッドを止め、
     // その間は画面が更新されないので、閉じる前に始めると一覧が残ったままクリックも受けてしまう。
     struct DeferredLoad {
-        std::string pathUtf8;
+        std::string pathUtf8; // 空なら新規レイアウト
         bool discardRecovery = false;
     };
     std::optional<DeferredLoad> deferredLoad_;

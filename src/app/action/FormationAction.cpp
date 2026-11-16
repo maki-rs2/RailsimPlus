@@ -10,6 +10,8 @@
 
 #include "../plugin_session/PluginSelector.h"
 #include "../plugin_session/LayoutDocumentState.h"
+#include "../plugin_session/FormationBuilder.h"
+#include "../plugin_session/TrainGroupTemplateParse.h"
 #include "../plugin_session/TrainGroupTemplateApplier.h"
 #include "../camera/CabinViewCamera.h"
 #include "../camera/CameraControl.h"
@@ -131,6 +133,28 @@ std::string FormationAction::InsertCar(std::size_t defIndex, std::size_t slot, c
     }
     refs_.document.MarkEdited();
     return error;
+}
+
+std::size_t FormationAction::InsertTemplateCars(std::size_t defIndex, std::size_t slot,
+                                                const std::vector<FormationCarSpec>& cars,
+                                                const std::string& installRootUtf8, std::vector<std::string>& warnings) {
+    std::size_t inserted = 0;
+    for (const FormationCarSpec& car : cars) {
+        const std::string folder = ResolveTrainCarFolder(installRootUtf8, car);
+        if (folder.empty()) {
+            warnings.push_back("TrainPluginが空です");
+            continue;
+        }
+        const std::size_t position = slot + inserted;
+        const std::string error = InsertCar(defIndex, position, folder);
+        if (!error.empty()) {
+            warnings.push_back(error);
+            continue;
+        }
+        ApplyFormationCarSpec(refs_.selector, defIndex, position, folder, car.reverse, car.switchOptions, true, warnings);
+        ++inserted;
+    }
+    return inserted;
 }
 
 void FormationAction::SetPlacementReversedHead(bool reversed) {

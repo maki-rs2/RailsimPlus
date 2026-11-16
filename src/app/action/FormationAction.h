@@ -19,6 +19,7 @@ namespace rs::app {
 
 class PluginSelector;
 class SceneRenderer;
+struct FormationCarSpec;
 class CabinViewCamera;
 class CameraController;
 struct TrainPlacementUiState;
@@ -135,6 +136,10 @@ public:
     void MoveCarToSlot(std::size_t defIndex, std::size_t carIndex, std::size_t slot);
     // folderUtf8の列車プラグインを、スロットslotへ1両挿入する。失敗したら理由を返す(成功は空文字)。
     std::string InsertCar(std::size_t defIndex, std::size_t slot, const std::string& folderUtf8);
+    // cars(テンプレートの記載順。installRootUtf8 配下の Train/<名前> へ解決する)を、スロットslotから順に挿入し、
+    // 反転とスイッチ確定値も当てる。読めない車両は入れずに飛ばし、理由を warnings へ足す。入れた両数を返す。
+    std::size_t InsertTemplateCars(std::size_t defIndex, std::size_t slot, const std::vector<FormationCarSpec>& cars,
+                                   const std::string& installRootUtf8, std::vector<std::string>& warnings);
 
     void SetPlacementReversedHead(bool reversed);
 

@@ -255,8 +255,10 @@ void RenderFrameAndCapture(FrameLoopState& loopState, FrameScratch& scratch) {
     }
     rmlui::RmlUiWorkspaceView* const photoView = state.rmlUiIntegration.WorkspaceView();
     if (photoView != nullptr) {
-        loopState.cameraPhoto.BeforeRender(globals.app, photoView->CameraScreen(),
-            diagnosticCapture || loopState.layoutDocument.SaveCaptureRequested() || screenshotRequested);
+        if (loopState.cameraPhoto.BeforeRender(globals.app, photoView->CameraScreen(),
+                diagnosticCapture || loopState.layoutDocument.SaveCaptureRequested() || screenshotRequested)) {
+            state.uiSound.Push(UiSound::Shutter);
+        }
         loopState.cameraFocus.BeforeRender(globals.app, photoView->CameraScreen());
     }
     // 読込ジョブ進行中(SyncJobActive)は3D描画をスキップしUIだけ描く(半端なスロットを描かない)。

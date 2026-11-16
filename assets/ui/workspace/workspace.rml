@@ -29,7 +29,9 @@
         <button class="icon round-icon ic-undo" data-attrif-disabled="!canUndo" data-attr-title="canUndo ? '元に戻す (Ctrl+Z)' : '元に戻せる操作がありません'" data-event-click="edit_history(false)"></button>
         <button class="icon round-icon ic-redo" data-attrif-disabled="!canRedo" data-attr-title="canRedo ? 'やり直す (Ctrl+Y)' : 'やり直せる操作がありません'" data-event-click="edit_history(true)"></button>
     </div>
+    <!-- ヘルプは中身(操作の一覧)が実際の割り当てにつながっていないので、画面からは一時的に外している。ウィンドウと結線は残してある。
     <button class="icon round-icon banner-info ic-help" title="ヘルプ" data-event-click="open_overlay('helpWindow')"></button>
+    -->
 </div>
 
 <!-- 右下の操作説明(鑑賞・シーン設定では空)。文言はsrc/app/workspace/OperationHintCatalog.hの表。 -->
@@ -277,7 +279,7 @@
             </div>
             <!-- 種別タブ(折り返す)。 -->
             <div class="browser-header">
-                <!-- 種別タブのクリックは親へ伝わり、編成テンプレートの分類を閉じる(テンプレートのあるモード(レール・情景・列車)だけ、その分類のタブを足す)。
+                <!-- 種別タブのクリックは親へ伝わり、編成テンプレートの分類を閉じる(テンプレートのあるモード(レール・列車)だけ、その分類のタブを足す)。
                      並びは、お気に入り・テンプレート・それ以外の種別。 -->
                 <div class="browser-tabs" data-event-click="browser_templates_close">
                     <button class="flat browser-tab" data-for="tab : browserTabs" data-if="tab.key == 'favorites'" data-class-is-selected="tab.selected && !browserTemplatesOpen"
@@ -291,17 +293,14 @@
             <!-- パンくず(階層を出しているときだけ)。先頭に戻るボタン、最後が今いる階層で押せない。区切りは右向きの矢印。
                  結線はsrc/app/rmlui/RmlUiBrowserFolder.cpp。 -->
             <div class="browser-crumbs" data-if="browserCrumbs.size > 0">
-                <!-- 1つ上の階層へ戻る(最上位では出さない)。カードを落とすと、その階層への移動になる。 -->
+                <!-- 1つ上の階層へ戻る(最上位では出さない)。フォルダへの移動は未実装なので、パンくず・戻るボタン・フォルダのカードは
+                     落とし先にしていない(結線 browser_drag_over・browser_drag_out・browser_drop_path・browser_drop_folder は残してある)。 -->
                 <button class="icon back browser-back ic-chevron-left" title="1つ上の階層へ戻る" data-if="browserBackDepth != -1"
-                        data-event-dragover="browser_drag_over" data-event-dragout="browser_drag_out"
-                        data-event-dragdrop="browser_drop_path(browserBackDepth)"
                         data-event-click="navigate_browser_path(browserBackDepth)"></button>
                 <div class="browser-crumb-item" data-for="crumb : browserCrumbs">
                     <span class="browser-crumb-sep ic-chevron-right" data-if="crumb.depth > 0"></span>
                     <span class="browser-crumb-current" data-if="crumb.current">{{ crumb.label }}</span>
                     <button class="flat browser-crumb" data-if="!crumb.current"
-                            data-event-dragover="browser_drag_over" data-event-dragout="browser_drag_out"
-                            data-event-dragdrop="browser_drop_path(crumb.depth)"
                             data-event-click="navigate_browser_path(crumb.depth)">{{ crumb.label }}</button>
                 </div>
             </div>
@@ -372,11 +371,9 @@
                 <div class="browser-space" data-style-height="browserTopSpace"></div>
                 <!-- フォルダのカード(グリッドの先頭)。押すとその階層へ入る(enter_browser_folder。カードのidとは別のイベント)。
                      プラグインのカードと同じ.browser-cardで、測定・行の高さに乗せる。DOMの順がグリッドの項目の順。
-                     カードをドラッグして落とすとこのフォルダへの移動(browser_drop_folder)。フォルダのカード自身もドラッグできる。 -->
+                     フォルダへの移動は未実装なので、落とし先にもドラッグ元にもしていない。 -->
                 <div class="browser-card browser-folder" data-for="folder : browserFolders" data-style-width="browserCardWidth"
                      data-attr-data-drag-name="folder.name" data-attr-data-folder-index="folder.index"
-                     data-event-dragover="browser_drag_over" data-event-dragout="browser_drag_out"
-                     data-event-dragdrop="browser_drop_folder(folder.index)"
                      data-event-click="enter_browser_folder(folder.index)">
                     <div class="browser-thumb" data-style-height="browserThumbHeight">
                         <div class="browser-folder-tab"></div>
@@ -411,9 +408,9 @@
                 <div class="browser-hover-line">{{ browserHoverName }}</div>
                 <div class="browser-hover-line browser-hover-detail">{{ browserHoverDetail }}</div>
             </div>
-            <!-- 保存済みのテンプレート(レールは敷設、情景は駅・施設、列車は編成)。編成と敷設のカードには、撮れた画像を出す(撮れるまでは無地)。
+            <!-- 保存済みのテンプレート(レールは敷設、列車は編成。情景は置く操作が無いので分類を出さない)。編成と敷設のカードには、撮れた画像を出す(撮れるまでは無地)。
                  編成のカードの右上は両数、左下の警告は見つからない車両があること。列車は編成編集パネルの`+`へドラッグすると、その車両をすべて入れる。
-                 レールはカードを押すと敷設プラグインセットへ読み込む。情景は押しても未実装の通知だけ。 -->
+                 レールはカードを押すと敷設プラグインセットへ読み込む。 -->
             <div id="browser-template-grid" class="browser-template-grid" data-if="templateTabVisible && browserTemplatesOpen">
                 <div class="form-line empty-hint" data-if="browserTemplates.size == 0">テンプレートがありません</div>
                 <div class="browser-card browser-template-card" data-for="card : browserTemplates" data-style-width="browserCardWidth"
@@ -600,6 +597,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                <!-- 接続待ちは走行側が未実装なので、画面からは一時的に外している。結線と表示データは残してある。
                                 <div class="dia-field-row">
                                     <span class="dia-field-label">接続待ち</span>
                                     <div class="dia-field-value"><input type="checkbox" class="toggle" data-attrif-checked="element.connection"
@@ -617,6 +615,7 @@
                                             data-event-blur="dia_commit('ChangeConnectionWait', ei, -1, 'maximum')" data-event-keydown="dia_commit('ChangeConnectionWait', ei, -1, 'maximum')" /><span class="form-unit">秒</span>
                                     </div>
                                 </div>
+                                -->
                             </div>
                             <div class="dia-field-row">
                                 <span class="dia-field-label">停止位置</span>
@@ -864,6 +863,7 @@
                 <div class="form-unit" data-if="field.text == 'AUTO'">AUTO</div>
             </div>
         </div>
+        <!-- ブックマークは中身(移動・追加・名前・削除)が未実装なので、画面からは一時的に外している。結線と表示データは残してある。
         <div class="form-section">ブックマーク</div>
         <div class="camera-bookmarks">
             <div class="form-line empty-hint" data-if="camera.bookmarks.rows.size == 0">ブックマークはありません。今のカメラを追加できます</div>
@@ -877,6 +877,7 @@
             </div>
         </div>
         <button class="flat add-row" title="今のカメラをブックマークに追加" data-event-click="camera_action('add')"><span class="ui-icon ic-plus"></span>ブックマークを追加</button>
+        -->
         <div class="form-section">ファインダー</div>
         <div class="form-row">
             <div class="form-label">三分割の線</div>
@@ -886,7 +887,7 @@
             <div class="form-label">水平線</div>
             <input type="checkbox" class="toggle" data-attrif-checked="camera.finderHorizon" data-event-change="camera_action('horizon')" />
         </div>
-        <div class="form-section">出力解像度</div>
+        <div class="form-section">縦横比</div>
         <select class="form-field" data-value="camera.resolution" data-event-change="camera_action('resolution')">
             <option data-for="resolution, ri : camera.resolutions" data-value="ri">{{ resolution.label }}</option>
         </select>
@@ -896,7 +897,7 @@
         <div class="camera-finder-space"></div>
         <div data-for="field, fi : camera.fields" data-attr-class="'camera-readout ' + field.placement"
              data-event-mousescroll="camera_action('wheel', fi)" data-attr-title="field.label + '：' + field.text + ' (ホイールで変更)'">
-            <div class="camera-readout-label">{{ field.label }}</div>
+            <div class="camera-readout-label">{{ field.label }}<span class="camera-readout-auto" data-if="field.text == 'AUTO'">AUTO</span></div>
             <div class="camera-digits">
                 <button class="icon camera-step ic-chevron-left" title="下げる" data-event-click="camera_action('step', fi, -1)"></button>
                 <div class="camera-digit" data-for="digit : field.digits" data-class-is-narrow="digit.narrow">
@@ -1309,8 +1310,9 @@
                 </div>
                 </div>
             </div>
-            <!-- 下の行。RailSim2 のレイアウトの画面では、検索欄を ほかの場所から開く の左に並べる。 -->
+            <!-- 下の行。左端に新規レイアウト。RailSim2 のレイアウトの画面では、検索欄を ほかの場所から開く の左に並べる。 -->
             <div class="layout-files-footer recovery-footer" data-if="!layoutFilesSaveMode">
+                <button class="layout-new-button" data-attrif-disabled="layoutFilesPicking" data-event-click="layout_new">新規レイアウト</button>
                 <div class="search-box layout-rs2-search" data-if="layoutRs2Available && layoutFilesTab == 'rs2'">
                     <input type="text" class="search-input"
                            data-attr-value="layoutRs2Search" data-event-change="layout_rs2_search"
@@ -1453,6 +1455,7 @@
             </div>
 
             <div class="game-settings-scroll" data-if="gsTab == 'input'">
+                <!-- 視点操作の切り替えは未実装なので、画面からは一時的に外している。結線と表示データは残してある。
                 <div class="form-row">
                     <div class="form-label">{{ gsInput.mouseLabel }}</div>
                     <div class="segmented compact">
@@ -1462,6 +1465,7 @@
                     </div>
                     <div class="float-window-note">{{ gsInput.note }}</div>
                 </div>
+                -->
                 <div class="tab-title form-section">{{ gsInput.keysLabel }}</div>
                 <div data-for="row, ri : gsInput.rows">
                     <div class="form-section" data-if="row.section != ''">{{ row.section }}</div>

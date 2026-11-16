@@ -3,13 +3,14 @@
 #include <algorithm>
 #include <string>
 
-#include "NotImplementedNotice.h"
+#include "FormationAction.h"
 #include "TemplateDefBuilder.h"
 #include "ToastQueue.h"
 #include "TrackPluginSetAction.h"
 #include "TrackPluginSetText.h"
 #include "../plugin_session/PluginSelector.h"
 #include "../plugin_session/TemplateSaver.h"
+#include "../plugin_session/TrainGroupTemplateParse.h"
 #include "../../editor/tool/Editor.h"
 #include "../../platform/text/Encoding.h"
 #include "../../world/alignment/GuidJson.h"
@@ -84,7 +85,32 @@ void SaveFormationTemplate(ToastQueue& queue, const TemplateSaveRefs& refs, std:
                      name);
 }
 
-void InsertFormationTemplate(ToastQueue& queue, std::string_view) {
-    NotifyNotImplemented(queue, "編成テンプレートの車両の追加");
+void InsertFormationTemplate(ToastQueue& queue, const FormationRefs& refs, const std::string& pluginRoot,
+                             std::string_view name, std::size_t defIndex, std::size_t slot) {
+    const std::string nameUtf8(name);
+    if (pluginRoot.empty()) {
+        queue.Post(ToastSeverity::Warning, "プラグインのルートが未登録のため読み込めません");
+        return;
+    }
+    const std::filesystem::path path = TemplateSavePath(pluginRoot, TemplateKind::TrainGroupTemplate, nameUtf8);
+    const TrainGroupTemplateParseResult parsed =
+        ParseTrainGroupTemplateFile(rs::platform_text::WideToUtf8(path.wstring()), pluginRoot);
+    if (!parsed.ok || parsed.cars.empty()) {
+        queue.Post(ToastSeverity::Warning, "テンプレート「" + nameUtf8 + "」を読み込めませんでした");
+        return;
+    }
+    std::vector<std::string> warnings;
+    const std::size_t inserted =
+        FormationAction(refs).InsertTemplateCars(defIndex, slot, parsed.cars, parsed.installRootUtf8, warnings);
+    const std::size_t skipped = parsed.cars.size() - inserted;
+    if (inserted == 0) {
+        queue.Post(ToastSeverity::Warning, "テンプレート「" + nameUtf8 + "」の車両が見つからないため、入れられませんでした");
+    } else if (skipped > 0) {
+        queue.Post(ToastSeverity::Warning, "テンプレート「" + nameUtf8 + "」から" + std::to_string(inserted) +
+                                               "両を入れました(見つからない" + std::to_string(skipped) + "両は入れていません)");
+    } else {
+        queue.Post(ToastSeverity::Info,
+                   "テンプレート「" + nameUtf8 + "」から" + std::to_string(inserted) + "両を入れました");
+    }
 }
 } // namespace rs::app::template_action

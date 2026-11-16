@@ -251,7 +251,7 @@ void RmlUiCameraScreenView::OnAction(Rml::Event& event, const Rml::VariantList& 
         else presentation_.fields_[index].Wheel(direction > 0 ? -1.0 : 1.0);
     } else if (kind == "resolution") {
         const std::string value = event.GetParameter<Rml::String>("value", std::to_string(presentation_.resolution_));
-        if (presentation_.SetResolution(value)) SetResolution(queue_, value);
+        presentation_.SetResolution(value);
     } else if (kind == "photo") TakePhotoByKey();
     else if (kind == "add") AddBookmark(queue_);
     else if (kind == "goto" && bookmarks.ValidRow(index)) GoToBookmark(queue_, index);

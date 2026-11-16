@@ -9,7 +9,6 @@
 #include <RmlUi/Core/Types.h>
 
 #include "RmlUiDataEventArgs.h"
-#include "../action/NotImplementedNotice.h"
 #include "../action/TemplateAction.h"
 #include "RmlUiUpdateVariable.h"
 #include "../action/FormationAction.h"
@@ -55,7 +54,7 @@ std::vector<TemplateKind> TemplateKindsFor(plugin_browser::BrowserProfile profil
     using plugin_browser::BrowserProfile;
     switch (profile) {
     case BrowserProfile::Rail: return {TemplateKind::RailwayPluginSet};
-    case BrowserProfile::Scenery: return {TemplateKind::StationBuildTemplate, TemplateKind::StructBuildTemplate};
+    // 情景のテンプレート(StationBuildTemplate・StructBuildTemplate)は置く操作が無いので、分類を出さない。
     case BrowserProfile::Train: return {TemplateKind::TrainGroupTemplate};
     default: return {};
     }
@@ -228,15 +227,12 @@ void RmlUiTrainTabView::RegisterModel(Rml::DataModelConstructor& constructor) {
             SetTemplatesOpen(true);
         });
     // テンプレートのカードを押す。レールは敷設プラグインセットへ読み込む。列車はドラッグで使うので何も起きない。
-    // 情景は読込の操作がまだ無いので通知だけ。
     constructor.BindEventCallback(
         "template_card_click", [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& arguments) {
             if (profile_ == plugin_browser::BrowserProfile::Rail) {
                 if (editor_ == nullptr || selector_ == nullptr || pluginRoots_ == nullptr) return;
                 template_action::LoadLayingTemplate(queue_, {*editor_, *selector_, *pluginRoots_},
                                                     EventArgumentAt<Rml::String>(arguments, 0, Rml::String()));
-            } else if (profile_ != plugin_browser::BrowserProfile::Train) {
-                NotifyNotImplemented(queue_, "テンプレートの読み込み");
             }
         });
     constructor.BindEventCallback(

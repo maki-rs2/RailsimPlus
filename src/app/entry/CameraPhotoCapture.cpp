@@ -9,9 +9,11 @@
 #include "../rmlui/RmlUiCameraScreenView.h"
 
 namespace rs::app {
-void CameraPhotoCapture::BeforeRender(App& app, rmlui::RmlUiCameraScreenView& view, bool otherCaptureRequested) {
+bool CameraPhotoCapture::BeforeRender(App& app, rmlui::RmlUiCameraScreenView& view, bool otherCaptureRequested) {
     finder_ = view.BeginPhotoCapture(otherCaptureRequested);
-    if (finder_) app.RequestBackBufferCapture(BackBufferCaptureStage::SceneOnly);
+    if (!finder_) return false;
+    app.RequestBackBufferCapture(BackBufferCaptureStage::SceneOnly);
+    return true;
 }
 
 void CameraFocusProbe::BeforeRender(App& app, rmlui::RmlUiCameraScreenView& view) {

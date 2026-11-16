@@ -915,6 +915,73 @@ add_library(RailsimPlusCore STATIC
     src/app/action/PluginBrowserCardSizeAction.cpp
     src/app/action/PluginRootAction.cpp
     src/app/action/LayoutActionResult.cpp
+    # アプリ層のうちテストからも使うもの。アプリとテストで二重にコンパイルしないよう、ここに置く
+    src/app/plugin_browser/LayingSetPreviewStore.cpp
+    src/app/plugin_browser/TemplateImageStore.cpp
+    src/app/plugin_browser/PluginThumbnailRecipe.cpp
+    src/app/plugin_browser/TemplateThumbnailRecipe.cpp
+    src/app/entry/DeviceLostShutdown.cpp
+    src/app/gpu/InitSteps.cpp
+    src/app/gpu/SceneSlotCulling.cpp
+    src/core/Frustum.cpp
+    src/app/ui/EditorViewportState.cpp
+    src/app/action/EdgePick.cpp
+    src/app/ui/OverlayColorTuning.cpp
+    src/app/plugin_session/SceneMaterialOverrides.cpp
+    src/app/plugin_session/PluginSession.cpp
+    src/app/plugin_session/PluginSwitchTable.cpp
+    src/app/plugin_session/SharedStateAxes.cpp
+    src/app/plugin_session/RslJsonWriter.cpp
+    src/app/plugin_session/RslJsonFieldRounding.cpp
+    src/app/plugin_session/RslLayoutSerialize.cpp
+    src/app/plugin_session/LayoutDocumentState.cpp
+    src/app/plugin_session/AutoRecovery.cpp
+    src/app/plugin_session/RslLayoutLoad.cpp
+    src/app/plugin_session/LayoutLoad.cpp
+    src/app/plugin_session/PluginRootResolver.cpp
+    src/app/plugin_session/RslSceneCacheSerialize.cpp
+    src/app/plugin_session/RslRuntimeState.cpp
+    src/app/action/LayoutPersistenceAction.cpp
+    src/app/action/LayoutPersistenceActionScene.cpp
+    src/app/action/ScenePanelViewModel.cpp
+    src/app/action/PluginInfoAction.cpp
+    src/app/action/SwitchList.cpp
+    src/app/action/EdgeSectionEditAction.cpp
+    src/app/action/EdgePropertyAction.cpp
+    src/app/action/StationDiaAction.cpp
+    src/app/action/PlatformRoutineAction.cpp
+    src/app/action/PlatformRoutineLayerAction.cpp
+    src/app/action/PlatformRoutineViewModel.cpp
+    src/app/action/DiaPanelPresentationBuilder.cpp
+    src/app/action/NodePropertyAction.cpp
+    src/app/action/TrackLayingAction.cpp
+    src/app/action/TrackLayingText.cpp
+    src/app/action/TrackLayingPreviewColor.cpp
+    src/app/action/ToolCancelAction.cpp
+    src/app/action/SignalBlockAction.cpp
+    src/app/action/SignalBlockSignalEdit.cpp
+    src/app/action/SignalPluginRules.cpp
+    src/app/action/GroupCommonSwitchSync.cpp
+    src/app/plugin_session/PreloadTextureSet.cpp
+    src/app/scene/ParsedPluginCache.cpp
+    src/app/scene/SceneTrainGroupCollector.cpp
+    src/app/scene/StationRunInfoDispatcher.cpp
+    src/app/scene/SignalModelSet.cpp
+    src/app/scene/TrainDoorSide.cpp
+    src/app/scene/SceneStopConstraintPhase.cpp
+    src/app/scene/SceneRouteReservationPhase.cpp
+    src/app/scene/SceneCabinPivot.cpp
+    src/app/scene/SceneSceneryPicker.cpp
+    src/app/scene/ParticleRequestCollector.cpp
+    src/app/scene/SceneSlotPool.cpp
+    src/app/scene/SurfaceBoundsTracker.cpp
+    src/app/scene/StaticMeshCache.cpp
+    src/app/scene/StaticMeshVariantSet.cpp
+    src/app/scene/StaticHeadlightRoster.cpp
+    src/app/scene/StaticMeshVariantBake.cpp
+    src/app/scene/StaticInstanceKey.cpp
+    src/app/scene/CamDistBandAssigner.cpp
+    src/app/scene/StaticBandedSceneryInstances.cpp
 )
 target_include_directories(RailsimPlusCore PUBLIC ${RS_EMBEDDED_CONFIG_DIR})
 target_sources(RailsimPlusCore PRIVATE ${RS_EMBEDDED_HEADERS})
@@ -942,11 +1009,7 @@ endif()
 add_executable(RailsimPlus
     src/app/entry/RailsimPlus.rc
     src/app/plugin_browser/PluginBrowserService.cpp
-    src/app/plugin_browser/LayingSetPreviewStore.cpp
-    src/app/plugin_browser/TemplateImageStore.cpp
     src/app/plugin_browser/PluginImageWorker.cpp
-    src/app/plugin_browser/PluginThumbnailRecipe.cpp
-    src/app/plugin_browser/TemplateThumbnailRecipe.cpp
     src/platform/font/UiFont.cpp
     src/app/entry/main.cpp
     src/app/entry/AppRuntime.cpp
@@ -965,8 +1028,8 @@ add_executable(RailsimPlus
     src/app/entry/CameraPhotoCapture.cpp
     src/app/entry/WorkspaceEditorBridge.cpp
     src/app/entry/LayoutDocumentController.cpp
+    src/app/entry/LayoutDocumentRecoveryChoice.cpp
     src/app/entry/AppRuntimeSettingsInit.cpp
-    src/app/entry/DeviceLostShutdown.cpp
     src/app/entry/GpuInitFailureDialog.cpp
     src/app/gpu/App.cpp
     src/app/gpu/AppFramePasses.cpp
@@ -975,7 +1038,6 @@ add_executable(RailsimPlus
     src/app/gpu/GpuContextDiagnostics.cpp
     src/app/gpu/GpuContextCapture.cpp
     src/app/gpu/GpuFrameTimer.cpp
-    src/app/gpu/InitSteps.cpp
     src/app/gpu/FrameRenderer.cpp
     src/app/gpu/FrameRendererFrame.cpp
     src/app/gpu/FrameRendererSceneSlots.cpp
@@ -1070,23 +1132,18 @@ add_executable(RailsimPlus
     src/render/overlay2d/Overlay2DPass.cpp
     src/render/overlay2d/Overlay2DPassSetup.cpp
     src/render/overlay2d/GlyphAtlas.cpp
-    src/app/gpu/SceneSlotCulling.cpp
-    src/core/Frustum.cpp
     src/app/entry/AppCommandLine.cpp
     src/app/gpu/AppInit.cpp
     src/app/input/ImGuiInputBridge.cpp
     src/app/ui/EditorViewport.cpp
-    src/app/ui/EditorViewportState.cpp
     src/app/ui/ViewportInput.cpp
     src/app/ui/ViewportInputModes.cpp
     src/app/ui/ViewportSceneryPlacementInput.cpp
     src/app/ui/ViewportScenerySelectionInput.cpp
     src/app/ui/EdgePickInput.cpp
-    src/app/action/EdgePick.cpp
     src/app/ui/NodeDragInput.cpp
     src/app/ui/PlacementDragInput.cpp
     src/app/ui/OverlayLineTuning.cpp
-    src/app/ui/OverlayColorTuning.cpp
     src/app/ui/ViewportOverlay.cpp
     src/app/ui/ViewportOverlayGeometry.cpp
     src/app/ui/ViewportSceneEntityOverlay.cpp
@@ -1112,7 +1169,6 @@ add_executable(RailsimPlus
     src/app/diagnostics/LayoutDigest.cpp
     src/app/diagnostics/Rs2Spike.cpp
     src/app/plugin_session/PluginRuntimeApplier.cpp
-    src/app/plugin_session/SceneMaterialOverrides.cpp
     src/app/ui/PluginInfoPanel.cpp
     src/app/ui/SwitchListWidget.cpp
     src/app/ui/ViewerSettingsPanel.cpp
@@ -1123,51 +1179,16 @@ add_executable(RailsimPlus
     src/app/ui/TrainPlacementHighlight.cpp
     src/app/ui/UiPanelHelpers.cpp
     src/app/ui/SceneEntitySwitchPanel.cpp
-    src/app/plugin_session/PluginSession.cpp
     src/app/plugin_session/ViewerState.cpp
-    src/app/plugin_session/PluginSwitchTable.cpp
-    src/app/plugin_session/SharedStateAxes.cpp
-    src/app/plugin_session/RslJsonWriter.cpp
-    src/app/plugin_session/RslJsonFieldRounding.cpp
-    src/app/plugin_session/RslLayoutSerialize.cpp
-    src/app/plugin_session/LayoutDocumentState.cpp
-    src/app/plugin_session/AutoRecovery.cpp
-    src/app/plugin_session/RslLayoutLoad.cpp
-    src/app/plugin_session/LayoutLoad.cpp
-    src/app/plugin_session/PluginRootResolver.cpp
-    src/app/plugin_session/RslSceneCacheSerialize.cpp
-    src/app/plugin_session/RslRuntimeState.cpp
-    src/app/action/LayoutPersistenceAction.cpp
     src/app/action/LayoutPersistenceActionProgress.cpp
-    src/app/action/LayoutPersistenceActionScene.cpp
     src/app/action/LayoutPersistenceActionSceneDelete.cpp
-    src/app/action/ScenePanelViewModel.cpp
-    src/app/action/PluginInfoAction.cpp
-    src/app/action/SwitchList.cpp
     src/app/action/ViewerSettingsAction.cpp
     src/app/action/GameSettingsAction.cpp
     src/app/action/RenderSettingsAction.cpp
-    src/app/action/EdgeSectionEditAction.cpp
-    src/app/action/EdgePropertyAction.cpp
     src/app/action/FormationAction.cpp
-    src/app/action/StationDiaAction.cpp
-    src/app/action/PlatformRoutineAction.cpp
-    src/app/action/PlatformRoutineLayerAction.cpp
-    src/app/action/PlatformRoutineViewModel.cpp
     src/app/action/DiaPanelAction.cpp
     src/app/action/DiaPanelRoutineAction.cpp
-    src/app/action/DiaPanelPresentationBuilder.cpp
-    src/app/action/NodePropertyAction.cpp
-    src/app/action/TrackLayingAction.cpp
-    src/app/action/TrackLayingText.cpp
-    src/app/action/TrackLayingPreviewColor.cpp
-    src/app/action/ToolCancelAction.cpp
-    src/app/action/SignalBlockAction.cpp
-    src/app/action/SignalBlockSignalEdit.cpp
-    src/app/action/SignalPluginRules.cpp
     src/app/action/SceneEntitySwitchAction.cpp
-    src/app/action/GroupCommonSwitchSync.cpp
-    src/app/plugin_session/PreloadTextureSet.cpp
     src/app/plugin_session/SessionFrameStep.cpp
     src/app/ui/ImGuiPathPicker.cpp
     src/app/ui/ModePanels.cpp
@@ -1186,37 +1207,18 @@ add_executable(RailsimPlus
       src/app/scene/SceneSlotSynchronizerResolve.cpp
       src/app/scene/SceneSlotSynchronizerUpload.cpp
       src/app/scene/SceneSlotSynchronizerRebake.cpp
-      src/app/scene/ParsedPluginCache.cpp
       src/app/scene/SceneTrainController.cpp
       src/app/scene/SceneTrainControllerGroupTick.cpp
       src/app/scene/SceneTrainControllerQueries.cpp
-      src/app/scene/SceneTrainGroupCollector.cpp
-      src/app/scene/StationRunInfoDispatcher.cpp
-      src/app/scene/SignalModelSet.cpp
-      src/app/scene/TrainDoorSide.cpp
       src/app/scene/SceneTrainFade.cpp
       src/app/scene/SceneSignalPhase.cpp
-      src/app/scene/SceneStopConstraintPhase.cpp
-      src/app/scene/SceneRouteReservationPhase.cpp
       src/app/scene/SceneTrainRenderSubmit.cpp
       src/app/scene/SceneTrainWheelSound.cpp
-      src/app/scene/SceneCabinPivot.cpp
       src/app/scene/SceneTrainBatching.cpp
       src/app/scene/SceneSceneryRuntime.cpp
-      src/app/scene/SceneSceneryPicker.cpp
       src/app/scene/TrainPickBox.cpp
     src/app/scene/PlacedSoundRequestCollector.cpp
-    src/app/scene/ParticleRequestCollector.cpp
     src/app/scene/HeadlightCollector.cpp
-    src/app/scene/SceneSlotPool.cpp
-    src/app/scene/SurfaceBoundsTracker.cpp
-    src/app/scene/StaticMeshCache.cpp
-    src/app/scene/StaticMeshVariantSet.cpp
-    src/app/scene/StaticHeadlightRoster.cpp
-    src/app/scene/StaticMeshVariantBake.cpp
-    src/app/scene/StaticInstanceKey.cpp
-    src/app/scene/CamDistBandAssigner.cpp
-    src/app/scene/StaticBandedSceneryInstances.cpp
     src/app/ui/GameSettingsPanel.cpp
     src/app/ui/RenderSettingsPanel.cpp
     src/app/ui/ViewModeSwitchPanel.cpp
@@ -1375,15 +1377,12 @@ add_executable(RailsimPlusTests
     tests/ResourceManagerTests.cpp
     tests/SrvRangeAllocatorTests.cpp
     tests/FramePipelineTests.cpp
-    src/app/gpu/InitSteps.cpp
-    src/app/entry/DeviceLostShutdown.cpp
     tests/BatchResidencyEvictionTests.cpp
     tests/PartWorldHistoryTests.cpp
     tests/TaaMathTests.cpp
     tests/MotionBlurMathTests.cpp
     tests/DepthOfFieldMathTests.cpp
     tests/VolumetricFogMathTests.cpp
-    src/render/pipeline/PartWorldHistory.cpp
     tests/CustomizerParsersTests.cpp
     tests/PlatformParentPoseTests.cpp
     tests/Rs2PlatformParentTests.cpp
@@ -1413,7 +1412,6 @@ add_executable(RailsimPlusTests
     tests/SceneEntitySerializeTests.cpp
     tests/PlatformStopInfoSerializeTests.cpp
     tests/RslLayoutSerializeTests.cpp
-    src/app/plugin_session/LayoutLoad.cpp
     tests/EditorSectionEditTests.cpp
     tests/EdgeSelectionTests.cpp
     tests/EdgeSplitMergeTests.cpp
@@ -1431,70 +1429,6 @@ add_executable(RailsimPlusTests
     tests/GameSettingsScreenModelTests.cpp
     tests/RenderSettingsRowsTests.cpp
     tests/RenderSettingsActionStubs.cpp
-    src/app/scene/TrainDoorSide.cpp
-    src/core/Frustum.cpp
-    src/app/gpu/SceneSlotCulling.cpp
-    src/app/scene/SceneSlotPool.cpp
-    src/app/scene/ParticleRequestCollector.cpp
-    src/app/scene/SceneTrainGroupCollector.cpp
-    src/app/scene/SceneCabinPivot.cpp
-    src/app/scene/SceneStopConstraintPhase.cpp
-    src/app/scene/SceneRouteReservationPhase.cpp
-    src/app/scene/StaticInstanceKey.cpp
-    src/app/scene/StaticMeshVariantSet.cpp
-    src/app/scene/StaticHeadlightRoster.cpp
-    src/app/plugin_browser/PluginThumbnailRecipe.cpp
-    src/app/plugin_browser/TemplateThumbnailRecipe.cpp
-    src/app/plugin_browser/LayingSetPreviewStore.cpp
-    src/app/plugin_browser/TemplateImageStore.cpp
-    src/app/scene/StaticMeshVariantBake.cpp
-    src/app/scene/CamDistBandAssigner.cpp
-    src/app/scene/StaticBandedSceneryInstances.cpp
-    src/app/scene/ParsedPluginCache.cpp
-    src/app/scene/StaticMeshCache.cpp
-    src/app/scene/StationRunInfoDispatcher.cpp
-    src/app/ui/EditorViewportState.cpp
-    src/app/scene/SceneSceneryPicker.cpp
-    src/app/scene/SurfaceBoundsTracker.cpp
-    src/app/plugin_session/PluginSession.cpp
-    src/app/plugin_session/PreloadTextureSet.cpp
-    src/app/plugin_session/SceneMaterialOverrides.cpp
-    src/app/plugin_session/PluginSwitchTable.cpp
-    src/app/plugin_session/SharedStateAxes.cpp
-    src/app/plugin_session/RslJsonWriter.cpp
-    src/app/plugin_session/RslJsonFieldRounding.cpp
-    src/app/plugin_session/RslLayoutSerialize.cpp
-    src/app/plugin_session/LayoutDocumentState.cpp
-    src/app/plugin_session/AutoRecovery.cpp
-    src/app/plugin_session/RslLayoutLoad.cpp
-    src/app/plugin_session/PluginRootResolver.cpp
-    src/app/plugin_session/RslSceneCacheSerialize.cpp
-    src/app/plugin_session/RslRuntimeState.cpp
-    src/app/action/LayoutSavePath.cpp
-    src/app/action/LayoutPersistenceAction.cpp
-    src/app/action/LayoutPersistenceActionScene.cpp
-    src/app/action/ScenePanelViewModel.cpp
-    src/app/action/PluginInfoAction.cpp
-    src/app/action/SwitchList.cpp
-    src/app/action/EdgeSectionEditAction.cpp
-    src/app/action/EdgePropertyAction.cpp
-    src/app/action/StationDiaAction.cpp
-    src/app/action/PlatformRoutineAction.cpp
-    src/app/action/PlatformRoutineLayerAction.cpp
-    src/app/action/PlatformRoutineViewModel.cpp
-    src/app/action/DiaPanelPresentationBuilder.cpp
-    src/app/action/NodePropertyAction.cpp
-    src/app/action/TrackLayingAction.cpp
-    src/app/action/TrackLayingText.cpp
-    src/app/action/TrackLayingPreviewColor.cpp
-    src/app/ui/OverlayColorTuning.cpp
-    src/app/action/ToolCancelAction.cpp
-    src/app/action/EdgePick.cpp
-    src/app/action/SignalBlockAction.cpp
-    src/app/action/SignalBlockSignalEdit.cpp
-    src/app/action/SignalPluginRules.cpp
-    src/app/scene/SignalModelSet.cpp
-    src/app/action/GroupCommonSwitchSync.cpp
 )
 target_link_libraries(RailsimPlusTests PRIVATE RailsimPlusCore Catch2::Catch2WithMain)
 target_compile_definitions(RailsimPlusTests PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
@@ -1506,6 +1440,19 @@ if(MSVC)
     target_compile_options(RailsimPlusTests PRIVATE /W4 /utf-8)
 endif()
 add_test(NAME RailsimPlusTests COMMAND RailsimPlusTests)
+endif()
+
+# プリコンパイル済みヘッダ。多くの .cpp が読む重いヘッダ(spdlog・nlohmann/json・STL)だけを入れる。
+# <windows.h>・d3d12.h は全 .cpp に読ませるとマクロが名前とぶつかるため入れない。
+# ターゲットごとにコンパイル定義が違い、PCH を使い回すと不一致になるので、それぞれで作る。
+set(RS_PCH_HEADERS
+    <algorithm> <array> <chrono> <cmath> <cstdint> <filesystem> <functional> <map> <memory>
+    <optional> <string> <string_view> <unordered_map> <vector>
+    <nlohmann/json.hpp> <spdlog/spdlog.h>)
+target_precompile_headers(RailsimPlusCore PRIVATE ${RS_PCH_HEADERS})
+target_precompile_headers(RailsimPlus PRIVATE ${RS_PCH_HEADERS})
+if(RS_BUILD_TESTS)
+    target_precompile_headers(RailsimPlusTests PRIVATE ${RS_PCH_HEADERS})
 endif()
 
 # ポータブル版のパッケージ(install / CPack)

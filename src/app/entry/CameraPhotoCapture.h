@@ -10,7 +10,8 @@ namespace rmlui { class RmlUiCameraScreenView; }
 
 class CameraPhotoCapture {
 public:
-    void BeforeRender(App& app, rmlui::RmlUiCameraScreenView& view, bool otherCaptureRequested);
+    // 撮影を描画側へ頼んだフレームだけ true。
+    bool BeforeRender(App& app, rmlui::RmlUiCameraScreenView& view, bool otherCaptureRequested);
     void AfterRender(App& app, rmlui::RmlUiCameraScreenView& view, const Localization& localization);
 private:
     std::optional<workspace::CameraFinderRect> finder_;

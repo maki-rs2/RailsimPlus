@@ -122,6 +122,9 @@ void RmlUiLayoutFilesView::RegisterModel(Rml::DataModelConstructor& constructor)
     constructor.BindEventCallback("layout_name_submit",
                                   [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { SubmitName(); });
 
+    constructor.BindEventCallback("layout_new", [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) {
+        command_ = LayoutFilesCommand{LayoutFilesCommand::Kind::NewLayout, {}};
+    });
     constructor.BindEventCallback("layout_open_other",
                                   [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { OnOpenOther(); });
 

@@ -38,6 +38,8 @@ FreeType は FTL の全文、OpenAL Soft は本体の `COPYING` と同梱 pffft 
 |---|---|---|
 | `assets/fonts/NotoSansJP-VariableFont_wght.ttf` | Google Fonts(Noto Sans JP) | SIL OFL 1.1(`assets/fonts/OFL.txt`) |
 | `assets/sky/Landscape.png` | Poly Haven「lilienstein」を加工 | CC0 |
-| `assets/sounds/MouseUp.wav` | 作者自作 | 本プロジェクトと同じ(LGPL-2.1-only) |
 | `assets/ui/icons/` のうち Lucide 由来のアイコン(元データは `tools/ui/svg/`。`mode_train`・`mode_signal`・`radio_dot`・`toggle_knob`・`loading_train` は自作) | Lucide(lucide-icons/lucide)を白1色に加工 | ISC。一部は Feather 由来で MIT(`licenses/Lucide.txt`) |
 | `assets/ui/icons/loading_train.png` | 本プロジェクトでSVGを作図しInkscapeで書き出し(元データは `tools/ui/svg/loading_train.svg`) | 本プロジェクトと同じ(LGPL-2.1-only) |
+| `assets/sounds/ui/` の `click`・`toggle`・`tab_switch`・`confirm`・`node_place`・`delete`・`train_place`・`warning`(.wav) | Freesound の音を加工(作者と元の URL は `assets/sounds/ui/CREDITS.md`) | CC0 1.0 |
+| `assets/sounds/ui/shutter.wav`・`focus.wav` | Pixabay の音を加工(作者と元の URL は `assets/sounds/ui/CREDITS.md`) | Pixabay Content License。音声ファイル単体での再配布・販売は禁止 |
+| `assets/sounds/ui/error.wav` | 作者自作 | 本プロジェクトと同じ(LGPL-2.1-only) |

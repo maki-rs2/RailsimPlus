@@ -17,7 +17,7 @@ enum class LayoutFlowEffect {
     OpenSaveAs,         // 名前を入力する画面を開く
     ConfirmOverwrite,   // pathの上書きを聞く
     Save,               // pathへ保存する
-    Load,               // pathを読み込む。discardRecoveryなら読込に成功したあとで今の復元データを消す
+    Load,               // pathを読み込む(空なら新規レイアウトにする)。discardRecoveryなら今の復元データを消す
     Quit,               // 終了する。discardRecoveryなら今の復元データを消してから終わる
 };
 

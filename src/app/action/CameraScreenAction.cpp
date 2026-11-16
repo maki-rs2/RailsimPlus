@@ -8,7 +8,6 @@
 #include "../workspace/CameraScreenPresentation.h"
 
 namespace rs::app::camera_screen_action {
-void SetResolution(ToastQueue& queue, std::string_view) { NotifyNotImplemented(queue, "出力解像度の反映"); }
 void TakePhoto(workspace::CameraScreenPresentation& screen) { screen.RequestPhoto(); }
 bool FocusAtDepth(workspace::CameraScreenPresentation& screen, double depthM) {
     const std::size_t index = static_cast<std::size_t>(workspace::CameraScreenParameter::FocusDistance);

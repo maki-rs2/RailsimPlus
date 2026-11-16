@@ -1192,6 +1192,12 @@ img.layout-file-image {
     flex: 1 1 0dp;
 }
 
+/* ロードの下の行の新規レイアウト。ほかのボタンを右へ寄せたまま、これだけ左端に置く。 */
+.recovery-footer > button.layout-new-button {
+    margin-left: 0dp;
+    margin-right: auto;
+}
+
 /* 復元の画面のカードは、右端に復元とごみ箱を置く。 */
 .recovery-card-buttons {
     flex: none;
@@ -1381,6 +1387,8 @@ button.camera-photo { position: absolute; left: var(--pad-window); width: var(--
 .camera-readout.bottom-center { left: 60%; }
 .camera-readout.bottom-right { left: 80%; }
 .camera-readout-label { font-size: var(--font-size-small); line-height: var(--camera-label-height); margin-bottom: var(--gap-y); }
+/* 自動の欄は、7セグの上の名前の右に「AUTO」を添える(7セグには自動で決まった値が出る)。 */
+.camera-readout-auto { margin-left: var(--gap-x); }
 .camera-digits { display: flex; justify-content: center; }
 .camera-step { width: var(--camera-digit-height); height: var(--camera-digit-height); margin: 0dp var(--gap-x); flex: 0 0 auto; }
 .camera-digit { position: relative; flex: 0 0 auto; width: var(--camera-digit-width); max-width: 1.5vw; height: var(--camera-digit-height); margin-right: var(--border-width); }
@@ -1810,10 +1818,14 @@ button.browser-back {
     color: var(--text-secondary);
 }
 
-/* カード(プラグイン・フォルダ)はどのモードでもドラッグでき、複製を作る。列車モードでは編成の`+`へ、どのモードでも
-   フォルダのカード・パンくず・戻るボタンへ落とせる。幅はカード自身のインラインstyleなので複製にも付く。 */
+/* プラグインのカードはどのモードでもドラッグでき、複製を作る。列車モードでは編成の`+`へ落とせる。幅はカード自身の
+   インラインstyleなので複製にも付く。フォルダへの移動は未実装なので、フォルダのカードはドラッグしない。 */
 .browser-card {
     drag: clone;
+}
+
+.browser-card.browser-folder {
+    drag: none;
 }
 
 /* ドラッグ中のカードが乗っている、落とせる場所(フォルダのカード・パンくず・戻るボタン)。 */

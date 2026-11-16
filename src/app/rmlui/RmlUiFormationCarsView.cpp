@@ -255,7 +255,12 @@ void RmlUiFormationCarsView::OnDrop(Rml::Event&, const std::string& cardId, int 
         if (plan->payload.kind == PayloadKind::Plugin) {
             action.InsertCar(plan->defIndex, plan->slot, plan->payload.folderUtf8);
         } else if (plan->payload.kind == PayloadKind::Template) {
-            if (queue_ != nullptr) template_action::InsertFormationTemplate(*queue_, plan->payload.templateName);
+            // テンプレートの一覧と同じく、プラグインルートの登録順の先頭から読む。
+            if (queue_ != nullptr && browser_ != nullptr) {
+                const std::vector<std::string>& roots = browser_->Roots();
+                template_action::InsertFormationTemplate(*queue_, *refs_, roots.empty() ? std::string() : roots.front(),
+                                                         plan->payload.templateName, plan->defIndex, plan->slot);
+            }
         } else {
             // 元の車両の添字は、ドロップ時点の編成の並びに対するもの(ドラッグ中に並びが変わらない前提)。
             action.MoveCarToSlot(plan->defIndex, plan->payload.carIndex, plan->slot);

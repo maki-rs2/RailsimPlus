@@ -23,6 +23,13 @@ struct FormationCarSpec {
     std::vector<int32_t> switchOptions;
 };
 
+// 編成(defIndex)の車両carIndexへ、反転とスイッチ確定値を当てる。checkSwitchCountが真なら、
+// 確定値の件数とプラグイン側のDefineSwitch件数の食い違いを warnings へ記録する
+// (プラグインを読めなかった車両は件数が分からないので偽にする)。folder は警告の文言に使う。
+void ApplyFormationCarSpec(PluginSelector& selector, size_t defIndex, size_t carIndex, const std::string& folder,
+                           bool reverse, const std::vector<int32_t>& switchOptions, bool checkSwitchCount,
+                           std::vector<std::string>& warnings);
+
 // folder を AddPath で編成(defIndex)の末尾へ1両足し、反転とスイッチ確定値を適用する。
 // 保存済みスイッチ確定値の件数がプラグイン側のDefineSwitch件数と食い違う場合は
 // warnings へ記録するが、確定値は適用する(位置対応がずれうるため警告のみ)。

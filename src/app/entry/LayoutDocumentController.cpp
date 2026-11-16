@@ -7,7 +7,6 @@
 #include "MainWindow.h"
 #include "../gpu/App.h"
 #include "../action/LayoutPersistenceAction.h"
-#include "../action/RenderSettingsAction.h"
 #include "../plugin_session/LayoutFileCatalog.h"
 #include "../plugin_session/LayoutThumbnail.h"
 #include "../rmlui/RmlUiConfirmDialog.h"
@@ -26,21 +25,16 @@ using workspace::UnsavedChoice;
 
 namespace {
 
-std::string NameOrUntitled(const std::string& name, const Localization& localization) {
-    return name.empty() ? localization.Text("layout.document.untitled") : name;
-}
-
-std::string RecoveryCandidateName(const AutoRecoveryCandidate& candidate, const Localization& localization) {
-    if (!candidate.sourcePathUtf8.empty()) return LayoutNameFromPath(candidate.sourcePathUtf8);
-    return NameOrUntitled(candidate.displayNameUtf8, localization);
-}
-
 bool FileExists(const std::string& pathUtf8) {
     std::error_code error;
     return std::filesystem::exists(std::filesystem::path(rs::platform_text::Utf8ToWide(pathUtf8)), error) && !error;
 }
 
 } // namespace
+
+std::string LayoutDocumentController::NameOrUntitled(const std::string& name, const Localization& localization) {
+    return name.empty() ? localization.Text("layout.document.untitled") : name;
+}
 
 void LayoutDocumentController::Tick(const LayoutDocumentServices& services) {
     rmlui::RmlUiWorkspaceView* const view = services.rmlUi.WorkspaceView();
@@ -49,9 +43,15 @@ void LayoutDocumentController::Tick(const LayoutDocumentServices& services) {
     view->LayoutFiles().SetOwnerWindow(services.mainWindow.Handle());
     if (deferredLoad_.has_value()) {
         const DeferredLoad load = *std::exchange(deferredLoad_, std::nullopt);
-        loadFromFilesScreen_ = true;
-        loadingPathUtf8_ = load.pathUtf8;
-        services.action.RequestLoadLayout(load.pathUtf8, load.discardRecovery);
+        if (load.pathUtf8.empty()) {
+            // 新規。今のレイアウトの復元データは、識別子が新しいものへ替わる前に消す。
+            if (load.discardRecovery) services.action.DiscardCurrentRecovery();
+            services.action.NewLayout();
+        } else {
+            loadFromFilesScreen_ = true;
+            loadingPathUtf8_ = load.pathUtf8;
+            services.action.RequestLoadLayout(load.pathUtf8, load.discardRecovery);
+        }
     }
     if (std::exchange(startAfterRestoreFailure_, false)) services.action.NewLayout();
     TickRecoveryChoice(services);
@@ -119,88 +119,6 @@ void LayoutDocumentController::OnLayoutFinished(const FinishedLayoutResult& fini
     startAfterRestoreFailure_ = restoring;
 }
 
-void LayoutDocumentController::BeginRecoveryChoice(std::vector<AutoRecoveryCandidate> candidates,
-                                                   std::string startupLayoutPath) {
-    recoveryCandidates_ = std::move(candidates);
-    startupLayoutPath_ = std::move(startupLayoutPath);
-    recoveryChoicePending_ = true;
-}
-
-void LayoutDocumentController::TickRecoveryChoice(const LayoutDocumentServices& services) {
-    rmlui::RmlUiWorkspaceView& view = *services.rmlUi.WorkspaceView();
-    if (std::exchange(recoveryChoicePending_, false)) {
-        recoveryOpen_ = true;
-        RefreshRecoveryCards(services);
-        view.OpenOverlay(OverlayKind::Recovery);
-    }
-    if (!recoveryOpen_) return;
-
-    if (std::optional<std::size_t> index = std::exchange(discardAnswer_, std::nullopt)) {
-        if (*index < recoveryCandidates_.size()) {
-            services.action.DiscardRecovery(recoveryCandidates_[*index].guid);
-            recoveryCandidates_.erase(recoveryCandidates_.begin() + static_cast<std::ptrdiff_t>(*index));
-            RefreshRecoveryCards(services);
-        }
-        if (recoveryCandidates_.empty()) {
-            FinishRecoveryWithStart(false, services);
-            return;
-        }
-    }
-
-    const std::optional<rmlui::RecoveryCommand> command = view.Recovery().TakeCommand();
-    if (!command.has_value()) return;
-    switch (command->kind) {
-    case rmlui::RecoveryCommand::Kind::Restore:
-        if (command->index >= recoveryCandidates_.size()) break;
-        restoringRecovery_ = true;
-        services.action.RequestRestoreRecovery(recoveryCandidates_[command->index]);
-        recoveryOpen_ = false;
-        view.CloseOverlay(OverlayKind::Recovery);
-        break;
-    case rmlui::RecoveryCommand::Kind::Discard:
-        if (command->index < recoveryCandidates_.size()) ShowDiscardRecoveryConfirm(command->index, services);
-        break;
-    case rmlui::RecoveryCommand::Kind::NormalStart: FinishRecoveryWithStart(false, services); break;
-    case rmlui::RecoveryCommand::Kind::SafeMode: FinishRecoveryWithStart(true, services); break;
-    }
-}
-
-void LayoutDocumentController::RefreshRecoveryCards(const LayoutDocumentServices& services) {
-    std::vector<rmlui::RecoveryCardContent> cards;
-    for (const AutoRecoveryCandidate& candidate : recoveryCandidates_) {
-        cards.push_back({RecoveryCandidateName(candidate, services.localization),
-                         FormatLayoutFileTime(candidate.writeTime)});
-    }
-    services.rmlUi.WorkspaceView()->Recovery().SetCards(cards);
-}
-
-void LayoutDocumentController::ShowDiscardRecoveryConfirm(std::size_t index, const LayoutDocumentServices& services) {
-    rmlui::RmlUiConfirmDialog* const dialog = services.rmlUi.ConfirmDialog();
-    if (dialog == nullptr) return;
-    rmlui::ConfirmDialogContent content;
-    const std::string name = RecoveryCandidateName(recoveryCandidates_[index], services.localization);
-    content.message = std::vformat(services.localization.Text("layout.document.discard_recovery"),
-                                   std::make_format_args(name));
-    content.confirmLabel = services.localization.Text("layout.document.delete");
-    content.cancelLabel = services.localization.Text("layout.document.cancel");
-    content.danger = true;
-    content.onConfirm = [this, index] { discardAnswer_ = index; };
-    dialog->Open(std::move(content));
-}
-
-void LayoutDocumentController::FinishRecoveryWithStart(bool safeMode, const LayoutDocumentServices& services) {
-    recoveryOpen_ = false;
-    services.rmlUi.WorkspaceView()->CloseOverlay(OverlayKind::Recovery);
-    if (safeMode) {
-        ApplyRenderSettings(services.app, MakeSafeModeRenderSettings(services.userSettings));
-        services.action.NewLayout();
-    } else if (!startupLayoutPath_.empty()) {
-        services.action.RequestLoadLayout(startupLayoutPath_);
-    } else {
-        services.action.NewLayout();
-    }
-}
-
 void LayoutDocumentController::UpdateLoadingDisplay(const LayoutDocumentServices& services) {
     rmlui::RmlUiLoadingView& loading = services.rmlUi.WorkspaceView()->Loading();
     const bool busy = IsBusy(services);
@@ -256,6 +174,10 @@ void LayoutDocumentController::HandleFilesCommand(const LayoutDocumentServices& 
     case rmlui::LayoutFilesCommand::Kind::LoadFile:
         Apply(flow_.RequestLoad(command->value, action.DocumentViewModel().dirty, action.DocumentSavedPath()),
               services);
+        break;
+    case rmlui::LayoutFilesCommand::Kind::NewLayout:
+        // 新規も、未保存の変更を聞いてから切り替える流れはロードと同じなので、空のパスとしてロードに乗せる。
+        Apply(flow_.RequestLoad({}, action.DocumentViewModel().dirty, action.DocumentSavedPath()), services);
         break;
     case rmlui::LayoutFilesCommand::Kind::SaveName: {
         const std::string pathUtf8 = action.ResolveSavePath(command->value);
