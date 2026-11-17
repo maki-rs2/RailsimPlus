@@ -6,7 +6,10 @@
 #include <vector>
 
 #include "../../../core/Math.h"
-#include "../../schema/PluginSchema.h"
+#include "../../schema/LensFlareSchema.h"
+#include "../../schema/TriggerInfo.h"
+
+namespace rs::legacy_pi { struct PluginDefinition; }
 
 namespace rs::app {
 

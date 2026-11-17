@@ -97,7 +97,7 @@ float4 SampleLandscape(TextureCube<float4> landscapeCube, float3 dir, float3 sun
     float3 contrasted = ApplyLandscapeContrast(texel.rgb / texel.a) * texel.a;
     float luma = dot(contrasted, kRec709LuminanceWeights);
     float3 albedo = lerp(luma.xxx, contrasted, gLandscapeSaturation) * gLandscapeTint * gLandscapeBrightness;
-    float3 sunColor = SunColorFromTransmittance(gTransmittanceLut, gLinearClamp, sunDir);
+    float3 sunColor = SunLightFromTransmittance(gTransmittanceLut, gLinearClamp, sunDir);
     float3 normal = LandscapeSurfaceNormal(dir);
     float skyViewFactor = 0.5 * (1.0 + normal.y);
     float3 light = sunColor * saturate(dot(normal, sunDir)) +

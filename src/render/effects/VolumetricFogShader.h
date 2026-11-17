@@ -77,7 +77,7 @@ float SunVisibility(float3 wpos, float viewDepth) {
     if (clip.z < 0.0 || clip.z > 1.0) return 1.0;
     float2 uv = float2(clip.x * 0.5 + 0.5, 0.5 - clip.y * 0.5);
     if (any(uv < 0.0) || any(uv > 1.0)) return 1.0;
-    Texture2DArray<float> shadowMap = ResourceDescriptorHeap[gShadowIndex.x];
+    Texture2DArray<float> shadowMap = gBindlessTex2DArrR[gShadowIndex.x];
     float visibility = shadowMap.SampleCmpLevelZero(gShadowSmp, float3(uv, cascade), clip.z);
     return 1.0 - (1.0 - visibility) * distanceFade;
 }
@@ -85,19 +85,19 @@ float SunVisibility(float3 wpos, float viewDepth) {
 [numthreads(4, 4, 4)]
 void CSInject(uint3 id : SV_DispatchThreadID) {
     if (any(id >= gGrid)) return;
-    RWTexture3D<float4> output = ResourceDescriptorHeap[gScatterUavIdx];
+    RWTexture3D<float4> output = gBindlessRwTex3D[gScatterUavIdx];
     float3 unit = (float3(id) + 0.5 + gJitter.xyz) / float3(gGrid);
     float viewDepth = SliceDepth(unit.z);
     float3 ray = CellRay(unit.xy);
     float3 wpos = gCameraAndDistance.xyz + ray * viewDepth;
     float density = FogDensity(wpos.y);
 
-    TextureCube<float4> diffuseCube = ResourceDescriptorHeap[gDiffuseCubeIdx];
+    TextureCube<float4> diffuseCube = gBindlessTexCube[gDiffuseCubeIdx];
     float3 ambient = gAmbientScale * diffuseCube.SampleLevel(gLinearSmp, float3(0.0, 1.0, 0.0), 0).rgb *
                      IblExposureCorrection();
 
-    Texture2D<float4> transmittance = ResourceDescriptorHeap[gTransmittanceIdx];
-    float3 sunColor = SunColorFromTransmittance(transmittance, gLinearSmp, gToSun.xyz) * AdaptationGainFromTexture();
+    Texture2D<float4> transmittance = gBindlessTex2D[gTransmittanceIdx];
+    float3 sunColor = SunLightFromTransmittance(transmittance, gLinearSmp, gToSun.xyz) * AdaptationGainFromTexture();
     float cosTheta = dot(normalize(ray), gToSun.xyz);
     float3 sun = kPi * sunColor * VolumetricFogPhase(cosTheta, gForward.w) * SunVisibility(wpos, viewDepth) * gToSun.w;
 
@@ -113,7 +113,7 @@ void CSInject(uint3 id : SV_DispatchThreadID) {
             float3 prevUnit = float3(prevNdc.x * 0.5 + 0.5, 0.5 - prevNdc.y * 0.5,
                                      VolumetricFogSliceUnit(prevClip.w, gCameraAndDistance.w));
             if (all(prevUnit.xy >= 0.0) && all(prevUnit.xy <= 1.0) && prevClip.w <= gCameraAndDistance.w) {
-                Texture3D<float4> previous = ResourceDescriptorHeap[gHistorySrvIdx];
+                Texture3D<float4> previous = gBindlessTex3D[gHistorySrvIdx];
                 history = previous.SampleLevel(gLinearSmp, prevUnit, 0);
                 weight = gHistoryWeight;
             }
@@ -130,8 +130,8 @@ float ScatterIntegral(float extinction, float length) {
 [numthreads(8, 8, 1)]
 void CSIntegrate(uint3 id : SV_DispatchThreadID) {
     if (any(id.xy >= gGrid.xy)) return;
-    Texture3D<float4> scatter = ResourceDescriptorHeap[gScatterSrvIdx];
-    RWTexture3D<float4> output = ResourceDescriptorHeap[gIntegratedUavIdx];
+    Texture3D<float4> scatter = gBindlessTex3D[gScatterSrvIdx];
+    RWTexture3D<float4> output = gBindlessRwTex3D[gIntegratedUavIdx];
     float2 unitXy = (float2(id.xy) + 0.5) / float2(gGrid.xy);
     float rayLength = length(CellRay(unitXy));
     float3 accumulated = float3(0.0, 0.0, 0.0);

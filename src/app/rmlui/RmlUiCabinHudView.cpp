@@ -1,12 +1,16 @@
 #include "RmlUiCabinHudView.h"
 
+#include <cmath>
+
 #include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/DataStructHandle.h>
 #include <RmlUi/Core/Event.h>
 #include <RmlUi/Core/Types.h>
 
 #include "RmlUiUpdateVariable.h"
+#include "../../world/alignment/GuidJson.h"
 #include "../action/FormationAction.h"
+#include "../workspace/TrainInfoCardCatalog.h"
 
 namespace rs::app::rmlui {
 
@@ -19,6 +23,11 @@ struct CabinHudModel {
     Rml::String nextStation;
     Rml::String nextPlatform;
     int speedKmh = 0;
+    // 速度操作の対象列車(16進)。-/+のボタンが持つ値で、押しっぱなしの連続入力は編成情報カードの処理が受け持つ。
+    Rml::String trainId;
+    Rml::String speedDirection;
+    int targetKmh = 0;
+    Rml::String speedClass;
     bool operator==(const CabinHudModel&) const = default;
 };
 
@@ -44,6 +53,10 @@ void RmlUiCabinHudView::RegisterModel(Rml::DataModelConstructor& constructor) {
         handle.RegisterMember("nextStation", &CabinHudModel::nextStation);
         handle.RegisterMember("nextPlatform", &CabinHudModel::nextPlatform);
         handle.RegisterMember("speedKmh", &CabinHudModel::speedKmh);
+        handle.RegisterMember("trainId", &CabinHudModel::trainId);
+        handle.RegisterMember("speedDirection", &CabinHudModel::speedDirection);
+        handle.RegisterMember("targetKmh", &CabinHudModel::targetKmh);
+        handle.RegisterMember("speedClass", &CabinHudModel::speedClass);
     }
     constructor.Bind(kHudKey, model_.get());
 
@@ -66,6 +79,12 @@ void RmlUiCabinHudView::Refresh() {
     next.nextStation = viewModel.nextStation;
     next.nextPlatform = viewModel.nextPlatform;
     next.speedKmh = viewModel.speedKmh;
+    if (viewModel.active) {
+        next.trainId = rs::world::GuidToHex(viewModel.trainId);
+        next.speedDirection = workspace::GetSpeedPreset(workspace::DirectionOfTarget(viewModel.targetSpeedKmh)).key;
+        next.targetKmh = static_cast<int>(std::lround(viewModel.targetSpeedKmh));
+        next.speedClass = workspace::GetRunStateStyle(viewModel.diaState).colorClass;
+    }
     UpdateVariable(modelHandle_, kHudKey, *model_, next);
 }
 

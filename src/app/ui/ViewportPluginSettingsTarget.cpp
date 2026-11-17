@@ -15,6 +15,7 @@
 #include "OverlayColorTuning.h"
 #include "OverlayLineTuning.h"
 #include "ViewportInput.h"
+#include "../../editor/tool/Editor.h"
 
 namespace rs::app {
 namespace {

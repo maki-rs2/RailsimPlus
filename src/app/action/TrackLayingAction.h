@@ -3,7 +3,9 @@
 #include <cstddef>
 #include <string>
 
-#include "../../editor/tool/Editor.h"
+#include "../../editor/tool/EditorTypes.h"
+
+namespace rs::editor { class Editor; }
 
 namespace rs::app {
 

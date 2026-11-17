@@ -74,7 +74,7 @@ void ApplyAerialPerspective(inout SurfaceShading shading, float3 wpos) {
     float atlasWidth = sliceCount * tileSize;
     float inTileU = ApSubUvFromUnit(unitX, tileSize) * tileSize;
     float v = ApSubUvFromUnit(unitY, tileSize);
-    Texture2D<float4> lut = ResourceDescriptorHeap[gApIndex.x];
+    Texture2D<float4> lut = gBindlessTex2D[gApIndex.x];
     float4 fogA = lut.SampleLevel(gIblSmp, float2((slice0 * tileSize + inTileU) / atlasWidth, v), 0);
     float4 fogB = lut.SampleLevel(gIblSmp, float2((slice1 * tileSize + inTileU) / atlasWidth, v), 0);
     float4 fog = lerp(fogA, fogB, blend);
@@ -113,7 +113,7 @@ float HeightFogOpticalDepth(float density, float heightScale, float baseHeight, 
 float3 VolumetricFogSunLight(float3 dir) {
     float3 toSun = normalize(-gLightDir.xyz);
     float phase = VolumetricFogPhase(dot(dir, toSun), gVolumetricFogParams.y);
-    return kPi * MeshSunColor(toSun) * AdaptationGainFromTexture() * phase * gVolumetricFogParams.z;
+    return kPi * MeshSunLight(toSun) * AdaptationGainFromTexture() * phase * gVolumetricFogParams.z;
 }
 
 void ApplyVolumetricFog(inout SurfaceShading shading, float3 wpos) {
@@ -123,7 +123,7 @@ void ApplyVolumetricFog(inout SurfaceShading shading, float3 wpos) {
     float maxDistance = gVolumetricFogParams.x;
     float2 ndc = clip.xy / clip.w;
     float3 unit = float3(ndc.x * 0.5 + 0.5, 0.5 - ndc.y * 0.5, VolumetricFogSliceUnit(viewDepth, maxDistance));
-    Texture3D<float4> integrated = ResourceDescriptorHeap[gVolumetricFogIndex.x];
+    Texture3D<float4> integrated = gBindlessTex3D[gVolumetricFogIndex.x];
     float4 grid = integrated.SampleLevel(gIblSmp, unit, 0);
 
     float farTransmittance = 1.0;

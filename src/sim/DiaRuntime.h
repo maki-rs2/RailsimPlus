@@ -32,7 +32,7 @@
 #include "../world/alignment/TrackGraph.h"
 #include "../world/scene/TrainRunInfoRegistry.h"
 #include "../world/scene/TrainTagRegistry.h"
-#include "../world/scene/SceneEntity.h"
+#include "../world/scene/TrainId.h"
 #include "SimTuning.h"
 
 namespace rs::sim {

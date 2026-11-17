@@ -19,7 +19,7 @@
 namespace rs::app {
 
 bool FrameRenderer::InitVolumetricFog(const rs::rhi::Device& device, const rs::rhi::SrvHeap& srvHeap) {
-    if (!volumetricFog_.Init(device, srvHeap, kSrvLayout.volumetricFog) || !volumetricFogSky_.Init(device)) {
+    if (!volumetricFog_.Init(device, srvHeap, kSrvLayout.volumetricFog) || !volumetricFogSky_.Init(device, srvHeap)) {
         spdlog::warn("[volumetric_fog] ボリュメトリックフォグを初期化できなかったため、使えません");
         return false;
     }

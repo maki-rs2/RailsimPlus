@@ -41,7 +41,7 @@ cbuffer Constants : register(b0) {
 
 [numthreads(4, 4, 4)]
 void CSWrite(uint3 id : SV_DispatchThreadID) {
-    RWTexture3D<float4> output = ResourceDescriptorHeap[gOutputIdx];
+    RWTexture3D<float4> output = gBindlessRwTex3D[gOutputIdx];
     uint width, height, depth;
     output.GetDimensions(width, height, depth);
     if (any(id >= uint3(width, height, depth))) return;
@@ -50,8 +50,8 @@ void CSWrite(uint3 id : SV_DispatchThreadID) {
 
 [numthreads(4, 4, 4)]
 void CSDouble(uint3 id : SV_DispatchThreadID) {
-    Texture3D<float4> input = ResourceDescriptorHeap[gInputIdx];
-    RWTexture3D<float4> output = ResourceDescriptorHeap[gOutputIdx];
+    Texture3D<float4> input = gBindlessTex3D[gInputIdx];
+    RWTexture3D<float4> output = gBindlessRwTex3D[gOutputIdx];
     uint width, height, depth;
     output.GetDimensions(width, height, depth);
     if (any(id >= uint3(width, height, depth))) return;

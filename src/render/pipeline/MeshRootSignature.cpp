@@ -2,6 +2,7 @@
 // MeshPipelineSharedState.cpp から分離。
 
 #include "MeshPipelineSharedState.h"
+#include "../resource/BindlessDescriptors.inl"
 
 #include <spdlog/spdlog.h>
 
@@ -10,12 +11,8 @@ using Microsoft::WRL::ComPtr;
 namespace rs::render {
 
 bool MeshPipelineSharedState::CreateMeshRootSignature(ID3D12Device* device) {
-    // ルートシグネチャ: b0 = CBV (root descriptor), s0 = static sampler。
-    // Bindless方式: base/normal/orm固定3レンジやgTexArr全域レンジは持たない。シェーダは
-    // D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED(SM6.6)により
-    // 現在バインド中のsrvHeap_全体をResourceDescriptorHeap[]で直接参照する
-    // (テクスチャ添字はMeshConstants.texIndex/MatData.texへCPU側が絶対値で
-    // 書き込む。AbsoluteTexIndex()参照)。
+    // テクスチャは現在のヒープの先頭を指すテーブルから絶対番号で引く。
+    // MeshConstants.texIndex/MatData.tex には AbsoluteTexIndex() の値を渡す。
 
     // 半透明パス用 SRV レンジ: param1 = space1 t0-t1（gTriMat / gMats）—
     // root SRV でも表現できるが構造化バッファ2本をまとめて張るためテーブルにする。
@@ -43,7 +40,9 @@ bool MeshPipelineSharedState::CreateMeshRootSignature(ID3D12Device* device) {
     overrideRange.RegisterSpace = 4;
     overrideRange.OffsetInDescriptorsFromTableStart = 0;
 
-    D3D12_ROOT_PARAMETER params[6] = {};
+    const BindlessDescriptorRanges ranges = MakeBindlessDescriptorRanges();
+    D3D12_ROOT_PARAMETER params[kBindlessRootParam + 1] = {};
+    params[kBindlessRootParam] = MakeBindlessDescriptorTable(ranges);
     params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     params[0].Descriptor.ShaderRegister = 0;
     params[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
@@ -119,12 +118,11 @@ bool MeshPipelineSharedState::CreateMeshRootSignature(ID3D12Device* device) {
     D3D12_STATIC_SAMPLER_DESC samplers[4] = {samp, iblSamp, shadowSamp, pointSamp};
 
     D3D12_ROOT_SIGNATURE_DESC rs = {};
-    rs.NumParameters = 6;
+    rs.NumParameters = _countof(params);
     rs.pParameters = params;
     rs.NumStaticSamplers = 4;
     rs.pStaticSamplers = samplers;
-    rs.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-               D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
+    rs.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
     ComPtr<ID3DBlob> sig, err;
     if (FAILED(D3D12SerializeRootSignature(&rs, D3D_ROOT_SIGNATURE_VERSION_1, &sig,

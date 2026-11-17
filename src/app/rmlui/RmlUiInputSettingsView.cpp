@@ -13,7 +13,6 @@
 #include "RmlUiDataEventArgs.h"
 #include "RmlUiKeyboardRouter.h"
 #include "../action/GameSettingsScreenModel.h"
-#include "../action/SettingsPlaceholderAction.h"
 #include "../action/InputBindingAction.h"
 #include "../action/ToastQueue.h"
 #include "../input/InputBindings.h"
@@ -61,10 +60,7 @@ input::KeyModifiers CurrentModifiers() {
 } // namespace
 
 RmlUiInputSettingsView::RmlUiInputSettingsView(ToastQueue& queue)
-    : queue_(queue) {
-    // マウス操作の切り替えは実設定につながっていない仮の値。
-    presentation_.mouseMode_ = "wasd";
-}
+    : queue_(queue) {}
 
 void RmlUiInputSettingsView::RegisterModel(Rml::DataModelConstructor& constructor) {
     Rml::StructHandle<InputSettingsRow> row = constructor.RegisterStruct<InputSettingsRow>();
@@ -83,7 +79,6 @@ void RmlUiInputSettingsView::RegisterModel(Rml::DataModelConstructor& constructo
     handle.RegisterMember("resetAllLabel", &InputSettingsPresentation::resetAllLabel_);
     handle.RegisterMember("warningLabel", &InputSettingsPresentation::warningLabel_);
     handle.RegisterMember("unassignedLabel", &InputSettingsPresentation::unassignedLabel_);
-    handle.RegisterMember("note", &InputSettingsPresentation::note_);
     handle.RegisterMember("mouseChoices", &InputSettingsPresentation::mouseChoices_);
     handle.RegisterMember("rows", &InputSettingsPresentation::rows_);
     constructor.Bind("gsInput", &presentation_);
@@ -94,7 +89,11 @@ void RmlUiInputSettingsView::RegisterModel(Rml::DataModelConstructor& constructo
     });
     constructor.BindEventCallback("gs_mouse_mode", [this](Rml::DataModelHandle, Rml::Event&,
         const Rml::VariantList& arguments) {
-        game_settings_action::SetMouseOperation(queue_, FirstEventArgument<std::string>(arguments, ""));
+        if (!refs_.has_value()) return;
+        const ViewOperationMode mode = ViewOperationModeFromKey(FirstEventArgument<std::string>(arguments, ""));
+        GameSettingsAction(*refs_).SetViewOperation(mode);
+        presentation_.mouseMode_ = ViewOperationModeKey(refs_->userSettings.viewOperation);
+        modelHandle_.DirtyVariable("gsInput");
     });
     constructor.BindEventCallback("gs_input_reset", [this](Rml::DataModelHandle, Rml::Event&,
         const Rml::VariantList& arguments) {
@@ -109,6 +108,7 @@ void RmlUiInputSettingsView::RefreshTexts(const Localization& localization) {
     if (!refs_.has_value()) return;
     presentation_ = BuildInputSettingsPresentation(
         presentation_, localization, InputBindingAction(refs_->userSettings, refs_->inputSource).Bindings());
+    presentation_.mouseMode_ = ViewOperationModeKey(refs_->userSettings.viewOperation);
     if (modelHandle_) modelHandle_.DirtyVariable("gsInput");
 }
 

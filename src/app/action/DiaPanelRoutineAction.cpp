@@ -109,7 +109,7 @@ void ReorderElement(const Refs& refs, const Request& request) {
 }
 
 void ChangeOperation(const Refs& refs, const Request& request) {
-    const std::optional<rs::world::DiaAction> operation = workspace::DiaActionFromKey(request.value_);
+    const std::optional<rs::world::DiaAction> operation = rs::world::DiaActionFromKey(request.value_);
     if (!operation) return;
     WithElement(refs, request, request.rowIndex_,
                 [operation](PlatformRoutineAction& action, const RoutineLayerRef& ref, const PlatformRoutineElement& element, std::size_t index) {

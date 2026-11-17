@@ -37,6 +37,7 @@
 #include "../../world/alignment/TrackGraph.h"
 #include "../../world/time/MoonPosition.h"
 #include "../../world/time/SolarPosition.h"
+#include "../../editor/tool/Editor.h"
 
 namespace rs::app {
 
@@ -218,6 +219,7 @@ struct PhotoRenderInputs {
     std::optional<rs::render::OutputRect> finderRect;               // ファインダーの枠(バックバッファのピクセル座標)
     std::optional<rs::render::DepthOfFieldCamera> dofCamera;        // 撮影カメラの被写界深度の値
     std::optional<float> exposureMultiplier;                        // トーンマップの露出へ掛ける撮影カメラの倍率
+    std::optional<float> shutterSeconds;                            // モーションブラーの長さを連動させるシャッター速度[秒]
     bool luminanceMeter = false;                                    // ISO オートの測光を走らせる
 };
 

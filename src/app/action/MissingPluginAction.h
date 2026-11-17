@@ -15,7 +15,8 @@
 
 #include "ActionError.h"
 #include "../plugin_session/MissingPluginCatalog.h"
-#include "../../plugins/schema/PluginSchema.h"
+
+namespace rs::legacy_pi { enum class PluginType; }
 
 namespace rs::editor {
 class Editor;

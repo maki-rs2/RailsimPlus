@@ -11,9 +11,11 @@
 #include <string>
 #include <vector>
 
-#include "../schema/PluginSchema.h"
 #include "../../render/mesh/Mesh.h"
 #include "../../world/alignment/TrackGraph.h"
+#include "runtime/TrackingMoveSolve.h"
+
+namespace rs::legacy_pi { struct PluginDefinition; struct PierDef; struct RailInterval; struct LineDef; }
 
 namespace rs::legacy_plugin {
 
@@ -147,6 +149,6 @@ rs::render::Mesh BuildLineWireMesh(const rs::legacy_pi::LineDef& lineDef,
                                    const std::wstring& baseDir, const rs::core::Vec3& baseA,
                                    const rs::core::Vec3& upA, const rs::core::Vec3& baseB,
                                    const rs::core::Vec3& upB, std::vector<std::string>& log,
-                                   int& missingTex);
+                                   int& missingTex, TrackingTargetTable* trackingTargets = nullptr);
 
 } // namespace rs::legacy_plugin

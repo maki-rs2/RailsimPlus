@@ -14,8 +14,10 @@
 
 #include "../../render/effects/LensFlareSwitches.h"
 #include "../../render/postprocess/PostProcessPlan.h"
+#include "../../render/postprocess/TonemapMath.h"
 #include "../locale/Localization.h"
 #include "../plugin_browser/BrowserCardSizeCatalog.h"
+#include "ViewOperationMode.h"
 
 namespace rs::app {
 
@@ -69,7 +71,7 @@ struct UserSettingsData {
     // 読めないときは真。起動時の --setting heightFog で上書きできる。
     bool heightFog = true;
     // トーンマップの曲線の名前(settings.datには"tonemap"で保存。名前はTonemapModeName)。
-    std::string tonemapMode = "triplesection";
+    std::string tonemapMode = rs::render::TonemapModeName(rs::render::kDefaultTonemapMode);
     // シャドウ品質(settings.datには"shadowQuality"で保存。文字列はShadowQuality.hのkShadowQualityChoices)。
     // 読めない値は既定(低)になる。
     std::string shadowQuality = "low";
@@ -108,6 +110,9 @@ struct UserSettingsData {
     // "cameraFinderHorizon"で保存)。読めないときは出す。
     bool cameraFinderGrid = true;
     bool cameraFinderHorizon = true;
+    // 俯瞰カメラの視点操作(settings.datには"viewOperation"で保存。文字列はViewOperationMode.hのkViewOperationChoices)。
+    // 読めない値は既定(WASD)になる。
+    ViewOperationMode viewOperation = kDefaultViewOperationMode;
     // 読み込んだsettings.datの内容そのもの。このバージョンが知らないキーを、保存で消さないために持つ。
     nlohmann::json loadedDocument = nlohmann::json::object();
     // JSONには保存せず、設定を読み込んだファイルを次回の保存先として保持する。

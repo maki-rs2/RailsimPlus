@@ -1,5 +1,5 @@
 //
-// DepthOfFieldShader.h - フォトモードの被写界深度の HLSL(DXC、SM6.6。ResourceDescriptorHeap[] で SRV を番号から引く)
+// DepthOfFieldShader.h - フォトモードの被写界深度の HLSL(DXC、SM6.0。bindless テーブルの配列で SRV を番号から引く)
 //
 // パスは6段(2 のタイルの最大は横・縦の2回に分ける)。1) プリフィルタ(半解像度。色と符号付きのぼけの半径) 2) 近景のぼけの最大(タイル。横→縦の2回)
 // 3) 周囲 3x3 のタイルの最大 4) 遠景のギャザー(半解像度) 5) 近景のギャザー(半解像度) 6) 合成(フル解像度)。
@@ -62,7 +62,7 @@ float InterleavedGradientNoise(float2 pixel, uint frame) {
 // 錯乱円の直径 c = f^2 / (N (s - f)) * |d - s| / d(DepthOfFieldMath.h の CocDiameterMm と同じ式)。
 // d は視線方向の奥行き。深度が遠方面(Reversed-Z のクリア値 0)の画素は d = 無限大で、c = f^2 / (N (s - f))。
 float SignedCocRadius(int2 pixel) {
-    Texture2D<float> depthTex = ResourceDescriptorHeap[gDepthIdx];
+    Texture2D<float> depthTex = gBindlessTex2DR[gDepthIdx];
     float depth = depthTex.Load(int3(pixel, 0));
     float scale = gFocalMm * gFocalMm / (gAperture * (gFocusMm - gFocalMm));
     float coc = scale;
@@ -82,7 +82,7 @@ float SignedCocRadius(int2 pixel) {
 // 1) プリフィルタ。2x2 のフル解像度の画素から、色は輝度の重みで平均し、ぼけの半径は、近景が1つでもあれば最も負の値、
 // 無ければ平均にする。
 float4 PSPrefilter(VSOut input) : SV_Target {
-    Texture2D<float4> colorTex = ResourceDescriptorHeap[gColorIdx];
+    Texture2D<float4> colorTex = gBindlessTex2D[gColorIdx];
     int2 p = int2(input.pos.xy);
     int2 maxPixel = int2(gSize) - 1;
     float3 sum = float3(0.0, 0.0, 0.0);
@@ -107,7 +107,7 @@ float NearMagnitude(float signedCocFull) { return max(-signedCocFull, 0.0) * 0.5
 
 // 2) タイルごとの最大の近景のぼけ。横(半解像度の横をタイル幅に縮めた RT へ)→ 縦(タイルの RT へ)の2回に分ける。
 float2 PSTilePartial(VSOut input) : SV_Target {
-    Texture2D<float4> prefilterTex = ResourceDescriptorHeap[gPrefilterIdx];
+    Texture2D<float4> prefilterTex = gBindlessTex2D[gPrefilterIdx];
     int2 p = int2(input.pos.xy);
     int maxX = int(gHalfSize.x) - 1;
     float best = 0.0;
@@ -119,7 +119,7 @@ float2 PSTilePartial(VSOut input) : SV_Target {
 }
 
 float2 PSTileMax(VSOut input) : SV_Target {
-    Texture2D<float2> partialTex = ResourceDescriptorHeap[gPartialIdx];
+    Texture2D<float2> partialTex = gBindlessTex2DRg[gPartialIdx];
     int2 p = int2(input.pos.xy);
     int maxY = int(gHalfSize.y) - 1;
     float best = 0.0;
@@ -132,7 +132,7 @@ float2 PSTileMax(VSOut input) : SV_Target {
 
 // 3) 周囲 3x3 のタイルの最大。画素へ届く近景のぼけは、自分のタイルと隣のタイルのどれかから来る。
 float2 PSNeighborMax(VSOut input) : SV_Target {
-    Texture2D<float2> tileTex = ResourceDescriptorHeap[gTileIdx];
+    Texture2D<float2> tileTex = gBindlessTex2DRg[gTileIdx];
     int2 p = int2(input.pos.xy);
     int2 maxTile = int2(ceil(gHalfSize / float(gTileSize))) - 1;
     float best = 0.0;
@@ -155,7 +155,7 @@ float2 DiskOffset(uint i, float radius, float phase) {
 // 4) 遠景のギャザー。自分の遠景のぼけの半径の円盤で拾う。点の重みは、その点自身の遠景のぼけの半径が距離に届くかで決め、
 // 手前の点(近景・ピントが合った点)は拾わない。
 float4 PSFar(VSOut input) : SV_Target {
-    Texture2D<float4> prefilterTex = ResourceDescriptorHeap[gPrefilterIdx];
+    Texture2D<float4> prefilterTex = gBindlessTex2D[gPrefilterIdx];
     int2 p = int2(input.pos.xy);
     int2 maxPixel = int2(gHalfSize) - 1;
     float4 center = prefilterTex.Load(int3(p, 0));
@@ -180,8 +180,8 @@ float4 PSFar(VSOut input) : SV_Target {
 // 5) 近景のギャザー。周囲のタイルの最大のぼけの半径の円盤で拾う。点の重みは、その点自身の近景のぼけの半径が距離に
 // 届くかで決める。rgb は重みで平均した色、a は円盤のうち近景に覆われた割合(縁が外へ柔らかく広がる)。
 float4 PSNear(VSOut input) : SV_Target {
-    Texture2D<float4> prefilterTex = ResourceDescriptorHeap[gPrefilterIdx];
-    Texture2D<float2> neighborTex = ResourceDescriptorHeap[gNeighborIdx];
+    Texture2D<float4> prefilterTex = gBindlessTex2D[gPrefilterIdx];
+    Texture2D<float2> neighborTex = gBindlessTex2DRg[gNeighborIdx];
     int2 p = int2(input.pos.xy);
     int2 maxPixel = int2(gHalfSize) - 1;
     float4 center = prefilterTex.Load(int3(p, 0));
@@ -221,9 +221,9 @@ float4 SampleHalfBilinear(Texture2D<float4> tex, int2 fullPixel) {
 // 6) 合成。遠景のぼけの画素は、半解像度の遠景の結果と混ぜる(混ぜる割合は自分のぼけの半径で決める)。
 // 近景の画素は遠景のぼけと混ぜず、その上に近景の結果をカバー率で重ねる。
 float4 PSComposite(VSOut input) : SV_Target {
-    Texture2D<float4> colorTex = ResourceDescriptorHeap[gColorIdx];
-    Texture2D<float4> farTex = ResourceDescriptorHeap[gFarIdx];
-    Texture2D<float4> nearTex = ResourceDescriptorHeap[gNearIdx];
+    Texture2D<float4> colorTex = gBindlessTex2D[gColorIdx];
+    Texture2D<float4> farTex = gBindlessTex2D[gFarIdx];
+    Texture2D<float4> nearTex = gBindlessTex2D[gNearIdx];
     int2 p = int2(input.pos.xy);
     float3 color = Sanitize(colorTex.Load(int3(p, 0)).rgb);
     float cocFull = SignedCocRadius(p);

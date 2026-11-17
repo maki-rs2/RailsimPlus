@@ -23,17 +23,15 @@ void DrawLoadProgressOverlay(const LoadProgressOverlayContext& ctx) {
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
     ImGui::Begin("##LoadProgressOverlay", nullptr, overlayFlags);
 
-    const size_t total = ctx.sceneRenderer.SyncJobPhaseTotal();
-    const size_t done = ctx.sceneRenderer.SyncJobPhaseDone();
-    const float fraction = total > 0 ? static_cast<float>(done) / static_cast<float>(total) : 1.0f;
+    const double fraction = ctx.sceneRenderer.SyncJobOverallFraction();
     const std::string label = LoadPhaseLabel(ctx.sceneRenderer.SyncJobPhase(), ctx.localization);
 
     const ImVec2 boxSize(420.0f, 90.0f);
     ImGui::SetCursorPos(ImVec2((viewport->Size.x - boxSize.x) * 0.5f, (viewport->Size.y - boxSize.y) * 0.5f));
     ImGui::BeginChild("##LoadProgressBox", boxSize, true, ImGuiWindowFlags_NoScrollbar);
     ImGui::TextUnformatted(label.c_str());
-    ImGui::ProgressBar(fraction, ImVec2(-1, 0));
-    ImGui::Text("%zu / %zu エンティティ", done, total);
+    ImGui::ProgressBar(static_cast<float>(fraction), ImVec2(-1, 0));
+    ImGui::TextUnformatted(LoadProgressPercentText(fraction, ctx.localization).c_str());
     ImGui::EndChild();
 
     ImGui::End();

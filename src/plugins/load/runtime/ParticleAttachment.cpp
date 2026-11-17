@@ -7,6 +7,7 @@
 #include "../../../platform/text/Encoding.h"
 #include "../PluginPaths.h"
 #include "SoundEffectAttachment.h"
+#include "../../schema/PluginSchema.h"
 
 namespace rs::app {
 

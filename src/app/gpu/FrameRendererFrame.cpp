@@ -3,6 +3,7 @@
 #include <spdlog/spdlog.h>
 
 #include "../../platform/EnvironmentVariable.h"
+#include "../../render/pipeline/MeshConstantsEnvironment.h"
 #include "../../render/sky/EnvironmentState.h"
 #include "../../render/resource/RenderTuning.h"
 #include "App.h"

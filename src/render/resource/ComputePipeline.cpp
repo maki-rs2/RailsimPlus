@@ -6,6 +6,7 @@
 #include <spdlog/spdlog.h>
 
 #include "DxcShaderCompiler.h"
+#include "BindlessDescriptors.inl"
 
 using Microsoft::WRL::ComPtr;
 
@@ -16,6 +17,7 @@ struct ComputePipeline::Impl {
     ComPtr<ID3D12PipelineState> pso;
     std::uint32_t constantDwordCount = 0;
     UINT rootCbvParam = 0;
+    UINT bindlessParam = 0;
     bool useRootCbv = false;
 };
 
@@ -30,7 +32,7 @@ bool ComputePipeline::Init(const rs::rhi::Device& device, const std::string& sou
     std::unique_ptr<Impl> impl = std::make_unique<Impl>();
     impl->constantDwordCount = constantDwordCount;
 
-    D3D12_ROOT_PARAMETER params[2] = {};
+    D3D12_ROOT_PARAMETER params[3] = {};
     UINT paramCount = 0;
     if (constantDwordCount > 0) {
         D3D12_ROOT_PARAMETER& constants = params[paramCount++];
@@ -47,6 +49,10 @@ bool ComputePipeline::Init(const rs::rhi::Device& device, const std::string& sou
         cbv.Descriptor.ShaderRegister = 1;
         cbv.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     }
+
+    const BindlessDescriptorRanges ranges = MakeBindlessDescriptorRanges();
+    impl->bindlessParam = paramCount;
+    params[paramCount++] = MakeBindlessDescriptorTable(ranges);
 
     // メッシュのルート署名の s1・s2 と同じ設定にして、同じ HLSL の関数をそのまま使えるようにする。
     D3D12_STATIC_SAMPLER_DESC samplers[2] = {};
@@ -72,7 +78,6 @@ bool ComputePipeline::Init(const rs::rhi::Device& device, const std::string& sou
     rootDesc.pParameters = paramCount > 0 ? params : nullptr;
     rootDesc.NumStaticSamplers = 2;
     rootDesc.pStaticSamplers = samplers;
-    rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
     ComPtr<ID3DBlob> signature, error;
     if (FAILED(D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error))) {
         if (error) spdlog::error("[{}] rootsig: {}", logTag, static_cast<const char*>(error->GetBufferPointer()));
@@ -84,7 +89,7 @@ bool ComputePipeline::Init(const rs::rhi::Device& device, const std::string& sou
 
     DxcShaderCompiler dxc;
     ComPtr<IDxcBlob> cs;
-    if (!dxc.Init() || !dxc.Compile(source, entry, L"cs_6_6", {}, logTag, cs)) return false;
+    if (!dxc.Init() || !dxc.Compile(source, entry, L"cs_6_0", {}, logTag, cs)) return false;
     D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
     desc.pRootSignature = impl->rootSig.Get();
     desc.CS = {cs->GetBufferPointer(), cs->GetBufferSize()};
@@ -104,6 +109,7 @@ void ComputePipeline::Bind(const rs::rhi::CommandList& commandList, const rs::rh
     ID3D12DescriptorHeap* heaps[] = {srvHeap.Native()};
     list->SetDescriptorHeaps(1, heaps);
     list->SetComputeRootSignature(impl_->rootSig.Get());
+    SetComputeBindlessTable(list, impl_->bindlessParam, srvHeap.Native());
     list->SetPipelineState(impl_->pso.Get());
 }
 

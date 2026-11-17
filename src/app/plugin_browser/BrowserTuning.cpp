@@ -21,6 +21,13 @@ const BrowserTuning& BrowserTuning::Embedded() {
             tuning.thumbnailFarClipRadiusMultiplier = root.value("thumbnailFarClipRadiusMultiplier", tuning.thumbnailFarClipRadiusMultiplier);
             tuning.thumbnailEndFaceSectionScale = root.value("thumbnailEndFaceSectionScale", tuning.thumbnailEndFaceSectionScale);
             tuning.thumbnailSampleSpacingM = root.value("thumbnailSampleSpacingM", tuning.thumbnailSampleSpacingM);
+            tuning.trainPhotoShortLengthM = root.value("trainPhotoShortLengthM", tuning.trainPhotoShortLengthM);
+            tuning.trainPhotoLongLengthM = root.value("trainPhotoLongLengthM", tuning.trainPhotoLongLengthM);
+            tuning.trainPhotoLongAzimuthDeg = root.value("trainPhotoLongAzimuthDeg", tuning.trainPhotoLongAzimuthDeg);
+            tuning.trainPhotoFrontHeightRatio = root.value("trainPhotoFrontHeightRatio", tuning.trainPhotoFrontHeightRatio);
+            tuning.trainPhotoSideMargin = root.value("trainPhotoSideMargin", tuning.trainPhotoSideMargin);
+            tuning.trainPhotoFrontCenterY = root.value("trainPhotoFrontCenterY", tuning.trainPhotoFrontCenterY);
+            tuning.trainPhotoMaxDistanceM = root.value("trainPhotoMaxDistanceM", tuning.trainPhotoMaxDistanceM);
             return tuning;
         });
     return kTuning;

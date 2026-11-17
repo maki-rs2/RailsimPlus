@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "../../editor/tool/Editor.h"
+#include "../../editor/tool/EditorTypes.h"
 #include "../../render/mesh/Mesh.h"
 #include "ViewMode.h"
 

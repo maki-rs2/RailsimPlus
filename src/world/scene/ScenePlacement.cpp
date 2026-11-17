@@ -38,6 +38,29 @@ Mat4 ComposeRigid(const Vec3& origin, const Vec3& forward, const Vec3& up) {
 
 } // namespace
 
+Vec3 HorizontalForward(const Vec3& v) {
+    const float length = v.Length();
+    if (length < rs::core::kDegenerateVectorEps) return {0.0f, 0.0f, 1.0f};
+    const Vec3 horizontal{v.x / length, 0.0f, v.z / length};
+    if (horizontal.Length() < rs::core::kHorizontalDirectionEps) return {0.0f, 0.0f, 1.0f};
+    return horizontal.Normalized();
+}
+
+float HeadingDeg(const Vec3& v) {
+    const Vec3 forward = HorizontalForward(v);
+    return std::atan2(forward.x, forward.z) * 180.0f / std::numbers::pi_v<float>;
+}
+
+UprightFrame ResolveUprightFrame(const Vec3& tangent, float yawOffsetDeg) {
+    const Vec3 up{0.0f, 1.0f, 0.0f};
+    const float yawRad = yawOffsetDeg * std::numbers::pi_v<float> / 180.0f;
+    UprightFrame frame;
+    frame.up = up;
+    frame.forward = RotateAroundAxis(HorizontalForward(tangent), up, yawRad).Normalized();
+    frame.right = Vec3::Cross(up, frame.forward).Normalized();
+    return frame;
+}
+
 Mat4 ResolveWorldMatrix(const ScenePlacement& placement, const TrackGraph& graph) {
     if (const TrackPlacement* track = std::get_if<TrackPlacement>(&placement)) {
         const auto it = graph.edges.find(track->position.edge);
@@ -46,7 +69,6 @@ Mat4 ResolveWorldMatrix(const ScenePlacement& placement, const TrackGraph& graph
         const TrackFrame frame = EvaluateAt(it->second, track->position.s, track->position.direction);
         const float yawRad = track->yawOffsetDeg * std::numbers::pi_v<float> / 180.0f;
         const Vec3 forward = RotateAroundAxis(frame.tangent, frame.up, yawRad).Normalized();
-        const Vec3 right = Vec3::Cross(frame.up, forward).Normalized();
         // 横オフセットは軌道の右方向で測る(取り込み・ドラッグの射影と同じ基準)。yawは
         // モデルの姿勢だけを回し、原点を軌道の反対側へ鏡映させない。
         const Vec3 trackRight = Vec3::Cross(frame.up, frame.tangent).Normalized();
@@ -54,19 +76,10 @@ Mat4 ResolveWorldMatrix(const ScenePlacement& placement, const TrackGraph& graph
             frame.pos + trackRight * track->lateralOffsetM + frame.up * track->verticalOffsetM;
 
         if (track->keepUpright) {
-            // 位置(origin)はカント適用済みframe.upで計算済み。姿勢のみワールドup基準の
-            // 直交基底へ組み直し、カントによるロール回転をモデルへ伝えない。
-            static const Vec3 kWorldUp{0.0f, 1.0f, 0.0f};
-            Vec3 uprightRight = Vec3::Cross(kWorldUp, forward);
-            if (uprightRight.Length() < rs::core::kHorizontalDirectionEps) {
-                // forwardがワールドupとほぼ平行(直上/直下)な縮退ケース。カント適用済み
-                // rightをそのまま使う(現実的にはPole配置では起こらない想定)。
-                uprightRight = right;
-            } else {
-                uprightRight = uprightRight.Normalized();
-            }
-            const Vec3 uprightUp = Vec3::Cross(forward, uprightRight).Normalized();
-            return ComposeRigid(origin, forward, uprightUp);
+            // 位置(origin)はカント適用済みframe.upで計算済み。姿勢は水平な前とワールドの
+            // 上だけで組み、勾配やカントのロール・ピッチをモデルへ伝えない。
+            const UprightFrame upright = ResolveUprightFrame(frame.tangent, track->yawOffsetDeg);
+            return ComposeRigid(origin, upright.forward, upright.up);
         }
 
         return ComposeRigid(origin, forward, frame.up);

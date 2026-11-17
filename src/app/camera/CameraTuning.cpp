@@ -26,6 +26,8 @@ CameraTuning ParseEmbedded() {
             tuning.flyMouseSensitivity = root.value("flyMouseSensitivity", tuning.flyMouseSensitivity);
             tuning.flyPitchLimitRadians = root.value("flyPitchLimitRadians", tuning.flyPitchLimitRadians);
             tuning.viewHeightSensitivity = root.value("viewHeightSensitivity", tuning.viewHeightSensitivity);
+            tuning.viewDragPerPixel = root.value("viewDragPerPixel", tuning.viewDragPerPixel);
+            tuning.viewDragFastMultiplier = root.value("viewDragFastMultiplier", tuning.viewDragFastMultiplier);
             tuning.viewDistMoveMinMeters = root.value("viewDistMoveMinMeters", tuning.viewDistMoveMinMeters);
             tuning.viewDashMultiplier = root.value("viewDashMultiplier", tuning.viewDashMultiplier);
             tuning.viewZoomStepIn = root.value("viewZoomStepIn", tuning.viewZoomStepIn);

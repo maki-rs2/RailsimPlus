@@ -41,7 +41,7 @@ cbuffer Constants : register(b0) {
     float4 gUvTransform0;
     float4 gUvTransform1;
     // Bindless参照: x=base/normal/ormの絶対ディスクリプタヒープ添字
-    // (base=+0, normal=+1, orm=+2)。ResourceDescriptorHeap[]で直接参照する。
+    // (base=+0, normal=+1, orm=+2)。bindless テーブルの配列で直接参照する。
     uint4 gTexIndex;
     uint gPartsPerInstance;
     uint gMaterialIndex;
@@ -231,7 +231,7 @@ float4 PSMain(PSIn i) : SV_TARGET {
     float3 texRgb = float3(1.0, 1.0, 1.0);
     float  texAlpha = 1.0;
     if (tex.y != 0u) {
-        Texture2D<float4> baseTex = ResourceDescriptorHeap[tex.x + 0];
+        Texture2D<float4> baseTex = gBindlessTex2D[tex.x + 0];
         float4 t = SampleMaterialTex(baseTex, tuv, uv1.z > 0.5);
         texRgb = t.rgb;
         texAlpha = t.a; // 材質の半透明とテクスチャ抜きを両立
@@ -254,12 +254,12 @@ float4 PSMain(PSIn i) : SV_TARGET {
 
     float3 sampledN = float3(0, 0, 1);
     if (flags.x > 0.5) {
-        Texture2D<float4> normalTex = ResourceDescriptorHeap[tex.x + 1];
+        Texture2D<float4> normalTex = gBindlessTex2D[tex.x + 1];
         sampledN = SampleMaterialTex(normalTex, tuv, uv1.z > 0.5).xyz;
     }
     float3 sampledOrm = kDefaultOrm;
     if (flags.y > 0.5) {
-        Texture2D<float4> ormTex = ResourceDescriptorHeap[tex.x + 2];
+        Texture2D<float4> ormTex = gBindlessTex2D[tex.x + 2];
         sampledOrm = SampleMaterialTex(ormTex, tuv, uv1.z > 0.5).rgb;
     }
     // 画面のAOは、深度プリパスに載った画素にだけ使う(PSMainCutoutDepthOnly と同じ式)。アルファが閾値に満たない画素は
@@ -302,7 +302,7 @@ float CutoutDepthMargin(float2 uv, uint instanceId) {
                         uv.x * uv0.y + uv.y * uv0.w + uv1.y);
     float alpha = diffuse.a;
     if (tex.y != 0u) {
-        Texture2D<float4> baseTex = ResourceDescriptorHeap[tex.x + 0];
+        Texture2D<float4> baseTex = gBindlessTex2D[tex.x + 0];
         alpha *= SampleMaterialTex(baseTex, tuv, uv1.z > 0.5).a;
     }
     // 穴あきを不透明と半透明に分けた材質は、gMaterial.xが上限(0.95)。上限未満は深度を書かない。
@@ -334,7 +334,7 @@ float4 PSMainHighlight(PSIn i) : SV_TARGET {
 // ==== 半透明パス（1ドローコール・PS内マテリアル選択） ====
 // per-triangle にマテリアルとテクスチャを切り替える。run 分割・per-run の
 // ルート切替を廃し、半透明三角形を1ドローで描く。テクスチャ参照は
-// ResourceDescriptorHeap[]直接参照(SM6.6)で行う。
+// bindless テーブルの配列参照(SM6.0)で行う。
 
 
 // 動的 IB の三角形順に対応する per-triangle マテリアル番号（gMats の添字）
@@ -358,7 +358,7 @@ float4 PSMainTrans(PSIn i, uint primId : SV_PrimitiveID) : SV_TARGET {
     float3 texRgb = float3(1.0, 1.0, 1.0);
     float  texAlpha = 1.0;
     if (useBase) {
-        Texture2D<float4> baseTex = ResourceDescriptorHeap[NonUniformResourceIndex(base + 0u)];
+        Texture2D<float4> baseTex = gBindlessTex2D[NonUniformResourceIndex(base + 0u)];
         float4 t = SampleMaterialTex(baseTex, tuv, gUvTransform1.z > 0.5);
         texRgb = t.rgb;
         texAlpha = t.a;
@@ -370,12 +370,12 @@ float4 PSMainTrans(PSIn i, uint primId : SV_PrimitiveID) : SV_TARGET {
 
     float3 sampledN = float3(0, 0, 1);
     if (useNormal) {
-        Texture2D<float4> normalTex = ResourceDescriptorHeap[NonUniformResourceIndex(base + 1u)];
+        Texture2D<float4> normalTex = gBindlessTex2D[NonUniformResourceIndex(base + 1u)];
         sampledN = SampleMaterialTex(normalTex, tuv, gUvTransform1.z > 0.5).xyz;
     }
     float3 sampledOrm = kDefaultOrm;
     if (useOrm) {
-        Texture2D<float4> ormTex = ResourceDescriptorHeap[NonUniformResourceIndex(base + 2u)];
+        Texture2D<float4> ormTex = gBindlessTex2D[NonUniformResourceIndex(base + 2u)];
         sampledOrm = SampleMaterialTex(ormTex, tuv, gUvTransform1.z > 0.5).rgb;
     }
 
@@ -402,7 +402,7 @@ float4 PSMainTrans(PSIn i, uint primId : SV_PrimitiveID) : SV_TARGET {
 //   SV_Target0 accum(RGBA16F): Σ(color*a, a)*w を加算ブレンド(ONE,ONE)で蓄積
 //   SV_Target1 reveal(R16F)  : Π(1-a) を乗算ブレンド(ZERO,INV_SRC_COLOR)で蓄積(1で初期化)
 // 合成は WboitPass の全画面パスで avg=accum.rgb/accum.a を (1-reveal) で載せる。
-// マテリアル選択は PSMainTrans と同一(gTriMat/gMats/ResourceDescriptorHeap[])。
+// マテリアル選択は PSMainTrans と同一(gTriMat/gMats/bindless テーブルの配列)。
 struct PSOutWBOIT { float4 accum : SV_Target0; float reveal : SV_Target1; };
 
 PSOutWBOIT PSMainTransWBOIT(PSIn i, uint primId : SV_PrimitiveID) {
@@ -434,7 +434,7 @@ PSOutWBOIT PSMainTransWBOIT(PSIn i, uint primId : SV_PrimitiveID) {
     float3 texRgb = float3(1.0, 1.0, 1.0);
     float texAlpha = 1.0;
     if (useBase) {
-        Texture2D<float4> baseTex = ResourceDescriptorHeap[NonUniformResourceIndex(base + 0u)];
+        Texture2D<float4> baseTex = gBindlessTex2D[NonUniformResourceIndex(base + 0u)];
         float4 t = SampleMaterialTex(baseTex, tuv, gUvTransform1.z > 0.5);
         texRgb = t.rgb;
         texAlpha = t.a;
@@ -449,12 +449,12 @@ PSOutWBOIT PSMainTransWBOIT(PSIn i, uint primId : SV_PrimitiveID) {
     alpha *= gMaterial.w;
     float3 sampledN = float3(0, 0, 1);
     if (useNormal) {
-        Texture2D<float4> normalTex = ResourceDescriptorHeap[NonUniformResourceIndex(base + 1u)];
+        Texture2D<float4> normalTex = gBindlessTex2D[NonUniformResourceIndex(base + 1u)];
         sampledN = SampleMaterialTex(normalTex, tuv, gUvTransform1.z > 0.5).xyz;
     }
     float3 sampledOrm = kDefaultOrm;
     if (useOrm) {
-        Texture2D<float4> ormTex = ResourceDescriptorHeap[NonUniformResourceIndex(base + 2u)];
+        Texture2D<float4> ormTex = gBindlessTex2D[NonUniformResourceIndex(base + 2u)];
         sampledOrm = SampleMaterialTex(ormTex, tuv, gUvTransform1.z > 0.5).rgb;
     }
 
@@ -516,7 +516,7 @@ float4 PSMainSolidFade(PSIn i) : SV_TARGET {
     float3 texRgb = float3(1.0, 1.0, 1.0);
     float texAlpha = 1.0;
     if (tex.y != 0u) {
-        Texture2D<float4> baseTex = ResourceDescriptorHeap[tex.x + 0];
+        Texture2D<float4> baseTex = gBindlessTex2D[tex.x + 0];
         float4 t = SampleMaterialTex(baseTex, tuv, uv1.z > 0.5);
         texRgb = t.rgb;
         texAlpha = t.a;
@@ -530,12 +530,12 @@ float4 PSMainSolidFade(PSIn i) : SV_TARGET {
     }
     float3 sampledN = float3(0, 0, 1);
     if (flags.x > 0.5) {
-        Texture2D<float4> normalTex = ResourceDescriptorHeap[tex.x + 1];
+        Texture2D<float4> normalTex = gBindlessTex2D[tex.x + 1];
         sampledN = SampleMaterialTex(normalTex, tuv, uv1.z > 0.5).xyz;
     }
     float3 sampledOrm = kDefaultOrm;
     if (flags.y > 0.5) {
-        Texture2D<float4> ormTex = ResourceDescriptorHeap[tex.x + 2];
+        Texture2D<float4> ormTex = gBindlessTex2D[tex.x + 2];
         sampledOrm = SampleMaterialTex(ormTex, tuv, uv1.z > 0.5).rgb;
     }
 

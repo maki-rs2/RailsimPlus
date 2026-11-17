@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-#include "../../world/scene/SceneEntity.h"
+namespace rs::world { struct SceneEntity; }
 
 namespace rs::app {
 

@@ -38,7 +38,7 @@ namespace rs::legacy_plugin {
 std::vector<rs::core::Mat4> UpdatePartMoverLocals(
     const rs::legacy_pi::PluginDefinition& def, std::vector<PartMoverRuntime>& moverRuntimes,
     const rs::legacy_pi::SwitchResolver& resolve, uint64_t switchGeneration, float dt,
-    float dynamicRotateSpeedScale, double clockSecondsOfDay) {
+    float dynamicRotateSpeedScale, double clockSecondsOfDay, bool deferTracking) {
     const std::vector<rs::legacy_pi::ModelPart>& parts = def.parts;
     std::vector<rs::core::Mat4> moverLocals(parts.size(), rs::core::Mat4::Identity());
     for (size_t partIndex = 0; partIndex < parts.size(); ++partIndex) {
@@ -52,6 +52,7 @@ std::vector<rs::core::Mat4> UpdatePartMoverLocals(
         PartMoverRuntime& mover = moverRuntimes[partIndex];
         mover.UpdateActivation(resolve, switchGeneration);
         if (!mover.Settled()) mover.Update(dt, dynamicRotateSpeedScale, clockSecondsOfDay);
+        if (deferTracking && mover.HasTrackingMoves()) continue;
         float local[16];
         mover.ComposeLocal(local);
         std::memcpy(moverLocals[partIndex].m, local, sizeof(local));
@@ -67,7 +68,8 @@ std::vector<Mat4> ResolveDynamicPartWorlds(
     const rs::legacy_pi::PluginDefinition& def,
     std::vector<rs::legacy_plugin::PartMoverRuntime>& moverRuntimes,
     const rs::legacy_pi::SwitchResolver& resolve, uint64_t switchGeneration, float dt,
-    float dynamicRotateSpeedScale, double clockSecondsOfDay) {
+    float dynamicRotateSpeedScale, double clockSecondsOfDay,
+    const rs::legacy_plugin::TrackingMoveContext* tracking) {
     const std::vector<ModelPart>& parts = def.parts;
     size_t n = parts.size();
     std::vector<std::string> labels;
@@ -75,11 +77,24 @@ std::vector<Mat4> ResolveDynamicPartWorlds(
     for (const ModelPart& part : parts) labels.push_back(part.label);
 
     // 1. 全パーツの自身のmover(StaticMove/StaticRotation/DynamicRotation)を
-    //    1回だけ更新し、パーツローカルのアニメ行列を得る。表示中かどうかに
+    //    1回だけ更新する。TrackingMove は基準姿勢が決まるまで合成を待ち、それ以外は
+    //    パーツローカルのアニメ行列を得る。表示中かどうかに
     //    関わらず全パーツ対象(非表示アンカーの mover も他パーツへ伝播する
     //    必要があるため)。
     const std::vector<Mat4> animLocal = rs::legacy_plugin::UpdatePartMoverLocals(
-        def, moverRuntimes, resolve, switchGeneration, dt, dynamicRotateSpeedScale, clockSecondsOfDay);
+        def, moverRuntimes, resolve, switchGeneration, dt, dynamicRotateSpeedScale, clockSecondsOfDay, true);
+    const auto composeWorld = [&](size_t index, const Mat4& base) {
+        Mat4 local = animLocal[index];
+        if (!parts[index].hasUnresolvedJointRef && index < moverRuntimes.size() &&
+            moverRuntimes[index].HasTrackingMoves()) {
+            Mat4 placement{};
+            const bool hasPlacement = tracking && tracking->placementToWorld &&
+                tracking->placementToWorld(index, placement);
+            moverRuntimes[index].ComposeLocal(local.m, base, tracking ? tracking->targets : nullptr,
+                                              hasPlacement ? &placement : nullptr);
+        }
+        return Mat4::Mul(local, base);
+    };
     // 2. Joint3Dを持たないパーツは、パース時に確定済みの静的offset行列
     //    (part.worldMat、スイッチに依存しない)へ自身のmoverを重ねるだけで
     //    今フレームのワールド行列が決まる。
@@ -89,7 +104,7 @@ std::vector<Mat4> ResolveDynamicPartWorlds(
         if (!parts[i].joints3d.empty() || parts[i].isZyPart) continue;
         Mat4 base{};
         std::memcpy(base.m, parts[i].worldMat, sizeof(base.m));
-        world[i] = Mat4::Mul(animLocal[i], base);
+        world[i] = composeWorld(i, base);
         resolved[i] = true;
     }
 
@@ -114,7 +129,7 @@ std::vector<Mat4> ResolveDynamicPartWorlds(
                     const size_t memberIdx = group.indices[k];
                     Mat4 solved{};
                     std::memcpy(solved.m, group.worlds[k], sizeof(solved.m));
-                    world[memberIdx] = Mat4::Mul(animLocal[memberIdx], solved);
+                    world[memberIdx] = composeWorld(memberIdx, solved);
                     resolved[memberIdx] = true;
                 }
                 progressed = true;
@@ -133,7 +148,7 @@ std::vector<Mat4> ResolveDynamicPartWorlds(
             ComposeJoint3DWorld(j, dirFrame.m, upFrame.m, targetFrame.m, jointWorld);
             Mat4 jointMat{};
             std::memcpy(jointMat.m, jointWorld, sizeof(jointMat.m));
-            world[i] = Mat4::Mul(animLocal[i], jointMat);
+            world[i] = composeWorld(i, jointMat);
             resolved[i] = true;
             progressed = true;
         }

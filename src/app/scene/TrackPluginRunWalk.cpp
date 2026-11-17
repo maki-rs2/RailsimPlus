@@ -39,15 +39,16 @@ bool EntryActiveAt(const rs::world::TrackGraph& graph, const rs::world::Guid& ed
     return false;
 }
 
-// 複線一括(trackNum>1)エントリの配置先チェーン: trackCount が一致する中心線
-// edge を各1-edge chain にして返す。既存の run/interval 配置ロジックへ
+// 複線一括(trackNum>1)エントリの配置先チェーン: 中心線edge(束ねる本数は問わない)を
+// 各1-edge chain にして返す。既存の run/interval 配置ロジックへ
 // そのまま流せる(factoring)。単線用は呼び出し側で実レールchainを使う。
 std::vector<rs::world::EdgeChain> CenterlineChainsFor(const rs::world::TrackGraph& graph,
                                                       int trackNum) {
     std::vector<rs::world::EdgeChain> chains;
+    if (trackNum <= 1) return chains;
     for (const auto& kv : graph.edges) {
         const rs::world::TrackEdge& e = kv.second;
-        if (e.centerlineOnly && e.trackCount == trackNum) {
+        if (rs::world::EdgeAcceptsTrackNum(e, trackNum)) {
             rs::world::EdgeChain ch;
             ch.steps.push_back(rs::world::EdgeChainStep{e.guid, 1});
             chains.push_back(std::move(ch));
@@ -236,7 +237,7 @@ std::vector<PoleWalkRun> WalkPoleRuns(const std::vector<TrackPluginEntry>& entri
     // (RailSim IIもLine未選択時はPole/Lineとも生成しない、CLineBuildCurve.cpp:66-67)。
     // 同一edge上でPole/Lineの組が複数(まれ)ある場合は全組み合わせぶん走査する。
     //
-    // 複線一括(Pole自身のTrackNum>1)は実レールではなく trackCount 一致の中心線
+    // 複線一括(Pole自身のTrackNum>1)は実レールではなく中心線(束ねる本数は問わない)
     // edgeへ配置する(RailSim IIはPolePlugin::IsMultiTrack()で判定、
     // CLineBuildCurve.cpp:66,76-83。Lineの配置先もPole側のTrackNumに従う)。
     // 中心線routingはPierと同じ2パス構成。

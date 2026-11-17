@@ -70,9 +70,15 @@ rs::render::SceneHdrTarget* FrameRenderer::ResolveMotionBlur(const rs::rhi::Comm
     rs::render::MotionBlurFrameParams params;
     std::memcpy(params.invViewProj, taaInvViewProj_.m, sizeof(params.invViewProj));
     std::memcpy(params.prevViewProj, framePrevViewProj_, sizeof(params.prevViewProj));
-    params.shutter = rs::render::MotionBlurShutterForFrameTime(ShutterOverride().value_or(tuning.motionBlurShutter),
-                                                               frame_.motionBlurFrameSeconds);
-    params.maxRadiusFraction = tuning.motionBlurMaxRadius;
+    if (photoShutterSeconds_) {
+        // ファインダー中は、撮影カメラのシャッターが開いている間の動きをぼかしの長さにする。
+        params.shutter = rs::render::MotionBlurShutterForExposure(*photoShutterSeconds_, frame_.motionBlurFrameSeconds);
+        params.maxRadiusFraction = tuning.photoMotionBlurMaxRadius;
+    } else {
+        params.shutter = rs::render::MotionBlurShutterForFrameTime(ShutterOverride().value_or(tuning.motionBlurShutter),
+                                                                   frame_.motionBlurFrameSeconds);
+        params.maxRadiusFraction = tuning.motionBlurMaxRadius;
+    }
     params.samples = tuning.motionBlurSamples;
     params.frameIndex = static_cast<std::uint32_t>(frameCounter_);
     params.objectVelocitySrvIndex = kSrvLayout.velocity;

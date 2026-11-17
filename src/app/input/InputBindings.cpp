@@ -22,6 +22,7 @@ constexpr PointerBinding kPointerBindings[] = {
     {PointerAction::SelectionExtend, std::nullopt, {false, true, false}},
     {PointerAction::PlacementReverse, std::nullopt, {false, true, false}},
     {PointerAction::TransformSnap, std::nullopt, {true, false, false}},
+    {PointerAction::CameraPan, PointerButton::Middle, {}},
 };
 static_assert(std::size(kPointerBindings) == magic_enum::enum_count<PointerAction>());
 static_assert(workspace::IsCatalogInEnumOrder(kPointerBindings, &PointerBinding::action));

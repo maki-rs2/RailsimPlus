@@ -20,12 +20,6 @@ std::vector<TrackPluginPlacementItem> ApplyOverlayToItems(
     const auto appendIndividuals = [&out, &entries](const std::vector<rs::world::PlacedIndividual>& individuals) {
         for (const rs::world::PlacedIndividual& individual : individuals) {
             if (individual.folderUtf8.empty()) continue;
-            // ワールドアンカー個体(軌道に載っていないPole)はedge/s前提の
-            // TrackPlacementで表現できない。ここへ流すとResolveWorldMatrixが
-            // edge未解決で単位行列を返し、原点にPoleモデルが浮いて見える
-            // (このPole自体のモデル描画は行わない。架線径間の追従・
-            // 保存だけを対象にする)。
-            if (individual.hasWorldAnchor) continue;
             const std::vector<TrackPluginEntry>::const_iterator entryIt = std::find_if(
                 entries.begin(), entries.end(), [&individual](const TrackPluginEntry& entry) {
                 return entry.folderUtf8 == individual.folderUtf8;
@@ -33,6 +27,16 @@ std::vector<TrackPluginPlacementItem> ApplyOverlayToItems(
             if (entryIt == entries.end() && !entries.empty()) continue;
             TrackPluginPlacementItem item;
             item.folderUtf8 = individual.folderUtf8;
+            if (individual.hasWorldAnchor) {
+                // 軌道に載っていない柱はedge/s前提のTrackPlacementで表せない。ワールド座標の
+                // 位置と方位で描く(柱は鉛直なのでピッチとロールは0)。
+                rs::world::FreePlacement world;
+                world.position = individual.worldPos;
+                world.yawDeg = individual.worldYawDeg;
+                item.worldPlacement = world;
+                out.push_back(item);
+                continue;
+            }
             item.placement.position.edge = individual.edge;
             item.placement.position.s = individual.s;
             item.placement.position.direction = individual.direction;

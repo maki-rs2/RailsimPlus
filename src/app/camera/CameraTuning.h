@@ -16,7 +16,11 @@ struct CameraTuning {
     // 視点操作・視野角の可動域
     float flyMouseSensitivity = 0.005f; // 右ドラッグ視点回転の感度[rad/px]
     float flyPitchLimitRadians = 1.5533f; // ピッチ可動域(≒89度)
-    float viewHeightSensitivity = 0.01f; // Shift+左ドラッグの高さ変化係数
+    float viewHeightSensitivity = 0.01f; // 運転台カメラのShift+左ドラッグの高さ変化係数
+    // 俯瞰カメラのドラッグ移動(中・左ドラッグと、Shift+左ドラッグの高さ調節)の係数。
+    // 注目点の移動量[m] = 移動したpx × 距離 × 係数 × 倍率。
+    float viewDragPerPixel = 0.001f;
+    float viewDragFastMultiplier = 10.0f; // Ctrl押下中の倍率
     float viewDistMoveMinMeters = 2.0f; // WASD移動速度係数(distance基準)の下限
     float viewDashMultiplier = 3.0f; // Ctrl押下中のWASD移動速度の倍率
     float viewZoomStepIn = 1.0f / 1.15f; // ホイール1ノッチで距離を詰める倍率

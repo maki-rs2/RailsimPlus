@@ -30,6 +30,7 @@
 #include "../../world/scene/ManualPlacementOverlay.h"
 #include "../../world/scene/MaterializeSnapshot.h"
 #include "PlacementEditCommand.h"
+#include "SpeedSignalOwnerCandidate.h"
 #include "PlacementOverlayCommand.h"
 #include "../../world/geometry/GeometrySolvers.h"
 #include "Command.h"
@@ -57,13 +58,6 @@ namespace rs::editor {
 
 namespace detail {
 }
-
-enum class SignalBlockArmedAction { None, PlaceSpeedSignal };
-
-struct SpeedSignalOwnerCandidate {
-    rs::world::Guid block = rs::world::NilGuid();
-    rs::world::SpeedSignalPlacementError error = rs::world::SpeedSignalPlacementError::None;
-};
 
 // 配置位置と担当候補の検証結果。仮止め中もマーカーと候補表示が同じ結果を読む。
 struct SpeedSignalHover {

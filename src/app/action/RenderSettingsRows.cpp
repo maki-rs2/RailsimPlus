@@ -61,7 +61,7 @@ const RenderChoiceList kFpsLimitList{
     },
     IdentityValue};
 
-// トーンマップの曲線の選択肢(Offは配管確認用なので出さない)。既定はTriple section(UserSettingsData::tonemapMode)。名前は曲線の固有名なので翻訳しない。
+// トーンマップの曲線の選択肢(Offは配管確認用なので出さない)。既定は kDefaultTonemapMode(TonemapMath.h)。名前は曲線の固有名なので翻訳しない。
 struct TonemapEntry {
     rs::render::TonemapMode mode;
     const char* label;

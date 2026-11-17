@@ -214,6 +214,8 @@ void AppendWorldAnchoredPole(const rs::legacy_layout::Rs2PlacedInstance& pole,
     // Pole配置のposは絶対座標。軌道紐付けPoleもNormalizeImportedGroundBasisで
     // 取り込み前のワールド座標へ戻されるため、そのまま保持すれば高さが揃う。
     worldAnchoredPole.individual.worldPos = pole.pos;
+    // 柱の姿勢はOrigDirの方位だけで決まる(架線の接続点の横並びにも使う)。
+    worldAnchoredPole.individual.worldYawDeg = rs::world::HeadingDeg(pole.dir);
     const PoleFolderMap::const_iterator folderIt = poleFolderByAddress.find(pole.address);
     if (folderIt != poleFolderByAddress.end()) {
         worldAnchoredPole.individual.folderUtf8 = folderIt->second;

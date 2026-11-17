@@ -65,6 +65,10 @@ struct RenderTuning {
     float skyRadianceScale = 1.3f;
     // 太陽の円盤の明るさ(透過率LUTの色に掛ける。物理値はfp16を超えるため大きく抑えた値)。
     float sunDiskIntensity = 30.0f;
+    // 標準の空で、太陽が物を照らす直射光(メッシュ・粒子・遠景・霧)の強さ。skyRadianceScale に対する比で持つ
+    // (直射光に掛かる倍率は SunLightRadianceScale)。1.0なら空と同じ倍率で、日なたと日陰(空の光)の明るさの比が物理どおりになる。
+    // 太陽の円盤とレンズフレアには掛けない(円盤は sunDiskIntensity)。0以上、100以下。範囲外の値は ParseJson が既定値へ戻す。
+    float sunLightScale = 1.0f;
     // 太陽の円盤の角直径[度]。実際の太陽は約0.53度。
     float sunDiskAngularDiameterDeg = 0.53f;
     // 大気のエアロゾルの光学的厚さ(AOD、波長によらず1つ。render/sky/AtmosphereParams.h の MieScatteringPerKm)。
@@ -87,7 +91,7 @@ struct RenderTuning {
     //   heightFogHeightScale   密度が 1/e になる高さ H [m](1以上、5000以下)。
     //   heightFogBaseHeight    基準の高さ h0 [m](-1000以上、10000以下)。
     //   heightFogAlbedo        霧の反射率。霧に当たる光に掛ける(0以上、1以下)。
-    float heightFogDensity = 0.0008f;
+    float heightFogDensity = 0.0005f;
     float heightFogHeightScale = 150.0f;
     float heightFogBaseHeight = 0.0f;
     float heightFogAlbedo = 1.0f;
@@ -159,16 +163,18 @@ struct RenderTuning {
     // モーションブラー(render/postprocess/MotionBlurPass)。見た目で決める。
     // motionBlurShutter: 1フレームの動きのうち、ぼかしの長さにする割合(0〜2。0でぼかしなし)。0.5がシャッター角 180° 相当、0.65 が約 234° 相当。
     // motionBlurMaxRadius: ぼかしの半径(中心から前後へ広げる片側の長さ)の上限(画面の高さに対する割合。0.001〜0.1)。速いカメラの動きで画面全体が流れすぎないようにする。
-    //   速度のタイル1枚の大きさ(32 画素)でも頭打ちになる。
+    //   速度のタイル1枚の大きさ(64 画素)でも頭打ちになる。
+    // photoMotionBlurMaxRadius: ファインダー中(シャッター速度に連動するとき)の motionBlurMaxRadius。遅いシャッターで大きく流すため広げる。
     // motionBlurSamples: 速度の向きに拾う点の数(4〜32)。多いほどなめらかで、重い。
     float motionBlurShutter = 0.65f;
     float motionBlurMaxRadius = 0.02f;
+    float photoMotionBlurMaxRadius = 0.05f;
     int motionBlurSamples = 12;
     // フォトモードの被写界深度(render/postprocess/DepthOfFieldPass)。見た目で決める。
     // dofMaxRadius: ぼかしの半径の上限(出力の幅に対する割合。0.001〜0.1)。解像度が変わっても最大のぼけ方が同じになる。
-    //   半解像度のタイル2枚ぶん(フル解像度で32画素)でも頭打ちになる。
+    //   半解像度のタイル2枚ぶん(フル解像度で96画素)でも頭打ちになる。
     // dofSamples: 円盤の中で拾う点の数(8〜64)。多いほどなめらかで、重い。
-    float dofMaxRadius = 0.015f;
+    float dofMaxRadius = 0.04f;
     int dofSamples = 32;
     // フォトモードの ISO オート(app/camera/PhotoAutoIso)。見た目で決める。
     // photoAutoIsoTarget: 画面の目標の明るさ(測光した輝度 x トーンマップの露出 x 撮影カメラの倍率が、この値になる ISO を選ぶ。0.001〜10)。
@@ -269,6 +275,9 @@ struct RenderTuning {
 
     // プラグインの空の背景・AP の散乱光に掛ける放射輝度の倍率(skyRadianceScale × pluginSkyAtmosphereScale)。
     float PluginSkyRadianceScale() const { return skyRadianceScale * pluginSkyAtmosphereScale; }
+
+    // 標準の空で、太陽が物を照らす直射光に掛ける倍率(skyRadianceScale × sunLightScale)。
+    float SunLightRadianceScale() const { return skyRadianceScale * sunLightScale; }
 
     // JSON文字列を解析する。JSONとして読めない・トップがオブジェクトでない・キーの型が違うときは nullopt。
     // 欠けたキーと範囲外のキーは、そのキーだけ既定値になる。

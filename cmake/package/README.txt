@@ -10,7 +10,7 @@ RailsimPlus (ポータブル版)
 
 ■ 動作環境
 - Windows 10 / 11 (64bit)
-- DirectX 12 に対応したグラフィックス
+- Direct3D 12、Shader Model 6.0、Resource Binding Tier 3 に対応した GPU
 
 ■ 保存されるもの
 - 設定(settings.dat)、保存したレイアウト(saves フォルダ)、スクリーンショットは、

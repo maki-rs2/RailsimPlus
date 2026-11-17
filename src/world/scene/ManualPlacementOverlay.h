@@ -14,7 +14,8 @@
 #include <string>
 #include <vector>
 
-#include "../alignment/TrackGraph.h"
+#include "../../core/Math.h"
+#include "../alignment/Guid.h"
 #include "ScenePlacement.h"
 #include "RunAnchor.h"
 

@@ -70,7 +70,7 @@ bool ParseWindTracker(const PiBlock& b, const TriggerInfo& trig, WindTrackerCust
 // Symmetric は 1 未満を 1 に直す。
 bool ParseWindmill(const PiBlock& b, const TriggerInfo& trig, WindmillCustomizer& out);
 
-// TrackingMove{ TrackingID; AscentRange; SliderRange(任意); Displacement; タイミング } をパースする。読むだけで実行時には使わない。
+// TrackingMove{ TrackingID; AscentRange; SliderRange(任意); Displacement; タイミング } をパースする。
 // TrackingID(文字列)・AscentRange・Displacement(3値)が無いか型が違う、SliderRange が実数でないときはfalse。
 // SliderRange は半分にして持つ(省略は -1)。
 bool ParseTrackingMove(const PiBlock& b, const TriggerInfo& trig, TrackingMoveCustomizer& out);

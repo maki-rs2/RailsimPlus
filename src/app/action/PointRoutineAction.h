@@ -8,8 +8,11 @@
 #include <cstddef>
 #include <string>
 
-#include "../../editor/tool/Editor.h"
+#include "../../world/alignment/Guid.h"
+#include "../../world/alignment/PlatformRoutine.h"
 #include "../../world/alignment/PointRoutine.h"
+
+namespace rs::editor { class Editor; }
 
 namespace rs::app {
 

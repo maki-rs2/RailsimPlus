@@ -11,9 +11,10 @@
 #include <string>
 #include <vector>
 
-#include "../../plugins/schema/PluginSchema.h"
 #include "../../plugins/schema/sidecar/StationSidecar.h"
 #include "../../world/alignment/TrackGraph.h"
+
+namespace rs::legacy_pi { struct SwitchDef; }
 
 namespace rs::app {
 

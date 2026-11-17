@@ -74,7 +74,7 @@ inline float MaxCocRadiusPixels(std::uint32_t outputWidthPixels, float widthFrac
 
 // 近景のぼけの最大値を求めるタイルの1辺(半解像度の画素)。ぼかしの半径の上限(DepthOfFieldMaxRadiusPixels)を
 // 半解像度の画素に直した値以上であること。周囲 3x3 のタイルの最大を見れば、その画素へ届く近景のぼけが全部分かる。
-constexpr std::uint32_t kDepthOfFieldTileSize = 16;
+constexpr std::uint32_t kDepthOfFieldTileSize = 48;
 
 // 半解像度の画素数を覆うタイルの数(端の欠けたタイルも1つに数える)。
 constexpr std::uint32_t DepthOfFieldTileCount(std::uint32_t halfPixels) {

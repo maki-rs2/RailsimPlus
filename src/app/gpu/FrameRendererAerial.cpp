@@ -2,6 +2,7 @@
 
 #include "CameraMath.h"
 #include "../../render/pipeline/EnvFlag.h"
+#include "../../render/pipeline/MeshConstantsEnvironment.h"
 #include "../../render/resource/RenderTuning.h"
 #include "../../render/sky/EnvironmentState.h"
 

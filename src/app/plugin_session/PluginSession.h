@@ -194,7 +194,16 @@ public:
         std::optional<rs::world::SceneSharedSwitchValues> sharedState = std::nullopt) const;
 
     // 焼き込みでも実行時でも、同じ入力の優先順位と距離の量子化を使う。
-    void ApplySwitchEvaluationAndBake(const SwitchEvaluationInput& input);
+    // mode が RuntimeEvaluated のときは、システムスイッチに依存する ChangeTexture のテクスチャを
+    // 焼き込まない。実行時に毎フレーム評価し直すセッションでは、どの ChangeTexture も active でない
+    // 材質の戻り先が焼き込み後のテクスチャになるため、読込時の既定値で決めた差し替えが
+    // システムスイッチの値が違う個体にも残ってしまう。色・フラグは Full と同じく焼き込む。
+    enum class BakeMode {
+        Full,             // 今のスイッチ値で有効なテクスチャ・色・フラグをすべて焼き込む
+        RuntimeEvaluated, // 上に加えて、システムスイッチ依存のテクスチャ差し替えは焼き込まない
+    };
+    void ApplySwitchEvaluationAndBake(const SwitchEvaluationInput& input,
+                                      BakeMode mode = BakeMode::Full);
 
     void ApplyRoutineSwitchOverrides(const std::map<std::string, int32_t>& overrides);
 

@@ -30,8 +30,8 @@ struct DiaCardModel {
     Rml::String name;
     Rml::String title;
     bool selected = false;
-    Rml::String left;
-    Rml::String top;
+    Rml::String left = "0px";
+    Rml::String top = "0px";
     bool operator==(const DiaCardModel&) const = default;
 };
 

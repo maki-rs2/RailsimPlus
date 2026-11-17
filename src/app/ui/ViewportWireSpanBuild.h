@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "EditorViewport.h"
+#include "../../plugins/load/runtime/TrackingMoveSolve.h"
 
 namespace rs::render {
 class MeshAssembler;
@@ -22,7 +23,8 @@ void AppendWireAndHangers(const TrackPluginEntry& lineEntry, const std::wstring&
                           const rs::core::Vec3& baseA, const rs::core::Vec3& upA,
                           const rs::core::Vec3& baseB, const rs::core::Vec3& upB,
                           HangerModelCache& hangerModelCache, rs::render::MeshAssembler& assembler,
-                          std::vector<std::string>& log, int& missing);
+                          std::vector<std::string>& log, int& missing,
+                          rs::legacy_plugin::TrackingTargetTable* trackingTargets);
 
 // 実体化済みPole個体のGuid参照から架線径間を再構築して積む。切断・選択用の
 // ctx.wireEditCache の径間と、実体化済みの柱の接続点も追記する。

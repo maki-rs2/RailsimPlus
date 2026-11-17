@@ -53,7 +53,8 @@ inline std::string BuildAtmosphereConstantsShader() {
         "static const float kSkyViewMaxSteps = {};\n"
         "static const float kNightSkyBaseRadianceRatio = {:.9g};\n"
         "static const float kFullMoonToSunIrradianceRatio = {:.9g};\n"
-        "static const float kMoonAngularRadius = {:.9g};\n",
+        "static const float kMoonAngularRadius = {:.9g};\n"
+        "static const float kSunLightScale = {:.9g};\n",
         a::kBottomRadiusKm, a::kTopRadiusKm, a::kRayleighScatteringPerKm[0],
         a::kRayleighScatteringPerKm[1], a::kRayleighScatteringPerKm[2], a::kRayleighScaleHeightKm,
         a::MieScatteringPerKm(aerosolOpticalDepth), a::MieAbsorptionPerKm(aerosolOpticalDepth), a::kMieScaleHeightKm, a::kMiePhaseG,
@@ -63,7 +64,7 @@ inline std::string BuildAtmosphereConstantsShader() {
         a::kTransmittanceLutHeight, a::kMultiScatLutSize, a::kSkyViewLutWidth, a::kSkyViewLutHeight,
         a::kTransmittanceSteps, a::kMultiScatSteps, a::kMultiScatSqrtSamples, a::kSkyViewMinSteps,
         a::kSkyViewMaxSteps, a::kNightSkyBaseRadianceRatio, a::kFullMoonToSunIrradianceRatio,
-        a::kMoonAngularRadiusRad);
+        a::kMoonAngularRadiusRad, tuning.SunLightRadianceScale());
 }
 
 // 透過率LUTのUV割り当て(リソース宣言なしの純関数)。LUT生成・空パス・メッシュのシェーダが

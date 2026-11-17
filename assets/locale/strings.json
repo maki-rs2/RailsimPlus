@@ -19,7 +19,7 @@
   "layout.loading.prefetch": {"ja": "アセットを読込中...", "en": "Loading assets..."},
   "layout.loading.checking": {"ja": "配置物を確認中...", "en": "Checking placements..."},
   "layout.loading.applying": {"ja": "レイアウトを読込中...", "en": "Loading the layout..."},
-  "layout.loading.entities": {"ja": "{} / {} エンティティ", "en": "{} / {} entities"},
+  "layout.loading.percent": {"ja": "{}%", "en": "{}%"},
   "action.layout.file_not_found": {
     "ja": "ファイルを開けませんでした",
     "en": "Could not open the file"
@@ -488,10 +488,6 @@
     "ja": "オン",
     "en": "On"
   },
-  "game_settings.placeholder": {
-    "ja": "仮の値",
-    "en": "Placeholder values"
-  },
   "game_settings.quality_preset": {
     "ja": "画質プリセット",
     "en": "Quality preset"
@@ -581,8 +577,12 @@
     "en": "Not found"
   },
   "app.gpu_init_failed.reason_shader_model": {
-    "ja": "Shader Model 6.6 に対応していません(検出: {})",
-    "en": "Shader Model 6.6 is not supported (detected: {})"
+    "ja": "Shader Model 6.0 に対応していません(検出: {})",
+    "en": "Shader Model 6.0 is not supported (detected: {})"
+  },
+  "app.gpu_init_failed.reason_binding_tier": {
+    "ja": "Resource Binding Tier 3 に対応していません(検出: Tier {})",
+    "en": "Resource Binding Tier 3 is not supported (detected: Tier {})"
   },
   "app.gpu_init_failed.reason_no_device": {
     "ja": "Direct3D 12 に対応するGPUが見つかりません",

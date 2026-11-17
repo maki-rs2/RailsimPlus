@@ -1,4 +1,5 @@
 #include "ParticlePass.h"
+#include "../resource/BindlessDescriptors.inl"
 
 #include <d3d12.h>
 #include <wrl/client.h>
@@ -140,6 +141,7 @@ void ParticlePass::Record(const rs::rhi::CommandList& commandList, rs::rhi::CpuD
     ID3D12DescriptorHeap* heaps[] = {impl_->srvHeap};
     list->SetDescriptorHeaps(1, heaps);
     list->SetGraphicsRootSignature(impl_->rootSig.Get());
+    SetGraphicsBindlessTable(list, kRootBindless, impl_->srvHeap);
     list->SetPipelineState(impl_->pso.Get());
     list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     list->SetGraphicsRootShaderResourceView(kRootInstances, impl_->buffers[ring]->GetGPUVirtualAddress());

@@ -6,10 +6,12 @@
 #include <unordered_set>
 #include <vector>
 
-#include "TrackGraph.h"
+#include "Guid.h"
 #include "WarpLinkTable.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 // edgeと進む向き。alongがtrueならedgeのs軸の向き(nodeA→nodeB)に進む。
 struct DirectedEdge {

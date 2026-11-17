@@ -19,15 +19,17 @@ enum class TonemapMode : std::uint32_t {
     Hable = 2, // 露出を掛けてHable(Uncharted 2)×2.758。RailSim II -k-build のPBRシェーダと同じ曲線
     Reinhard = 3, // x/(1+x)。暗部はほぼそのまま
     Neutral = 4,  // Khronos PBR Neutral(色全体で計算。暗部は2乗で沈む)
-    Agx = 5,      // Blender の AgX(色全体で計算。対数の範囲へ写して多項式で近似)。既定
-    TripleSection = 6,       // triple section(暗部・直線・明部の3区間をつなぐ曲線。CEDEC 2017で公開された式)。中間が直線
+    Agx = 5,      // Blender の AgX(色全体で計算。対数の範囲へ写して多項式で近似)
+    TripleSection = 6,       // triple section(暗部・直線・明部の3区間をつなぐ曲線。CEDEC 2017で公開された式)。中間が直線。既定
     AcesFitted = 7,          // ACESのRRT+sRGB向けODTのフィット(Stephen Hill版)。AP1へ行列変換して色全体で計算する。tonemap=acesfitted で選ぶ
 };
 // 列挙の件数(環境変数の名前の表とシェーダの分岐の数)。
 inline constexpr std::size_t kTonemapModeCount = 8;
+// 既定の曲線。ユーザー設定の初期値・読めない名前の戻り先・サムネイル(設定によらず固定)が使う。
+inline constexpr TonemapMode kDefaultTonemapMode = TonemapMode::TripleSection;
 
 struct TonemapParams {
-    TonemapMode mode = TonemapMode::Agx;
+    TonemapMode mode = kDefaultTonemapMode;
     float exposure = 1.0f;
 };
 

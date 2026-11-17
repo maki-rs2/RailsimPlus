@@ -156,7 +156,18 @@ void DispatchChildBlock(const PiBlock& c, ModelPart& part, const WalkContext& ct
     }
     if (c.name == "TrackingMove") {
         TrackingMoveCustomizer move;
-        if (ParseTrackingMove(c, TriggerFromCtx(ctx), move)) part.trackingMoves.push_back(std::move(move));
+        if (ParseTrackingMove(c, TriggerFromCtx(ctx), move)) {
+            StaticCustomizer item;
+            item.kind = StaticCustomizer::Kind::TrackingMove;
+            item.trackingIndex = part.trackingMoves.size();
+            item.dispX = move.displacement[0];
+            item.dispY = move.displacement[1];
+            item.dispZ = move.displacement[2];
+            item.timing = move.timing;
+            item.trig = move.trig;
+            part.customizers.push_back(std::move(item));
+            part.trackingMoves.push_back(std::move(move));
+        }
         ioWasIf = false;
         return;
     }

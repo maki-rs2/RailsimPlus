@@ -2,6 +2,7 @@
 // TrackLayingAction.cpp - 敷設ツール設定と敷設プレビュー表示のアプリサービス
 //
 #include "TrackLayingAction.h"
+#include "../../editor/tool/Editor.h"
 
 #include "TrackLayingText.h"
 

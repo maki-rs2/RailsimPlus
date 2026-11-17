@@ -1,5 +1,5 @@
 //
-// CustomizerTrackingParsers.cpp - TrackingMove / TrackingRotation の読み込み(読むだけ)
+// CustomizerTrackingParsers.cpp - TrackingMove / TrackingRotation の読み込み
 //
 #include "CustomizerParsers.h"
 

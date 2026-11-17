@@ -104,7 +104,7 @@ public:
     // SRV枠の先頭(環境ソースキューブ)のGPUハンドル。
     std::uint64_t SrvTableGpuHandle() const;
 
-    // メッシュのシェーダが ResourceDescriptorHeap[] で引くための、共有SRVヒープ内の絶対番号。
+    // メッシュのシェーダが bindless テーブルの配列で引くための、共有SRVヒープ内の絶対番号。
     // Init 前は0。
     std::uint32_t DiffuseSrvIndex() const;
     std::uint32_t SpecularSrvIndex() const;
@@ -113,7 +113,7 @@ public:
     // 空パス(SkyPass)が画素0を読む。Update のたびに画素0が更新され、1度も記録していない間は中身が0なので、
     // 読む側は max(x, 1) で扱う。
     std::uint64_t ExposureSrvGpuHandle() const;
-    // 同じSRVの共有SRVヒープ内の絶対番号(メッシュのシェーダが ResourceDescriptorHeap[] で引く)。Init 前は0。
+    // 同じSRVの共有SRVヒープ内の絶対番号(メッシュのシェーダが bindless テーブルの配列で引く)。Init 前は0。
     std::uint32_t ExposureSrvIndex() const;
 
 private:

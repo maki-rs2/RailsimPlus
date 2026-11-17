@@ -1,5 +1,5 @@
 //
-// LuminanceMeterShader.h - 測光パスの HLSL(DXC、SM6.6。ResourceDescriptorHeap[] で SRV を番号から引く)
+// LuminanceMeterShader.h - 測光パスの HLSL(DXC、SM6.0。bindless テーブルの配列で SRV を番号から引く)
 //
 // 出力の1画素が、入力のその区画の「輝度の対数(log2)の平均」になる。区画の中を 8x8 の点で拾って平均する。
 // 輝度は Rec.709 の係数で求め、異常値(NaN・無限大)は 0、極端な値は [最小, 最大] に収めてから対数にする
@@ -33,7 +33,7 @@ VSOut VSMain(uint id : SV_VertexID) {
 static const uint kTapsPerSide = 8;
 
 float PSMeter(VSOut input) : SV_Target {
-    Texture2D<float4> colorTex = ResourceDescriptorHeap[gColorIdx];
+    Texture2D<float4> colorTex = gBindlessTex2D[gColorIdx];
     float2 blockSize = gInputSize / gGridSize;
     float2 origin = floor(input.pos.xy) * blockSize;
     int2 maxPixel = int2(gInputSize) - 1;

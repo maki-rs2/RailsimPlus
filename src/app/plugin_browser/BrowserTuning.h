@@ -24,6 +24,20 @@ struct BrowserTuning {
     // サムネイルの軌道サンプル間隔[m]。
     float thumbnailSampleSpacingM = 1.0f;
 
+    // 編成テンプレートの写真の構図(ThumbnailFit::TrainPhoto)。
+    // 方位は、編成の長さが Short 以下で表の方位、Long 以上で trainPhotoLongAzimuthDeg、その間は直線で補間する。
+    float trainPhotoShortLengthM = 60.0f;
+    float trainPhotoLongLengthM = 300.0f;
+    float trainPhotoLongAzimuthDeg = 5.0f;
+    // 先頭の端面の高さ(外接箱の高さ)が画面の高さに占める割合。
+    float trainPhotoFrontHeightRatio = 0.6f;
+    // 先頭・最後尾と画面の左右の端との余白(画面の半分の幅に対する割合)。
+    float trainPhotoSideMargin = 0.08f;
+    // 先頭の端面の中心の縦位置(画面の半分の高さに対する割合。上が正)。
+    float trainPhotoFrontCenterY = 0.04f;
+    // カメラと先頭の距離の上限[m]。短い編成を正面寄りから撮るとき、遠ざかりすぎて霞むのを防ぐ。
+    float trainPhotoMaxDistanceM = 150.0f;
+
     static const BrowserTuning& Embedded();
 };
 

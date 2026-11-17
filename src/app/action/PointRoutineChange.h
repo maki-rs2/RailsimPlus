@@ -10,6 +10,7 @@
 #include "PointRoutineAction.h"
 #include "RoutineListEdit.h"
 #include "../../editor/tool/PointDiaCommand.h"
+#include "../../editor/tool/Editor.h"
 
 namespace rs::app::point_routine_change {
 

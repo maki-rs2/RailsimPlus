@@ -1,5 +1,5 @@
 //
-// MoverRuntime.h - StaticMove/StaticRotation の純CPUアニメ評価層
+// MoverRuntime.h - 可動部の純CPUアニメ評価層
 //
 // 描画非依存。ModelPart::customizers（パース済みの可動部定義）を発動文脈
 // （常時/ApplySwitch Case/If 条件）ごとにグループ化し、UI からの
@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "EaseTable.h"
+#include "TrackingMoveSolve.h"
 #include "../../schema/PluginSchema.h"
 #include "../../schema/SwitchExpr.h"
 #include "../../../core/Math.h"
@@ -32,9 +33,9 @@ struct MoverGroup {
 };
 
 // item 単位のアニメ状態（近似モデル）。
-//   phase ∈ [0,1]（0=非適用、1=適用）: Move/Rotate 用
-//   delayRemaining: Pre(Reverse)Delay の残り秒数（Move/Rotate 用）
-//   target: 現在向かっている先（1=active化、0=inactive化。Move/Rotate 用）
+//   phase ∈ [0,1]（0=非適用、1=適用）: Move/Rotate/TrackingMove 用
+//   delayRemaining: Pre(Reverse)Delay の残り秒数（位相で動く項目用）
+//   target: 現在向かっている先（1=active化、0=inactive化。位相で動く項目用）
 //   angleDeg: DynamicRotate 用の累積回転角（active切替でリセットしない）
 //   curSpeedDegPerSec: DynamicRotate 用の現在角速度（同上）
 struct MoverItemState {
@@ -44,7 +45,7 @@ struct MoverItemState {
     float angleDeg = 0.0f;
     float curSpeedDegPerSec = 0.0f;
     bool pending = false; // PartMoverRuntime::pendingItems_ に載っているか(二重登録の防止)
-    // Move/Rotate か。ComposeLocal が定義側の大きな StaticCustomizer を読まずに、適用量0の item を
+    // 位相で適用量を決めるか。ComposeLocal が定義側の大きな StaticCustomizer を読まずに、適用量0の item を
     // 飛ばせるようにここへ写しておく(1パーツに数百の item があると、その読み出しだけで重い)。
     bool usesPhase = false;
 };
@@ -64,9 +65,10 @@ public:
 
     size_t GroupCount() const { return groups_.size(); }
     const MoverGroup& Group(size_t idx) const { return groups_[idx]; }
-    // 時間で動く item(DynamicRotate/AnalogClock)を1件でも持つか。Move/Rotateだけなら
+    // 時間や追従先で動く item を1件でも持つか。Move/Rotateだけなら
     // 目標位相で静止するため、静的インスタンス化の焼き込み対象にできる。
     bool HasTimeDrivenItems() const;
+    bool HasTrackingMoves() const { return !trackingMoves_.empty(); }
     bool IsGroupActive(size_t idx) const { return idx < active_.size() && active_[idx]; }
 
     // UI からの目標状態切替（トグル）。同じ状態を渡しても現在位相からの
@@ -85,7 +87,7 @@ public:
     void UpdateActivation(const rs::legacy_pi::SwitchResolver& resolve, uint64_t generation);
 
     // 全グループ・全 item が「これ以上状態が変化しない」静止状態かを返す。
-    // StaticMove/StaticRotation は phase==target かつ delayRemaining<=0、
+    // 位相で動く項目は phase==target かつ delayRemaining<=0、TrackingMove はさらに phase==0、
     // DynamicRotate は現在角速度0かつグループ非active(activeなら以後
     // 目標速度が非0になることがあるため静止扱いしない)であること。true の間は
     // Update/ComposeLocal を呼んでも結果が変わらないため、呼び出し側で
@@ -104,8 +106,10 @@ public:
 
     // 全グループ・全 item の変換を宣言順に合成したローカル行列を返す
     // （row-major, row-vector: v' = v * out）。
-    // 状態が変わるまでは前回の合成結果を返す。
-    void ComposeLocal(float out[16]);
+    // TrackingMove の位相が0でない間は追従先を調べ直し、それ以外は状態が変わるまで前回の結果を返す。
+    void ComposeLocal(float out[16], const rs::core::Mat4& base = rs::core::Mat4::Identity(),
+                      const TrackingTargetTable* targets = nullptr,
+                      const rs::core::Mat4* placementToWorld = nullptr);
 
 private:
     // まだ状態が変化する item の位置。Update はここに載っている item だけを進める。
@@ -134,6 +138,7 @@ private:
                            double clockSecondsOfDay);
 
     std::vector<MoverGroup>        groups_;
+    std::vector<rs::legacy_pi::TrackingMoveCustomizer> trackingMoves_;
     std::vector<bool>              active_;   // グループごとの目標状態
     std::vector<std::vector<MoverItemState>> itemStates_; // groups_[g].items と1:1
     std::vector<std::vector<MoverItemEase>> itemEases_;   // groups_[g].items と1:1

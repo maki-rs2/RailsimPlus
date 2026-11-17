@@ -84,7 +84,7 @@ bool BuildLineThumbnailMesh(const rs::legacy_plugin::LoadedPlugin& plugin, float
     int missing = 0;
     rs::render::MeshAssembler assembler;
     const rs::render::Mesh wire =
-        rs::legacy_plugin::BuildLineWireMesh(plugin.def.line, plugin.folder, baseA, up, baseB, up, log, missing);
+        rs::legacy_plugin::BuildLineWireMesh(plugin.def.line, plugin.folder, baseA, up, baseB, up, log, missing, nullptr);
     if (!wire.Empty()) assembler.Append(wire);
     return FinishMesh(assembler, meshOut);
 }

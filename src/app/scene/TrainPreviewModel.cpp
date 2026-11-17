@@ -115,6 +115,33 @@ bool TrainPreviewModel::Update(const std::vector<FormationCar>& cars, size_t max
     return true;
 }
 
+bool TrainPreviewModel::PrefetchReady(const std::vector<FormationCar>& cars, size_t maxCars) {
+    ParsedPluginCache& cache = GetParsedPluginCache();
+    const size_t carCount = std::min(cars.size(), maxCars);
+    std::string key = std::to_string(cache.Generation());
+    for (size_t i = 0; i < carCount; ++i) {
+        key += '\n';
+        key += cars[i].folderUtf8;
+    }
+    if (key == readyKey_) return true;
+
+    std::vector<PluginSource> missing;
+    for (size_t i = 0; i < carCount; ++i) {
+        PluginSource source(cars[i].folderUtf8);
+        if (!cache.Contains(source)) missing.push_back(std::move(source));
+    }
+    if (missing.empty()) {
+        readyKey_ = std::move(key);
+        return true;
+    }
+    // 先読み側は表に登録済みのものと重複を除くので、ここでは並びが変わったときに1回出すだけでよい。
+    if (key != prefetchKey_) {
+        cache.RequestPrefetch(missing);
+        prefetchKey_ = std::move(key);
+    }
+    return false;
+}
+
 std::vector<rs::core::Mat4> TrainPreviewModel::SolveWorlds(const std::vector<FormationCar>& cars,
                                                            const rs::world::TrackPosition& head,
                                                            const rs::world::TrackGraph& graph) const {

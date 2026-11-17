@@ -15,10 +15,11 @@
 
 #include "../../render/effects/HeadlightFlare.h"
 #include "../../world/alignment/TrackGraph.h"
-#include "../../world/scene/SceneEntity.h"
 #include "../plugin_session/FlareTextureSlots.h"
 #include "SceneSlotPool.h"
 #include "StaticHeadlightRoster.h"
+
+namespace rs::world { struct SceneEntity; }
 
 namespace rs::app {
 

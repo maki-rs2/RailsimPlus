@@ -3,7 +3,7 @@
 //
 // メッシュの直射光(MeshIblShader.h の MeshSunColor)・空の太陽の円盤・遠景の光(LandscapeShader.h)が
 // 同じ式を使う。AtmosphereShader.h の定数部と kTransmittanceUvShader の後ろへ連結する。
-// DXC(SM6.6)でもFXC(SM5)でも通る形(テクスチャとサンプラを引数で受ける)。
+// DXC(SM6.0)でもFXC(SM5)でも通る形(テクスチャとサンプラを引数で受ける)。
 //
 #pragma once
 
@@ -29,6 +29,13 @@ float3 SunColorFromTransmittance(Texture2D<float4> transmittanceLut, SamplerStat
     float3 transmittance =
         saturate(transmittanceLut.SampleLevel(smp, TransmittanceParamsToUv(viewHeight, toSun.y), 0).rgb);
     return transmittance * SunVisibilityAboveHorizon(toSun.y);
+}
+
+// 太陽が物を照らす直射光の色と強さ(標準の空)。太陽色に倍率 kSunLightScale(大気の定数部。空と同じ倍率×調整値の比)を掛ける。
+// メッシュ・粒子・遠景・霧の太陽の光はこれを使い、太陽の円盤・レンズフレア(見た目の明るさは別の調整値)と月は
+// SunColorFromTransmittance をそのまま使う。
+float3 SunLightFromTransmittance(Texture2D<float4> transmittanceLut, SamplerState smp, float3 toSun) {
+    return SunColorFromTransmittance(transmittanceLut, smp, toSun) * kSunLightScale;
 }
 )HLSL";
 

@@ -15,6 +15,7 @@
 #include "../plugin_browser/PluginBrowserService.h"
 #include "../plugin_session/TemplateSaver.h"
 #include "../plugin_session/TrainGroupTemplateParse.h"
+#include "../../platform/text/Encoding.h"
 #include "../../world/alignment/GuidJson.h"
 
 namespace rs::app::rmlui {
@@ -105,7 +106,8 @@ void RmlUiTrainTabView::ReloadTemplates() {
             TemplateCardRow row;
             row.name = name;
             // 編成・敷設は画像を撮る。両数と見つからない車両の警告は編成だけ(情景は名前だけ)。
-            const std::string path = TemplateSavePath(pluginRoot_, kind, name).string();
+            // path::string() はANSIコードページで返すので、日本語の名前がUTF-8として読めなくなる。
+            const std::string path = rs::platform_text::WideToUtf8(TemplateSavePath(pluginRoot_, kind, name).wstring());
             if (kind == TemplateKind::TrainGroupTemplate || kind == TemplateKind::RailwayPluginSet) {
                 plugin_browser::WantedTemplateImage wanted;
                 wanted.source.kind = kind == TemplateKind::TrainGroupTemplate ? plugin_browser::TemplateImageKind::Train

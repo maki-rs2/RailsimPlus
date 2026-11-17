@@ -54,8 +54,6 @@ struct OverlayLineTuning {
     float trainPlacementHeadBarHalfWidthM = 1.6f;
     // 列車配置の線をレールから浮かす高さ[m]。
     float trainPlacementLiftM = 0.15f;
-    // 分岐の左右の印を、分かれる線のレール上で分岐から離す距離[m]。
-    float pointHandMarkDistanceM = 6.0f;
 
     static const OverlayLineTuning& Embedded();
 };

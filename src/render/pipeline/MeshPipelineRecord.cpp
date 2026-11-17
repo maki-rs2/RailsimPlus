@@ -21,7 +21,7 @@ void MeshPipeline::RecordHighlightInstanced(ID3D12GraphicsCommandList* cmdList,
     if (geometry_.IndexCount() == 0) return;
     UINT f = frameIndex % kFrames;
 
-    shared_->BindRootSignature(cmdList, baseConstants);
+    shared_->BindRootSignature(rs::rhi::CommandList{cmdList}, baseConstants, {srvHeap_, srvSize_});
     cmdList->SetPipelineState(shared_->InstancedHighlight());
     dynamicBuffers_.BindInstanceMatOverrideTable(cmdList, f);
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -60,7 +60,7 @@ void MeshPipeline::RecordHighlightInstanced(ID3D12GraphicsCommandList* cmdList,
 MeshConstants MeshPipeline::BindInstancedMultiPart(ID3D12GraphicsCommandList* cmdList,
                                                    const MeshConstants& baseConstants, UINT f,
                                                    UINT partsPerInstance) {
-    shared_->BindRootSignature(cmdList, baseConstants);
+    shared_->BindRootSignature(rs::rhi::CommandList{cmdList}, baseConstants, {srvHeap_, srvSize_});
     dynamicBuffers_.BindInstanceMatOverrideTable(cmdList, f);
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cmdList->IASetVertexBuffers(0, 1, &geometry_.VertexBufferView());
@@ -240,7 +240,7 @@ void MeshPipeline::RecordTransparentInstancedMultiPart(
     if (geometry_.IndexCount() == 0 || instanceCount == 0 || partsPerInstance == 0 || transparency_.Empty()) return;
     const UINT f = frameIndex % kFrames;
     if (!transparency_.FrameReady(f)) return;
-    shared_->BindRootSignature(cmdList, baseConstants);
+    shared_->BindRootSignature(rs::rhi::CommandList{cmdList}, baseConstants, {srvHeap_, srvSize_});
     dynamicBuffers_.BindInstanceMatOverrideTable(cmdList, f);
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cmdList->IASetVertexBuffers(0, 1, &geometry_.VertexBufferView());
@@ -348,7 +348,7 @@ void MeshPipeline::RecordHighlightSelf(ID3D12GraphicsCommandList* cmdList,
     if (geometry_.IndexCount() == 0) return;
     UINT f = frameIndex % kFrames;
 
-    shared_->BindRootSignature(cmdList, baseConstants);
+    shared_->BindRootSignature(rs::rhi::CommandList{cmdList}, baseConstants, {srvHeap_, srvSize_});
     dynamicBuffers_.BindInstanceMatOverrideTable(cmdList, f);
     cmdList->SetPipelineState(shared_->Highlight());
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

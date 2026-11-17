@@ -71,7 +71,7 @@ bool MotionBlurPass::Init(const rs::rhi::Device& device, const rs::rhi::SrvHeap&
     std::unique_ptr<Impl> impl = std::make_unique<Impl>();
     impl->firstSrvIndex = firstSrvIndex;
 
-    // ルート署名は 32bit 定数 b0 だけ。SRV は ResourceDescriptorHeap[] から番号で引き、画素は Load で読む。
+    // ルート署名は 32bit 定数 b0 と bindless テーブル。SRV は配列から番号で引き、画素は Load で読む。
     FullscreenPassPipelines& pipelines = impl->pipelines;
     if (!pipelines.Init(device, srvHeap, kMotionBlurShader, "motion_blur", kConstantDwordCount) ||
         !pipelines.AddPixelShader(L"PSVelocity", HdrTargetFormat::Half16) ||

@@ -56,13 +56,14 @@
 #include "../ui/EditorViewport.h"
 #include "../ui/ModePanels.h"
 #include "../ui/UiPanels.h"
-#include "../../editor/tool/Editor.h"
 #include "../../platform/file/StableFileWatcher.h"
 #include "../../sim/audio/AudioEngine.h"
 #include "../../world/scene/SceneRegistry.h"
 #include "../../world/time/EnvironmentPresets.h"
 #include "../../world/time/GameClock.h"
 #include "../../world/time/SolarPosition.h"
+
+namespace rs::editor { class Editor; }
 
 namespace rs::app {
 

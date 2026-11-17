@@ -93,6 +93,10 @@ struct CabinHudViewModel {
     std::string nextStation;
     std::string nextPlatform;
     int speedKmh = 0;
+    // 速度操作の対象(追従中の列車)と、その目標速度[km/h](後退は負)・運行状態。
+    rs::world::TrainId trainId = rs::world::NilGuid();
+    float targetSpeedKmh = 0.0f;
+    rs::sim::DiaState diaState = rs::sim::DiaState::Running;
     bool operator==(const CabinHudViewModel&) const = default;
 };
 

@@ -13,7 +13,7 @@ namespace rs::render {
 
 // 速度の最大値を求めるタイルの1辺[画素]。ぼかしの半径の上限(MotionBlurMaxRadiusPixels)以上であること。
 // 周囲 3x3 のタイルの最大の速度を見れば、その画素を通る全部のぼかしの向きが分かる。
-constexpr std::uint32_t kMotionBlurTileSize = 32;
+constexpr std::uint32_t kMotionBlurTileSize = 64;
 
 // 画面の大きさ(画素)を覆うタイルの数(端の欠けたタイルも1つに数える)。
 constexpr std::uint32_t MotionBlurTileCount(std::uint32_t pixels) {
@@ -35,6 +35,14 @@ constexpr float kMotionBlurReferenceFrameSeconds = 1.0f / 60.0f;
 constexpr float MotionBlurShutterForFrameTime(float shutter, float frameSeconds) {
     if (frameSeconds <= kMotionBlurReferenceFrameSeconds) return shutter;
     return shutter * std::max(kMotionBlurReferenceFrameSeconds / frameSeconds, 0.125f);
+}
+
+// 撮影カメラのシャッター速度[秒]から求めるシャッターの割合。ぼかしの長さを「シャッターが開いている間の動き」にするため、
+// 1フレームの動きに対する比(シャッター速度 / フレーム時間)にする。フレーム時間が不正なときは基準のフレーム時間で割る。
+constexpr float MotionBlurShutterForExposure(float shutterSeconds, float frameSeconds) {
+    if (!(shutterSeconds > 0.0f)) return 0.0f;
+    const float frame = frameSeconds > 0.0f ? frameSeconds : kMotionBlurReferenceFrameSeconds;
+    return shutterSeconds / frame;
 }
 
 // 速度の向きに拾う点の数。極端な値を許さない(速度の向きの刻みが粗すぎる・重すぎるのを防ぐ)。

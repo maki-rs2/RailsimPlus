@@ -39,7 +39,7 @@ void MeshPipeline::UploadMaterialTextures(ID3D12Device* device,
     // (同一メッシュ内の重複＋切替後の再アップロード)はスロット参照のみで済む
     // (VRAM・アップロード帯域・切替ヒッチを大幅削減)。ランタイムのテクスチャ差替
     // (ChangeTexture/画像切替アニメ)は UpdateMaterialTexture が texSlotOffset(ひいては
-    // ResourceDescriptorHeap[]添字)を差し替えるだけで既存スロットの SRV/リソースを
+    // bindless テーブルの配列添字)を差し替えるだけで既存スロットの SRV/リソースを
     // 上書きしないため、プール共有は安全。
     ProfClock::time_point profTex0 = ProfClock::now();
     size_t prefetchCount = 0;

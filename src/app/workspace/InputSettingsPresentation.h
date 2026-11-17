@@ -36,7 +36,6 @@ struct InputSettingsPresentation {
     std::string confirmMessage_;
     std::string confirmLabel_;
     std::string cancelLabel_;
-    std::string note_;
     // 割り当てられないキーが押されたときのトースト文言(画面には出さない)。
     std::string unassignableMessage_;
     // 固定の割り当てと重なるキーが押されたときのトースト文言(画面には出さない)。

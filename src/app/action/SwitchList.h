@@ -12,7 +12,8 @@
 #include <string>
 #include <vector>
 
-#include "../../plugins/schema/PluginSchema.h"
+namespace rs::legacy_pi { struct SwitchDef; }
+
 
 namespace rs::app {
 

@@ -14,6 +14,7 @@
 #include "../../world/alignment/JsonReadValue.h"
 #include "../../world/scene/ManualPlacementOverlaySerialize.h"
 #include "../../world/scene/SceneEntitySerialize.h"
+#include "../../plugins/schema/PluginSchema.h"
 
 namespace rs::app {
 namespace {

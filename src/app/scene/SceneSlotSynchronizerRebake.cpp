@@ -151,13 +151,16 @@ void BakeSwitchOptionsWithProfile(SyncContext& ctx, SceneSlotPool::Slot& slot,
                                   const rs::world::SceneEntity& entity) {
     const SwitchEvaluationInput input =
         slot.session.BuildSwitchEvaluationInput(&entity.switchOptions);
+    // スロットは実行時にも材質を評価し直す。システムスイッチ依存のテクスチャ差し替えを焼くと、
+    // 値の違う個体で戻り先が焼き込み後のテクスチャになるため、焼き込まない。
+    constexpr PluginSession::BakeMode kBakeMode = PluginSession::BakeMode::RuntimeEvaluated;
     if (!ctx.profileEnabled) {
-        slot.session.ApplySwitchEvaluationAndBake(input);
+        slot.session.ApplySwitchEvaluationAndBake(input, kBakeMode);
         return;
     }
     using ProfClock = std::chrono::steady_clock;
     const ProfClock::time_point tBake0 = ProfClock::now();
-    slot.session.ApplySwitchEvaluationAndBake(input);
+    slot.session.ApplySwitchEvaluationAndBake(input, kBakeMode);
     ctx.profile.bakeMs +=
         std::chrono::duration<double, std::milli>(ProfClock::now() - tBake0).count();
     ++ctx.profile.bakeCount;

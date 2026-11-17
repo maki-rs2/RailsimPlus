@@ -34,8 +34,8 @@ struct SignalPanelSignal {
     double s_ = 0.0;
     // 画面上の位置(毎フレームの配置の結果。"123px"の形)。画面の外・後ろならshown_がfalse。
     bool shown_ = false;
-    std::string left_;
-    std::string top_;
+    std::string left_ = "0px";
+    std::string top_ = "0px";
 };
 
 struct SignalPanelPresentation {
@@ -45,8 +45,8 @@ struct SignalPanelPresentation {
     rs::world::Guid blockEdge_ = rs::world::NilGuid();
     double blockS_ = 0.0;
     bool blockButtonShown_ = false;
-    std::string blockButtonLeft_;
-    std::string blockButtonTop_;
+    std::string blockButtonLeft_ = "0px";
+    std::string blockButtonTop_ = "0px";
     std::vector<SignalPanelSignal> signals_;
 
     // 信号を1つ選ぶ(同じ信号をもう一度押すと選択を外す)。範囲外は何もしない。

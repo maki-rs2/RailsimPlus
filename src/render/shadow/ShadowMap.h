@@ -39,7 +39,7 @@ public:
     bool Ready() const;
     std::uint32_t Size() const;
     std::uint32_t SliceCount() const;
-    // シェーダが ResourceDescriptorHeap[] で引くSRVの絶対番号。
+    // シェーダが bindless テーブルの配列で引くSRVの絶対番号。
     std::uint32_t SrvIndex() const;
 
     // 必要なら状態遷移のバリアを記録する(同じ状態なら何もしない)。

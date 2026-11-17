@@ -116,6 +116,16 @@ public:
     std::vector<MaterialApplyResult> Apply(const rs::legacy_pi::SwitchResolver& resolve,
                                            uint64_t generation, float dayAlpha = 1.0f) const;
 
+    // Apply() と同じ「最後の active 勝ち」で、テクスチャの上書きだけを材質ごとに返す。
+    // ただし発動条件(trig)が excludedSwitches のどれかを参照する ChangeTexture は、
+    // 候補に含めない(実行時に値が変わるスイッチへ依存する指定を、読込時の値で確定させないため)。
+    // 除外した結果どれも active でない材質は hasTextureOverride が偽(上書きなし)。
+    // 戻り値は材質数と同じ長さで、color はベース値のまま(色は Apply() の結果を使う)。
+    // Apply() の世代キャッシュは使わず、書き換えもしない。
+    std::vector<MaterialApplyResult> ResolveTextureOverridesExcludingSwitches(
+        const rs::legacy_pi::SwitchResolver& resolve,
+        const std::vector<std::string>& excludedSwitches) const;
+
     // resolve の下で active な ChangeTexture エントリの解決済みパス
     // (base/normal/pbr の3つ組)を out へ追加する(重複除去は呼び出し側の責務)。
     // 事前ロード用。Apply()と違い勝者選定を行わず、activeな候補を全て挙げる
@@ -138,6 +148,12 @@ private:
     // 件数が ChangeTexture の数と合わないときは未解決の相対パスをそのまま使う(テスト用)。
     void AssignTexPaths(const rs::legacy_pi::ModelPart& part,
                         const std::vector<std::array<std::string, 3>>& resolvedTexPaths);
+
+    // 宣言順に active な ChangeTexture を out の材質へ書く(最後の active 勝ち)。excludedSwitches が
+    // nullptr でなければ、それを参照する条件のエントリは飛ばす。Apply と除外つきの解決で共通。
+    void ApplyTextureEntries(const rs::legacy_pi::SwitchResolver& resolve,
+                             const std::vector<std::string>* excludedSwitches,
+                             std::vector<MaterialApplyResult>& out) const;
 
     std::vector<MaterialTexEntry>   texEntries_;
     std::vector<MaterialColorEntry> colorEntries_;

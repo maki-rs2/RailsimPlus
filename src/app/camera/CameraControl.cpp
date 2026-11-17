@@ -11,8 +11,27 @@
 namespace rs::app {
 
 namespace {
-// Shift+左ボタンを押してから、これだけ(px)動いたらクリックでなくドラッグとして高さ調節を始める。
-constexpr int kHeightDragStartPx = 4;
+// 左・中ボタンを押してから、これだけ(px)動いたらクリックでなくドラッグとして基準点の移動を始める。
+constexpr int kMoveDragStartPx = 4;
+
+// 水平面内の画面の前方と右。移動はピッチに影響しない(マップエディタ流)。
+// eyePos は target + distance*(sinYaw,·,cosYaw) でカメラが+yaw側に立つため、
+// 画面の前方(視線方向)はその逆向き -(sin,cos) になる。
+struct HorizontalAxes {
+    float forward[3];
+    float right[3];
+};
+
+HorizontalAxes HorizontalAxesFromYaw(float yaw) {
+    HorizontalAxes axes;
+    axes.forward[0] = -std::sin(yaw);
+    axes.forward[1] = 0.0f;
+    axes.forward[2] = -std::cos(yaw);
+    axes.right[0] = axes.forward[2];
+    axes.right[1] = 0.0f;
+    axes.right[2] = -axes.forward[0];
+    return axes;
+}
 }  // namespace
 
 void CameraController::FitToAabb(const float mn[3], const float mx[3]) {
@@ -121,41 +140,70 @@ void CameraController::OnRightDown(int x, int y) {
 
 void CameraController::OnRightUp() { rotating_ = false; }
 
-bool CameraController::OnLeftDown(int x, int y, bool shiftDown) {
-    // Shift+左ドラッグ = 高さ調節。Shift非押下の左クリックはエディタ操作等に
-    // 譲るため、ここでは何も始めない。
-    // 押した直後は「待ち」にとどめ、しきい値を超えて動いたときに初めて高さ調節を始める
+void CameraController::BeginMoveDrag(rs::app::input::PointerButton button, int x, int y, bool vertical) {
+    // 押した直後は「待ち」にとどめ、しきい値を超えて動いたときに初めて移動を始める
     // (敷設ツールのShift+クリックでカメラの高さが動かないようにするため)。
-    if (!shiftDown) return false;
-    heightPressed_ = true;
-    heightDragging_ = false;
+    moveDrag_ = MoveDragPhase::Pending;
+    moveDragButton_ = button;
+    moveDragVertical_ = vertical;
     lastDragPos_.x = x;
     lastDragPos_.y = y;
+}
+
+bool CameraController::EndMoveDrag(rs::app::input::PointerButton button) {
+    // 待ちのまま離した(クリック)場合も、SetCaptureしているのでtrueを返す。
+    if (moveDrag_ == MoveDragPhase::None || moveDragButton_ != button) return false;
+    moveDrag_ = MoveDragPhase::None;
     return true;
 }
 
-bool CameraController::OnLeftUp() {
-    // 待ちのまま離した(クリック)場合も、SetCaptureしているのでtrueを返す。
-    const bool wasCaptured = heightPressed_ || heightDragging_;
-    heightPressed_ = false;
-    heightDragging_ = false;
-    return wasCaptured;
+bool CameraController::OnLeftDown(int x, int y, bool shiftDown) {
+    // Shift+左ドラッグ = 垂直(高さ調節)。Shift非押下は、水平の移動に使う設定のときだけ受け付ける。
+    // どちらでもない左クリックはエディタ操作等に譲るため、ここでは何も始めない。
+    if (!shiftDown && !leftDragMovesTarget) return false;
+    BeginMoveDrag(rs::app::input::PointerButton::Left, x, y, shiftDown);
+    return true;
 }
 
-void CameraController::OnMouseMove(int x, int y) {
-    if (heightPressed_) {
+bool CameraController::OnLeftUp() { return EndMoveDrag(rs::app::input::PointerButton::Left); }
+
+bool CameraController::OnMiddleDown(int x, int y, bool shiftDown) {
+    if (!middleDragMovesTarget) return false;
+    BeginMoveDrag(rs::app::input::PointerButton::Middle, x, y, shiftDown);
+    return true;
+}
+
+bool CameraController::OnMiddleUp() { return EndMoveDrag(rs::app::input::PointerButton::Middle); }
+
+void CameraController::ApplyMoveDrag(float dx, float dy, bool fastDown) {
+    const CameraTuning& tuning = CameraTuning::Embedded();
+    const float scale = std::max(fly.distance, tuning.viewDistMoveMinMeters) * tuning.viewDragPerPixel *
+                        (fastDown ? tuning.viewDragFastMultiplier : 1.0f);
+    if (moveDragVertical_) {
+        // dxは無視し、上ドラッグで上昇する。
+        fly.target[1] -= dy * scale;
+        return;
+    }
+    // 右へドラッグすると注目点が画面の右へ、上へドラッグすると前へ動く。
+    const HorizontalAxes axes = HorizontalAxesFromYaw(fly.yaw);
+    fly.target[0] += (axes.right[0] * dx - axes.forward[0] * dy) * scale;
+    fly.target[2] += (axes.right[2] * dx - axes.forward[2] * dy) * scale;
+}
+
+void CameraController::OnMouseMove(int x, int y, bool fastDown) {
+    if (moveDrag_ == MoveDragPhase::Pending) {
         const int moveX = x - lastDragPos_.x;
         const int moveY = y - lastDragPos_.y;
-        if (moveX * moveX + moveY * moveY < kHeightDragStartPx * kHeightDragStartPx) return;
+        if (moveX * moveX + moveY * moveY < kMoveDragStartPx * kMoveDragStartPx) return;
         // 開始時に飛ばないよう、基準位置を今の位置へ取り直す。
-        heightPressed_ = false;
-        heightDragging_ = true;
+        moveDrag_ = MoveDragPhase::Moving;
         lastDragPos_.x = x;
         lastDragPos_.y = y;
         return;
     }
-    if (!rotating_ && !heightDragging_) return;
-    if (heightDragging_) {
+    const bool moving = moveDrag_ == MoveDragPhase::Moving;
+    if (!rotating_ && !moving) return;
+    if (moving) {
         CancelFlyTo();
     } else {
         CancelFlyToUnlessFollowing();
@@ -163,11 +211,9 @@ void CameraController::OnMouseMove(int x, int y) {
     float dx = float(x - lastDragPos_.x);
     float dy = float(y - lastDragPos_.y);
     const CameraTuning& tuning = CameraTuning::Embedded();
-    if (heightDragging_) {
-        // Shift+左ドラッグ = 基準点の高さ(target[1])を調節する。dxは無視し、
-        // 上ドラッグで上昇する。変化量はdistanceに比例させる。
-        // ドラッグ開始後にShiftを離しても、ボタンを離すまでは高さ調節を継続する。
-        fly.target[1] -= dy * tuning.viewHeightSensitivity * std::max(fly.distance, tuning.viewDistMoveMinMeters);
+    if (moving) {
+        // ドラッグ開始後にShiftを離しても、ボタンを離すまでは押した時点の向き(水平/垂直)で続ける。
+        ApplyMoveDrag(dx, dy, fastDown);
     } else {
         // 右ドラッグ = 基準点(target)を中心とした回転。ピボットは常にtargetなので
         // 特別な捕捉処理は不要で、yaw/pitchを更新するだけでよい。
@@ -212,11 +258,9 @@ void CameraController::UpdateWasd(float dt, bool foreground, const rs::app::inpu
                         input.Held(rs::app::input::InputAction::CameraMoveLeft);
     if (moving) CancelFlyTo();
 
-    // 移動は水平面内のみ(ピッチは移動に影響しない。マップエディタ流)。
-    // eyePos は target + distance*(sinYaw,·,cosYaw) でカメラが+yaw側に立つため、
-    // 画面の前方(視線方向)はその逆向き -(sin,cos) になる。
-    float fwdHoriz[3] = {-std::sin(fly.yaw), 0.0f, -std::cos(fly.yaw)};
-    float right[3] = {fwdHoriz[2], 0.0f, -fwdHoriz[0]};
+    const HorizontalAxes axes = HorizontalAxesFromYaw(fly.yaw);
+    const float* const fwdHoriz = axes.forward;
+    const float* const right = axes.right;
 
     // 移動速度 = 基準倍率 * 距離係数(distance) * dt。
     // 基準点から離れているほど速く動く(Cities:Skylines流)。

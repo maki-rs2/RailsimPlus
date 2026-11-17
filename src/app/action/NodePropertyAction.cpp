@@ -2,6 +2,7 @@
 // NodePropertyAction.cpp - 選択nodeプロパティのアプリサービス
 //
 #include "NodePropertyAction.h"
+#include "../../editor/tool/Editor.h"
 
 #include <memory>
 #include <optional>

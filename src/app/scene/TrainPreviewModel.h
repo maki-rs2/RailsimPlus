@@ -36,6 +36,11 @@ public:
     // 戻り値は「結合メッシュが変わったので再アップロードが要る」こと。
     bool Update(const std::vector<FormationCar>& cars, size_t maxCars, std::vector<std::string>& log);
 
+    // carsの先頭から最大maxCars両のプラグインが解析済みか。未解析の車があれば先読みのスレッドへ出して
+    // falseを返す(同じ並びでは1回だけ出す)。Updateは未解析の車をその場で解析して数秒止まるので、
+    // メインスレッドではこれがtrueになってからUpdateを呼ぶ。
+    bool PrefetchReady(const std::vector<FormationCar>& cars, size_t maxCars);
+
     // 結合メッシュの中身を表すキー(アップロード済みかどうかの判定用)。
     const std::string& ContentKey() const { return contentKey_; }
     const rs::render::Mesh& Mesh() const { return mergedMesh_; }
@@ -71,6 +76,9 @@ private:
     std::vector<DrawnCar> drawn_;
     std::string contentKey_;
     rs::render::Mesh mergedMesh_;
+    // 先読みを出した車の並びと、解析済みを確かめた並び(どちらもキャッシュの世代を含む)。
+    std::string prefetchKey_;
+    std::string readyKey_;
 };
 
 } // namespace rs::app

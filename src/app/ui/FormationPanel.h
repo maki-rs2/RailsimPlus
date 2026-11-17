@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "../../world/alignment/TrackTraversal.h"
-#include "../../world/scene/SceneEntity.h"
+#include "../../world/scene/TrainId.h"
 #include "ImGuiPathPicker.h"
 
 namespace rs::world {

@@ -10,6 +10,7 @@
 
 #include "../../core/Epsilon.h"
 #include "ProfileMaterial.h"
+#include "LineWireGeometry.h"
 
 #include <cmath>
 
@@ -171,25 +172,13 @@ void SweepFacesAlongPoints(Mesh& mesh, ProfileQuadSink& quads,
     }
 }
 
-// 描画に使う1本の架線プロファイルへの参照。Wiredmesh/Wireframeのどちらから来たかを
-// ここで吸収し、以降の描画コードを共通化する。facesが非空ならFace断面スイープ、
-// 空ならDiffuseリボンへフォールバックする。
-struct WireProfileRef {
-    const std::vector<rs::legacy_pi::LineWirePolyline>* lines;
-    float r, g, b, a;
-    const std::vector<rs::legacy_pi::RailProfileFace>* faces = nullptr;
-    std::string texFileName;
-    float texVPerMeter = 1.0f;
-    bool useTexture = false;
-    rs::legacy_pi::ProfileMaterialExtra materialExtra; // Wireframe(旧形式)は既定のまま
-};
-
 } // namespace
 
 rs::render::Mesh BuildLineWireMesh(const rs::legacy_pi::LineDef& lineDef,
                                    const std::wstring& baseDir, const Vec3& baseA,
                                    const Vec3& upA, const Vec3& baseB, const Vec3& upB,
-                                   std::vector<std::string>& log, int& missingTex) {
+                                   std::vector<std::string>& log, int& missingTex,
+                                   TrackingTargetTable* trackingTargets) {
     rs::render::Mesh mesh;
     if (lineDef.wiredmeshes.empty() && lineDef.wireframes.empty()) return mesh;
 
@@ -205,42 +194,7 @@ rs::render::Mesh BuildLineWireMesh(const rs::legacy_pi::LineDef& lineDef,
     // 帯別)ため単一選択ではなく[minInterval, maxInterval)を満たす全プロファイルを
     // 重ねて描画する。Wireframeのみの旧形式ファイルでは単一プロファイル選択
     // (一致が無ければmaxIntervalが最大のブロックへフォールバック)を維持する。
-    std::vector<WireProfileRef> selected;
-    if (!lineDef.wiredmeshes.empty()) {
-        auto toRef = [](const rs::legacy_pi::LineWiredmesh& w) {
-            WireProfileRef ref;
-            ref.lines = &w.lines;
-            ref.r = w.diffuseR; ref.g = w.diffuseG; ref.b = w.diffuseB; ref.a = w.diffuseA;
-            if (!w.faces.empty()) ref.faces = &w.faces;
-            ref.texFileName = w.texFileName;
-            ref.texVPerMeter = w.texVPerMeter;
-            ref.useTexture = w.useTexture;
-            ref.materialExtra = w.materialExtra;
-            return ref;
-        };
-        for (const auto& w : lineDef.wiredmeshes)
-            if (spanLength >= w.minInterval && spanLength < w.maxInterval)
-                selected.push_back(toRef(w));
-        if (selected.empty()) {
-            const rs::legacy_pi::LineWiredmesh* best = nullptr;
-            for (const auto& w : lineDef.wiredmeshes)
-                if (!best || w.maxInterval > best->maxInterval) best = &w;
-            if (best) selected.push_back(toRef(*best));
-        }
-    } else {
-        const rs::legacy_pi::LineWireframe* wf = nullptr;
-        for (const auto& w : lineDef.wireframes) {
-            if (spanLength >= w.minInterval && spanLength < w.maxInterval) {
-                wf = &w;
-                break;
-            }
-        }
-        if (!wf) {
-            for (const auto& w : lineDef.wireframes)
-                if (!wf || w.maxInterval > wf->maxInterval) wf = &w;
-        }
-        if (wf) selected.push_back({&wf->lines, wf->diffuseR, wf->diffuseG, wf->diffuseB, wf->diffuseA});
-    }
+    const std::vector<WireProfileRef> selected = SelectLineWireProfiles(lineDef, spanLength);
     if (selected.empty()) return mesh;
 
     const Vec3 dirSpan = chord * (1.0f / spanLength);
@@ -277,10 +231,18 @@ rs::render::Mesh BuildLineWireMesh(const rs::legacy_pi::LineDef& lineDef,
         const uint32_t indexStart = static_cast<uint32_t>(mesh.indices.size());
         for (const rs::legacy_pi::LineWirePolyline& poly : *profile.lines) {
             if (poly.verts.size() < 2) continue;
+            const std::vector<rs::core::DVec3> points =
+                CalculateLineWirePoints(poly, baseA, dirSpan, up, spanLength);
+            if (trackingTargets && !poly.label.empty()) {
+                std::vector<TrackingSegment>& segments = (*trackingTargets)[poly.label];
+                for (size_t i = 0; i + 1 < points.size(); ++i)
+                    segments.push_back({points[i], points[i + 1]});
+            }
             std::vector<Vec3> worldPts;
-            worldPts.reserve(poly.verts.size());
-            for (const rs::legacy_pi::LineWireVertex& v : poly.verts)
-                worldPts.push_back(baseA + dirSpan * (v.z * spanLength) + up * v.y);
+            worldPts.reserve(points.size());
+            for (const rs::core::DVec3& point : points)
+                worldPts.emplace_back(static_cast<float>(point.x), static_cast<float>(point.y),
+                                      static_cast<float>(point.z));
             if (profile.faces) {
                 SweepFacesAlongPoints(mesh, quads, *profile.faces, profile.texVPerMeter, worldPts, poly.verts,
                                       right, up, dirSpan);

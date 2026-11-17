@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "../alignment/Guid.h"
-#include "SceneEntity.h"
+#include "TrainId.h"
 
 namespace rs::world {
 

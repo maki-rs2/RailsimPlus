@@ -1,5 +1,6 @@
 //
-// MeshConstants.h - メッシュのシェーダへ渡す定数の並びと、環境・大気遠近・高さフォグの詰め方。
+// MeshConstants.h - メッシュのシェーダへ渡す定数の並びと、大気遠近・高さフォグの詰め方。
+// 環境(EnvironmentState)・調整値(RenderTuning)を読む詰め方は MeshConstantsEnvironment.h に分ける。
 //
 // DX12の型に触れないので、描画なしのテストからもそのまま使える。
 //
@@ -9,10 +10,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "EnvFlag.h"
 #include "../sky/AtmosphereMath.h"
-#include "../resource/RenderTuning.h"
-#include "../sky/EnvironmentState.h"
 #include "ViewConstants.h"
 
 namespace rs::render {
@@ -37,7 +35,7 @@ struct alignas(256) MeshConstants {
     float uvTransform1[4];
     // Bindless方式: x=base/normal/ormの絶対ディスクリプタヒープ添字
     // (firstTexIndex_+texSlotOffset。base=+0, normal=+1, orm=+2)。シェーダは
-    // ResourceDescriptorHeap[]でこのインデックスを直接参照する(SM6.6)。
+    // bindless テーブルからこの絶対番号で参照する。
     // テクスチャ無しマテリアルは常にダミー(texSlotOffset=0)を指す。
     uint32_t texIndex[4];
     uint32_t partsPerInstance;
@@ -120,59 +118,12 @@ static_assert(offsetof(MeshConstants, volumetricFogParams) == 400, "HLSL gVolume
 static_assert(offsetof(MeshConstants, viewConstantsAddress) == 416, "CPUだけが読む視点の定数のアドレス");
 static_assert(sizeof(MeshConstants) == 512, "MeshConstants must occupy two 256-byte CBV units");
 
-// 環境光(IBL)・太陽色の設定を MeshConstants へ詰める。FrameRenderer が毎フレーム1か所で呼ぶ。
-inline void ApplyEnvironmentToMeshConstants(const EnvironmentState& env, MeshConstants& dst) {
-    dst.iblIndex[0] = env.srv.diffuse;
-    dst.iblIndex[1] = env.srv.specular;
-    dst.iblIndex[2] = env.srv.brdfLut;
-    dst.iblIndex[3] = env.srv.transmittance;
-    dst.iblParams[0] = static_cast<float>(env.specularMipCount);
-    dst.iblParams[1] = env.iblDiffuseIntensity;
-    dst.iblParams[2] = env.iblSpecularIntensity;
-    dst.iblParams[3] = env.envMapMetallic;
-    dst.iblParams2[0] = env.envMapRoughness;
-    dst.iblParams2[1] = env.pluginSkyDiffuseIntensity;
-    dst.iblParams2[2] = env.pluginSkySpecularIntensity;
-    dst.iblParams2[3] = env.iblSpecularMipScale;
-    dst.iblFlags[0] = env.iblEnabled ? 1u : 0u;
-    dst.iblFlags[1] = static_cast<uint32_t>(env.debugMode);
-    dst.iblFlags[2] = PbrUnifiedEnabled() ? 1u : 0u;
-    for (int i = 0; i < 3; ++i) {
-        dst.pluginDirectional[i] = env.pluginDirectional[i];
-        dst.pluginAmbient[i] = env.pluginAmbient[i];
-        dst.pluginMeshLightScale[i] = env.pluginMeshLightScale[i];
-    }
-    dst.pluginDirectional[3] = env.pluginSky ? 1.0f : 0.0f;
-    dst.pluginAmbient[3] = static_cast<float>(env.pluginSpecularMipCount);
-    dst.pluginIblIndex[0] = env.pluginSrv.diffuse;
-    dst.pluginIblIndex[1] = env.pluginSrv.specular;
-    dst.pluginIblIndex[2] = env.pluginSrv.brdfLut;
-    for (int i = 0; i < 3; ++i) dst.moonLight[i] = env.moonDirection[i];
-    dst.moonLight[3] = env.moonRatio;
-    dst.adaptation[0] = env.srv.exposure;
-    dst.adaptation[1] = env.adaptation ? 1u : 0u;
-}
-
 // 画面のアンビエントオクルージョン(AO。R8)の結果を引くための値を詰める。AO が走ったフレームだけ呼ぶ。
 // width・height は描画先(画面)の大きさ。シェーダはこの大きさでピクセルの位置を uv に直して AO を引く。
 inline void ApplyAmbientOcclusionToMeshConstants(MeshConstants& dst, uint32_t srvIndex, uint32_t width,
                                                  uint32_t height) {
     dst.adaptation[2] = srvIndex;
     dst.adaptation[3] = (width & 0xFFFFu) | (height << 16);
-}
-
-// 本編とサムネイルが共通で入れる定数(光の向き・昼夜係数・環境)。光が進む向きを lightDirXyz に渡す。
-// 視点は ApplyViewToMeshConstants、フォグ(高さ・空気遠近)は呼び出し側が続けて入れる。
-inline MeshConstants MakeBaseMeshConstants(const float* lightDirXyz, float dayAlpha, const EnvironmentState& env) {
-    MeshConstants c = {};
-    for (int i = 0; i < 3; ++i) {
-        c.lightDir[i] = lightDirXyz[i];
-        c.diffuse[i] = kMeshDefaultDiffuseRgb;
-    }
-    c.lightDir[3] = dayAlpha; // 昼夜係数(1=昼、0=完全な夜)
-    c.diffuse[3] = 1.0f;
-    ApplyEnvironmentToMeshConstants(env, c);
-    return c;
 }
 
 // 視点の定数(ViewConstants)のうち、viewProj と cameraPos を詰める。
@@ -241,17 +192,6 @@ struct HeightFogFrame {
     float baseHeight = 0.0f;       // 基準の高さ h0 [m](ワールドの Y)
     float albedo = 1.0f;           // 霧の反射率
 };
-
-// 埋め込みの調整値(RenderTuning)から高さフォグの入力を作る。本編とサムネイルが同じ値を使うための1か所。
-inline HeightFogFrame MakeHeightFogFrame(const RenderTuning& tuning, bool enabled) {
-    HeightFogFrame frame;
-    frame.enabled = enabled;
-    frame.density = tuning.heightFogDensity;
-    frame.heightScale = tuning.heightFogHeightScale;
-    frame.baseHeight = tuning.heightFogBaseHeight;
-    frame.albedo = tuning.heightFogAlbedo;
-    return frame;
-}
 
 // 高さフォグを MeshConstants へ詰める(APの有効・無効とは独立)。FrameRenderer が毎フレーム1か所で呼ぶ。
 inline void ApplyHeightFogToMeshConstants(const HeightFogFrame& frame, MeshConstants& dst) {

@@ -66,7 +66,7 @@ D3D12_SHADER_BYTECODE Bytecode(const ComPtr<IDxcBlob>& blob) {
 
 // メッシュ描画に使う全シェーダをDXCでコンパイルする。
 bool CompileMeshShaders(MeshShaderBlobs& out) {
-    // DXC(IDxcCompiler3)でSM6.6としてコンパイルする(ResourceDescriptorHeap[]直接参照にHLSL 2021+SM6.6が必要)。
+    // DXC(IDxcCompiler3)でSM6.0としてコンパイルする(HLSL 2021 と共通の bindless 配列を使う)。
     DxcShaderCompiler dxc;
     if (!dxc.Init()) return false;
 
@@ -77,38 +77,38 @@ bool CompileMeshShaders(MeshShaderBlobs& out) {
 
     ComPtr<IDxcBlob> vsInstancedMultiPart, ps, psCutoutDepthOnly, psTrans, psTransWboit,
         psSolidFade, psHighlight, vsVelocity, psVelocity, psVelocityAlphaTest;
-    if (!compileHlsl(L"VSMainInstancedMultiPart", L"vs_6_6", vsInstancedMultiPart)) {
+    if (!compileHlsl(L"VSMainInstancedMultiPart", L"vs_6_0", vsInstancedMultiPart)) {
         spdlog::error("[mesh] VSMainInstancedMultiPart compile failed");
         return false;
     }
-    if (!compileHlsl(L"PSMain", L"ps_6_6", ps)) {
+    if (!compileHlsl(L"PSMain", L"ps_6_0", ps)) {
         spdlog::error("[mesh] PS compile failed");
         return false;
     }
-    if (!compileHlsl(L"PSMainCutoutDepthOnly", L"ps_6_6", psCutoutDepthOnly)) {
+    if (!compileHlsl(L"PSMainCutoutDepthOnly", L"ps_6_0", psCutoutDepthOnly)) {
         spdlog::error("[mesh] PSMainCutoutDepthOnly compile failed");
         return false;
     }
     // 半透明 PS（ソート版）と WBOIT 版（2RT出力）をそれぞれコンパイルする。
-    if (!compileHlsl(L"PSMainTrans", L"ps_6_6", psTrans)) {
+    if (!compileHlsl(L"PSMainTrans", L"ps_6_0", psTrans)) {
         spdlog::error("[mesh] PSMainTrans compile failed");
         return false;
     }
-    if (!compileHlsl(L"PSMainTransWBOIT", L"ps_6_6", psTransWboit)) {
+    if (!compileHlsl(L"PSMainTransWBOIT", L"ps_6_0", psTransWboit)) {
         spdlog::error("[mesh] PSMainTransWBOIT compile failed");
         return false;
     }
-    if (!compileHlsl(L"PSMainSolidFade", L"ps_6_6", psSolidFade)) {
+    if (!compileHlsl(L"PSMainSolidFade", L"ps_6_0", psSolidFade)) {
         spdlog::error("[mesh] PSMainSolidFade compile failed");
         return false;
     }
-    if (!compileHlsl(L"PSMainHighlight", L"ps_6_6", psHighlight)) {
+    if (!compileHlsl(L"PSMainHighlight", L"ps_6_0", psHighlight)) {
         spdlog::error("[mesh] PSMainHighlight compile failed");
         return false;
     }
-    if (!compileHlsl(L"VSMainVelocity", L"vs_6_6", vsVelocity) ||
-        !compileHlsl(L"PSVelocity", L"ps_6_6", psVelocity) ||
-        !compileHlsl(L"PSVelocityAlphaTest", L"ps_6_6", psVelocityAlphaTest)) {
+    if (!compileHlsl(L"VSMainVelocity", L"vs_6_0", vsVelocity) ||
+        !compileHlsl(L"PSVelocity", L"ps_6_0", psVelocity) ||
+        !compileHlsl(L"PSVelocityAlphaTest", L"ps_6_0", psVelocityAlphaTest)) {
         spdlog::error("[mesh] velocity shader compile failed");
         return false;
     }

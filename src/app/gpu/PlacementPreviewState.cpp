@@ -23,6 +23,10 @@ bool PlacementPreviewState::UploadMesh(
     GpuContext& gpu, const rs::render::Mesh& mesh,
     std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>& keepAlive) {
     gpu.WaitForGpu();
+    // 前のプレビューのテクスチャをプールから外す。外さないと、プレビューしたものすべてのテクスチャが
+    // VRAMに残り続け、枠が尽きると以後のテクスチャが登録できなくなる。シーンと共有している
+    // テクスチャは TextureManager に残るので、読み直しになるのはプレビューにしか出ていないものだけ。
+    pipeline_.Reset();
     bool ok = false;
     gpu.RunUploadCommands([&](ID3D12Device* device, DirectX::ResourceUploadBatch& upload) {
         mesh_ = mesh;

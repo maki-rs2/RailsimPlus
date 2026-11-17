@@ -362,6 +362,13 @@ inline bool IsCenterlineOnlyEdge(const TrackEdge& edge) {
     return edge.centerlineOnly;
 }
 
+// TrackNumを持つ構造物(Girder・Pier・Pole)をこのedgeに置くか。複線一括(trackNum>1)は
+// 中心線edgeにだけ、単線用は実レールedgeにだけ置く。中心線が束ねる本数(trackCount)と
+// trackNumの一致は見ない(RailSim II も「中心線か」と「複線用か」の一致だけで判定する)。
+inline bool EdgeAcceptsTrackNum(const TrackEdge& edge, int trackNum) {
+    return edge.centerlineOnly == (trackNum > 1);
+}
+
 // edge内の全区間に現れるフォルダを重複排除して返す。順序は「区間順→区間内の
 // folders順」での初出順(描画順・UI表示順を決めるためソートしてはならない)。
 inline std::vector<std::string> ActiveFolders(const TrackEdge& edge) {

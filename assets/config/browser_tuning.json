@@ -9,5 +9,12 @@
   "thumbnailMinBoundingRadiusM": 0.01,
   "thumbnailFarClipRadiusMultiplier": 2,
   "thumbnailEndFaceSectionScale": 1,
-  "thumbnailSampleSpacingM": 1
+  "thumbnailSampleSpacingM": 1,
+  "trainPhotoShortLengthM": 60,
+  "trainPhotoLongLengthM": 300,
+  "trainPhotoLongAzimuthDeg": 5,
+  "trainPhotoFrontHeightRatio": 0.6,
+  "trainPhotoSideMargin": 0.08,
+  "trainPhotoFrontCenterY": 0.04,
+  "trainPhotoMaxDistanceM": 150
 }

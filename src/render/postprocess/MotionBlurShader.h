@@ -1,5 +1,5 @@
 //
-// MotionBlurShader.h - モーションブラーの HLSL(DXC、SM6.6。ResourceDescriptorHeap[] で SRV を番号から引く)
+// MotionBlurShader.h - モーションブラーの HLSL(DXC、SM6.0。bindless テーブルの配列で SRV を番号から引く)
 //
 // パスは4つ。1) 速度の合成(カメラの動き+物体の速度、画素単位の半径ベクトルと線形の深度)
 // 2) タイルごとの最大の速度(横→縦の2回) 3) 周囲 3x3 のタイルの最大 4) 速度の向きに拾って混ぜる。
@@ -53,8 +53,8 @@ float3 Sanitize(float3 c) {
 // 1) 速度の合成。カメラの動きは深度から世界座標を復元して前フレームの viewProj で射影し、物体の速度を足す。
 // 「前 − 今」の動きを、シャッターの割合の半分(中心から前後へ広げる片側)で画素単位の半径ベクトルにして、上限で止める。
 float4 PSVelocity(VSOut input) : SV_Target {
-    Texture2D<float> depthTex = ResourceDescriptorHeap[gDepthIdx];
-    Texture2D<float2> objectTex = ResourceDescriptorHeap[gObjectVelocityIdx];
+    Texture2D<float> depthTex = gBindlessTex2DR[gDepthIdx];
+    Texture2D<float2> objectTex = gBindlessTex2DRg[gObjectVelocityIdx];
     int2 pixel = int2(input.pos.xy);
     float depth = depthTex.Load(int3(pixel, 0));
     float2 ndc = PixelToNdc(float2(pixel) + 0.5);
@@ -79,7 +79,7 @@ float2 LongerOf(float2 a, float2 b) { return dot(b, b) > dot(a, a) ? b : a; }
 // 2) タイルごとの最大の速度。横(画面の横をタイル幅に縮めた RT へ)→ 縦(タイルの RT へ)の2回に分ける
 // (長さの最大は、先に行ごとの最大を取ってから縦に取っても同じ)。
 float2 PSTilePartial(VSOut input) : SV_Target {
-    Texture2D<float4> velocityTex = ResourceDescriptorHeap[gVelocityIdx];
+    Texture2D<float4> velocityTex = gBindlessTex2D[gVelocityIdx];
     int2 p = int2(input.pos.xy);
     int maxX = int(gSize.x) - 1;
     float2 best = float2(0.0, 0.0);
@@ -91,7 +91,7 @@ float2 PSTilePartial(VSOut input) : SV_Target {
 }
 
 float2 PSTileMax(VSOut input) : SV_Target {
-    Texture2D<float2> partialTex = ResourceDescriptorHeap[gPartialIdx];
+    Texture2D<float2> partialTex = gBindlessTex2DRg[gPartialIdx];
     int2 p = int2(input.pos.xy);
     int maxY = int(gSize.y) - 1;
     float2 best = float2(0.0, 0.0);
@@ -104,7 +104,7 @@ float2 PSTileMax(VSOut input) : SV_Target {
 
 // 3) 周囲 3x3 のタイルの最大。画素を通るぼかしは、自分のタイルと隣のタイルの速度のどれかの向きに伸びる。
 float2 PSNeighborMax(VSOut input) : SV_Target {
-    Texture2D<float2> tileTex = ResourceDescriptorHeap[gTileIdx];
+    Texture2D<float2> tileTex = gBindlessTex2DRg[gTileIdx];
     int2 p = int2(input.pos.xy);
     int2 maxTile = int2(ceil(gSize / float(gTileSize))) - 1;
     float2 best = float2(0.0, 0.0);
@@ -133,9 +133,9 @@ float Cylinder(float dist, float len) { return 1.0 - smoothstep(0.95 * len, 1.05
 // 4) 速度の向きに拾って混ぜる。向きと拾う範囲は周囲のタイルの最大の速度、重みは各画素の速度と深度で決める
 // (手前の物のぼかしが奥へ滲み、静止した手前の物は奥の動きでぼけない)。
 float4 PSGather(VSOut input) : SV_Target {
-    Texture2D<float4> colorTex = ResourceDescriptorHeap[gColorIdx];
-    Texture2D<float4> velocityTex = ResourceDescriptorHeap[gVelocityIdx];
-    Texture2D<float2> neighborTex = ResourceDescriptorHeap[gNeighborIdx];
+    Texture2D<float4> colorTex = gBindlessTex2D[gColorIdx];
+    Texture2D<float4> velocityTex = gBindlessTex2D[gVelocityIdx];
+    Texture2D<float2> neighborTex = gBindlessTex2DRg[gNeighborIdx];
     int2 pixel = int2(input.pos.xy);
     int2 maxPixel = int2(gSize) - 1;
     float3 center = Sanitize(colorTex.Load(int3(pixel, 0)).rgb);

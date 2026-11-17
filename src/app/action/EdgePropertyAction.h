@@ -7,8 +7,10 @@
 #include <optional>
 #include <string>
 
-#include "../../editor/tool/Editor.h"
 #include "../../world/alignment/EdgeSplitMerge.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::editor { class Editor; }
 
 namespace rs::app {
 

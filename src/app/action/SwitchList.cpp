@@ -1,4 +1,5 @@
 #include "SwitchList.h"
+#include "../../plugins/schema/PluginSchema.h"
 
 #include <algorithm>
 #include <string_view>

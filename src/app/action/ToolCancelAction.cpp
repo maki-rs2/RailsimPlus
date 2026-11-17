@@ -2,6 +2,7 @@
 // ToolCancelAction.cpp - Escで取り消せる編集ツール操作の判定と取り消し
 //
 #include "ToolCancelAction.h"
+#include "../../editor/tool/Editor.h"
 
 #include <span>
 

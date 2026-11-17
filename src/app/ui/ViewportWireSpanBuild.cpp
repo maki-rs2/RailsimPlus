@@ -50,9 +50,10 @@ void AppendWireAndHangers(const TrackPluginEntry& lineEntry, const std::wstring&
                           const rs::core::Vec3& baseA, const rs::core::Vec3& upA,
                           const rs::core::Vec3& baseB, const rs::core::Vec3& upB,
                           HangerModelCache& hangerModelCache, rs::render::MeshAssembler& assembler,
-                          std::vector<std::string>& log, int& missing) {
+                          std::vector<std::string>& log, int& missing,
+                          rs::legacy_plugin::TrackingTargetTable* trackingTargets) {
     rs::render::Mesh wire = rs::legacy_plugin::BuildLineWireMesh(
-        lineEntry.def.line, lineBaseDir, baseA, upA, baseB, upB, log, missing);
+        lineEntry.def.line, lineBaseDir, baseA, upA, baseB, upB, log, missing, trackingTargets);
     if (!wire.Empty()) assembler.Append(wire, true);
 
     // ハンガー(碍子): Wireframe(ハンガー取付点トラッキング)のラベル付き
@@ -158,7 +159,8 @@ void AppendMaterializedWireSpans(const EditorViewportContext& ctx,
         }
         const std::wstring lineBaseDir = rs::platform_text::Utf8ToWide(span.lineFolderUtf8);
         AppendWireAndHangers(*lineEntry, lineBaseDir, baseA, frameA.up, baseB, frameB.up,
-                             hangerModelCache, assembler, tmpLog, tmpMissing);
+                             hangerModelCache, assembler, tmpLog, tmpMissing,
+                             &ctx.sceneRenderer.TrackingTargets());
     }
 
     // 径間を持たない柱も含め、実体化済みの柱の接続点をすべて積む。

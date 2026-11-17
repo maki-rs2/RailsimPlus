@@ -7,7 +7,8 @@
 #include <vector>
 
 #include "PluginSidecarCommon.h"
-#include "../PluginSchema.h"
+
+namespace rs::legacy_pi { struct SwitchDef; }
 
 namespace rs::legacy_pi::sidecar {
 

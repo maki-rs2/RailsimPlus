@@ -43,8 +43,7 @@ struct LayoutSceneViewModel {
 struct LayoutLoadProgress {
     bool jobActive = false;
     LoadJobPhase phase = LoadJobPhase::Prefetch;
-    size_t done = 0;
-    size_t total = 0;
+    double fraction = 0.0; // ジョブ全体の進み具合(0〜1)
 };
 
 struct LayoutDocumentViewModel {

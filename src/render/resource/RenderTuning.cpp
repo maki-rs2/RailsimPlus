@@ -111,12 +111,15 @@ RenderTuning ReadTuning(const nlohmann::json& root) {
         root, "volumetricFogSliceCount", static_cast<float>(defaults.volumetricFogSliceCount), 8.0f, 128.0f));
     tuning.volumetricFogAnisotropy =
         ReadInRange(root, "volumetricFogAnisotropy", defaults.volumetricFogAnisotropy, -0.9f, 0.9f);
+    tuning.sunLightScale = ReadInRange(root, "sunLightScale", defaults.sunLightScale, 0.0f, 100.0f);
     tuning.volumetricFogSunIntensity =
         ReadInRange(root, "volumetricFogSunIntensity", defaults.volumetricFogSunIntensity, 0.0f, 100.0f);
     tuning.volumetricFogHistoryWeight =
         ReadInRange(root, "volumetricFogHistoryWeight", defaults.volumetricFogHistoryWeight, 0.0f, 0.98f);
     tuning.motionBlurShutter = ReadInRange(root, "motionBlurShutter", defaults.motionBlurShutter, 0.0f, 2.0f);
     tuning.motionBlurMaxRadius = ReadInRange(root, "motionBlurMaxRadius", defaults.motionBlurMaxRadius, 0.001f, 0.1f);
+    tuning.photoMotionBlurMaxRadius =
+        ReadInRange(root, "photoMotionBlurMaxRadius", defaults.photoMotionBlurMaxRadius, 0.001f, 0.1f);
     tuning.motionBlurSamples = static_cast<int>(
         ReadInRange(root, "motionBlurSamples", static_cast<float>(defaults.motionBlurSamples), 4.0f, 32.0f));
     tuning.dofMaxRadius = ReadInRange(root, "dofMaxRadius", defaults.dofMaxRadius, 0.001f, 0.1f);

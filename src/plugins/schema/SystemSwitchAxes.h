@@ -221,6 +221,17 @@ inline const std::vector<std::string>& SystemSwitchNamesWithVerdict(
     return kCache[static_cast<size_t>(verdict)];
 }
 
+// 全システムスイッチ名の一覧(表の順序)。初回呼び出しで作ってキャッシュする。
+inline const std::vector<std::string>& AllSystemSwitchNames() {
+    static const std::vector<std::string> kNames = [] {
+        std::vector<std::string> built;
+        built.reserve(kSystemSwitchAxes.size());
+        for (const SystemSwitchAxis& axis : kSystemSwitchAxes) built.push_back(axis.name);
+        return built;
+    }();
+    return kNames;
+}
+
 // Dynamic のうち、駅舎の実行時スイッチ(source == StationRuntime)を除いた名前の一覧(表の順序)。
 // 駅舎の実行時スイッチが常に0の配置(信号プラグインのモデル)の静的判定に使う。
 inline const std::vector<std::string>& SystemSwitchNamesDynamicExceptStationRuntime() {

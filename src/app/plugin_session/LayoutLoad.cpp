@@ -41,8 +41,11 @@ void RestoreTrainTags(const rs::world::TrainTagRegistrySnapshot& snapshot, const
     }
 }
 
+// reportedWarnings は読み込みの段階ですでにログへ出した警告。同じ車両を読み込みと適用で2回組み立てるので、
+// 同じ文言は出し直さない。
 void ApplyFormationsFromJson(const nlohmann::json& defs, const nlohmann::json& selectedFormation,
-                             PluginSelector& selector, rs::world::TrainTagRegistry& tagRegistry) {
+                             const std::vector<std::string>& reportedWarnings, PluginSelector& selector,
+                             rs::world::TrainTagRegistry& tagRegistry) {
     if (!defs.is_array()) {
         spdlog::warn("[rsl_layout_serialize] formations is not an array; skipping it.");
         return;
@@ -72,11 +75,14 @@ void ApplyFormationsFromJson(const nlohmann::json& defs, const nlohmann::json& s
             AddFormationCar(selector, defIndex, plugin, carJson.value("reversed", false), switchOptions,
                             carWarnings);
             for (const std::string& warning : carWarnings) {
+                if (std::ranges::find(reportedWarnings, warning) != reportedWarnings.end()) continue;
                 spdlog::warn("[rsl_layout_serialize] {}", warning);
             }
         }
     }
     // 選択中の編成はGUIDで保存されるため、復元後の並びから添字を引き直す。
+    // 編成が無いときの保存と.rs2の取り込みではnullなので、選択は変えない。
+    if (selectedFormation.is_null()) return;
     const rs::world::Guid selectedGuid = rs::world::GuidFromJson(selectedFormation);
     for (size_t index = 0; index < selector.Formations().size(); ++index) {
         if (selector.Formations()[index].guid == selectedGuid) {
@@ -194,7 +200,7 @@ LayoutActionResult ApplyNormalizedLayout(NormalizedLayout&& layout, const Layout
     for (const TrainSpeedSeed& seed : layout.trainSpeedSeeds) { refs.sceneRenderer.SetGroupTargetSpeed(seed.trainId, seed.targetKmh); refs.sceneRenderer.SetGroupCurrentSpeed(seed.trainId, seed.currentKmh); }
     refs.gameClock = layout.gameClock;
     refs.solarOverrides = layout.solarOverrides;
-    ApplyFormationsFromJson(layout.formationDefsJson, layout.selectedFormationJson, refs.selector,
+    ApplyFormationsFromJson(layout.formationDefsJson, layout.selectedFormationJson, result.warnings, refs.selector,
                             refs.sceneRenderer.DiaRuntime().TagRegistry());
     // 編成の定義の差し替えより後に、タグと列車の対応を戻す(存在しない編成の分は捨てる)。
     RestoreTrainTags(layout.trainTags, refs.selector, refs.sceneRenderer.DiaRuntime().TagRegistry());

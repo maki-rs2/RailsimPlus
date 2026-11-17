@@ -28,15 +28,6 @@ std::string DiaRunInfoFieldLabel(rs::world::RunInfoChange::Field field) {
     return {};
 }
 
-const char* DiaActionKey(rs::world::DiaAction action) {
-    switch (action) {
-    case rs::world::DiaAction::Stop: return "stop";
-    case rs::world::DiaAction::Reverse: return "reverse";
-    case rs::world::DiaAction::Pass: return "pass";
-    }
-    return "stop";
-}
-
 const char* DiaActionLabel(rs::world::DiaAction action) {
     switch (action) {
     case rs::world::DiaAction::Stop: return "停車";
@@ -44,14 +35,6 @@ const char* DiaActionLabel(rs::world::DiaAction action) {
     case rs::world::DiaAction::Pass: return "通過";
     }
     return "停車";
-}
-
-std::optional<rs::world::DiaAction> DiaActionFromKey(std::string_view key) {
-    for (const rs::world::DiaAction action :
-         {rs::world::DiaAction::Stop, rs::world::DiaAction::Reverse, rs::world::DiaAction::Pass}) {
-        if (key == DiaActionKey(action)) return action;
-    }
-    return std::nullopt;
 }
 
 std::string FormatDiaTime(const rs::world::DiaTimeOfDay& time) {

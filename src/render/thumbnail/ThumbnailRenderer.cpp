@@ -20,6 +20,7 @@
 #include <spdlog/spdlog.h>
 
 #include "../mesh/Mesh.h"
+#include "../pipeline/MeshConstantsEnvironment.h"
 #include "../pipeline/MeshFrameRecord.h"
 #include "../pipeline/MeshPipeline.h"
 #include "../pipeline/MeshPipelineSharedState.h"

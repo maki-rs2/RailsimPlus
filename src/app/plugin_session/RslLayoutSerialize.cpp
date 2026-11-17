@@ -32,6 +32,7 @@
 #include "RslJsonWriter.h"
 #include "RslSceneCacheSerialize.h"
 #include "RslRuntimeState.h"
+#include "../../plugins/schema/PluginSchema.h"
 
 namespace rs::app {
 namespace {

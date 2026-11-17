@@ -13,10 +13,11 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../../plugins/schema/PluginSchema.h"
 #include "../../world/alignment/TrackGraph.h"
 #include "../../world/scene/ManualPlacementOverlay.h"
-#include "../../world/scene/SceneEntity.h"
+
+namespace rs::legacy_pi { struct LinePointDef; }
+namespace rs::world { struct SceneEntity; }
 
 namespace rs::app {
 

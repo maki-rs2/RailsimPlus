@@ -1,5 +1,6 @@
 #include "../../render/RenderPrecision.h"
 #include "TrainAssembly.h"
+#include "../schema/PluginSchema.h"
 
 #include <algorithm>
 #include <cmath>
@@ -318,6 +319,19 @@ std::vector<Mat4> SolvePartWorlds(const TrackGraph& graph, const TrackPosition& 
     return out;
 }
 
+bool FindPartPlacementToWorld(const PluginDefinition& def, const TrainVehicleTemplate& tmpl,
+                              const std::vector<Mat4>& solved, size_t partIndex, Mat4& out) {
+    if (partIndex >= tmpl.partRender.size()) return false;
+    const TrainVehicleTemplate::PartRenderInfo& info = tmpl.partRender[partIndex];
+    if (info.anchorKind == AnchorKind::None) return false;
+    const size_t anchorPart = static_cast<size_t>(
+        info.anchorKind == AnchorKind::Axle
+            ? tmpl.axlePartIndex[static_cast<size_t>(info.anchorIndex)]
+            : tmpl.bodyPartIndex[static_cast<size_t>(info.anchorIndex)]);
+    out = Mat4::Mul(InverseRigid(StaticMatOf(def.parts[anchorPart])), solved[anchorPart]);
+    return true;
+}
+
 std::vector<Mat4> ComposeDynamicPartWorlds(const PluginDefinition& def,
                                            const TrainVehicleTemplate& tmpl,
                                            const std::vector<Mat4>& solved,
@@ -325,17 +339,11 @@ std::vector<Mat4> ComposeDynamicPartWorlds(const PluginDefinition& def,
     std::vector<Mat4> out = solved;
     const size_t n = std::min({tmpl.partRender.size(), solved.size(), dynamicWorlds.size()});
     for (size_t i = 0; i < n; ++i) {
-        const TrainVehicleTemplate::PartRenderInfo& info = tmpl.partRender[i];
-        if (info.anchorKind == AnchorKind::None) continue;
-        const size_t anchorPart = static_cast<size_t>(
-            info.anchorKind == AnchorKind::Axle
-                ? tmpl.axlePartIndex[static_cast<size_t>(info.anchorIndex)]
-                : tmpl.bodyPartIndex[static_cast<size_t>(info.anchorIndex)]);
+        Mat4 placement{};
+        if (!FindPartPlacementToWorld(def, tmpl, solved, i, placement)) continue;
         // アンカーの静的配置からの相対を、今フレームの解き直し結果で取り直す。
         // アンカー自身は「自分の可動部 × 物理姿勢」になる。
-        const Mat4 relative =
-            Mat4::Mul(dynamicWorlds[i], InverseRigid(StaticMatOf(def.parts[anchorPart])));
-        out[i] = Mat4::Mul(relative, solved[anchorPart]);
+        out[i] = Mat4::Mul(dynamicWorlds[i], placement);
     }
     return out;
 }

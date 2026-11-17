@@ -14,6 +14,7 @@
 #include "PluginPaths.h"
 #include "../../render/resource/XLoader.h"
 #include "../../world/alignment/SplineSampleBracket.h"
+#include "../schema/PluginSchema.h"
 
 namespace rs::legacy_plugin {
 

@@ -1,4 +1,5 @@
 #include "ModePanels.h"
+#include "../../editor/tool/Editor.h"
 
 #include "imgui.h"
 #include "../scene/ParsedPluginCache.h"

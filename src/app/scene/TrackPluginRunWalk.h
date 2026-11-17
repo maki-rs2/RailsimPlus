@@ -35,7 +35,7 @@ bool EdgeHasEntry(const rs::world::TrackEdge& edge, const std::string& folderUtf
 bool EntryActiveAt(const rs::world::TrackGraph& graph, const rs::world::Guid& edge, double s,
                    const std::string& folderUtf8);
 
-// 複線一括(trackNum>1)エントリの配置先チェーン: trackCount が一致する中心線
+// 複線一括(trackNum>1)エントリの配置先チェーン: 中心線(束ねる本数は問わない)
 // edge を各1-edge chain にして返す。既存の run/interval 配置ロジックへ
 // そのまま流せる(factoring)。単線用は呼び出し側で実レールchainを使う。
 std::vector<rs::world::EdgeChain> CenterlineChainsFor(const rs::world::TrackGraph& graph,

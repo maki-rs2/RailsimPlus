@@ -50,8 +50,8 @@ struct TrainCardModel {
     int speedKmh = 0;
     // 運行状態の色クラス(kRunStateStylesのcolorClass)。
     Rml::String speedClass;
-    Rml::String left;
-    Rml::String top;
+    Rml::String left = "0px";
+    Rml::String top = "0px";
     bool operator==(const TrainCardModel&) const = default;
 };
 

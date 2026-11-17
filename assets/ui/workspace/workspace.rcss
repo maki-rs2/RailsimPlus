@@ -1248,6 +1248,10 @@ img.layout-file-image {
     pointer-events: none;
 }
 
+.toast-row {
+    width: 100%;
+}
+
 .toast-item {
     box-sizing: border-box;
     width: 100%;
@@ -1846,8 +1850,9 @@ button.browser-back {
     background-color: var(--bg-widget-hover);
 }
 
+/* RmlUi に outline は無いので、ほかのフォーカス表示と同じく内側の box-shadow で枠を描く。 */
 .browser-card:focus {
-    outline: 2dp solid var(--text-accent);
+    box-shadow: 0dp 0dp 0dp var(--focus-width) var(--text-accent) inset;
 }
 
 /* 画像の箱。画像と読込中アニメーションは箱の中央に置く(flexで寄せる)。 */
@@ -2231,7 +2236,7 @@ input.formation-card-name-input {
 }
 
 .formation-panel-car.is-focused {
-    outline: 2dp solid var(--text-accent);
+    box-shadow: 0dp 0dp 0dp var(--focus-width) var(--text-accent) inset;
 }
 
 /* 車両のサムネイル(横長の真横)。車両の幅いっぱいに出す。 */
@@ -2384,7 +2389,7 @@ button.rail-label-name {
     color: var(--text);
 }
 
-.rail-label-name-input {
+input.rail-label-name-input {
     display: none;
     width: 100%;
     box-sizing: border-box;
@@ -2399,7 +2404,7 @@ button.rail-label-name.is-disabled {
     display: none;
 }
 
-.rail-label.is-editing .rail-label-name-input {
+.rail-label.is-editing input.rail-label-name-input {
     display: block;
 }
 
@@ -2445,8 +2450,9 @@ button.dia-card-name {
     color: var(--text);
 }
 
-/* 名前の変更中は、名前の代わりに入力欄を出す(閉塞ラベルと同じ切り替え)。 */
-.dia-card-name-input {
+/* 名前の変更中は、名前の代わりに入力欄を出す(閉塞ラベルと同じ切り替え)。widgets.rcss の input[type="text"] の
+   display より優先させるため、型つきで書く。 */
+input.dia-card-name-input {
     display: none;
     width: var(--rail-label-width);
     box-sizing: border-box;
@@ -2456,7 +2462,7 @@ button.dia-card-name {
     display: none;
 }
 
-.dia-card.is-editing .dia-card-name-input {
+.dia-card.is-editing input.dia-card-name-input {
     display: block;
 }
 

@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
+#include <iterator>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -86,7 +87,7 @@ void AssignTrackPluginBatches(const EditorViewportContext& ctx,
         }
 
         const ProfClock::time_point tWorld0 = ProfClock::now();
-        const rs::core::Mat4 world = rs::world::ResolveWorldMatrix(item.placement, gEditor.graph);
+        const rs::core::Mat4 world = ResolvePlacementItemWorldMatrix(item, gEditor.graph);
         out.worldMs += std::chrono::duration<double, std::milli>(ProfClock::now() - tWorld0).count();
         const PierBatchPlan plan = ComputePierBatchPlan(item.folderUtf8, entry, world);
         if (plan.skip) {
@@ -190,7 +191,7 @@ void AddTrackPluginInstances(const EditorViewportContext& ctx,
         const auto it = batchOk.find(batchKey);
         if (it == batchOk.end() || !it->second) continue;
         const TrackPluginPlacementItem& item = trackPluginItems[i];
-        rs::core::Mat4 world = rs::world::ResolveWorldMatrix(item.placement, gEditor.graph);
+        rs::core::Mat4 world = ResolvePlacementItemWorldMatrix(item, gEditor.graph);
         // Pierのローカル原点はシャフト下端(地面)なので、Y平行移動は取付点の
         // 高さではなく地面(0)にする(シャフトはローカルy=0→heightMで既に
         // 取付点の高さまで押し出し済み)。
@@ -234,7 +235,12 @@ void RebuildDiscretePlacementInstances(const EditorViewportContext& ctx) {
     // 個別ピッキング用キャッシュ。rebuild時のみ更新し、他フレームは
     // 直近の内容を保持する(数千件規模でも1クリック/1フレームのO(N)走査で足りる
     // ため、空間索引等は導入しない)。
-    ctx.placementCache = trackPluginItems;
+    // 軌道に載らない柱(worldPlacement付き)は入れない。選択・ドラッグ・ピッキングは
+    // edgeとsで項目を指す前提で、Nil edgeとs=0が「未選択」の状態と一致してしまうため。
+    ctx.placementCache.clear();
+    std::copy_if(trackPluginItems.begin(), trackPluginItems.end(),
+                 std::back_inserter(ctx.placementCache),
+                 [](const TrackPluginPlacementItem& item) { return !item.worldPlacement.has_value(); });
 
     // 新規バッチに必要なassemblyMesh(CPU側)を先に全件揃えてから、GPUアップロードは
     // 最後に1回のRunUploadCommands(Begin/End/waitが1回だけ)へまとめる。

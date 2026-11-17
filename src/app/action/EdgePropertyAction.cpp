@@ -2,6 +2,7 @@
 // EdgePropertyAction.cpp - 選択edgeプロパティのアプリサービス
 //
 #include "EdgePropertyAction.h"
+#include "../../editor/tool/Editor.h"
 
 #include <algorithm>
 #include <cmath>

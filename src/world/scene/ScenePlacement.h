@@ -46,6 +46,24 @@ struct FreePlacement {
 
 using ScenePlacement = std::variant<TrackPlacement, FreePlacement>;
 
+// ベクトルの水平成分を正規化して返す。水平成分がほぼ0(真上・真下向き)なら(0,0,1)。
+rs::core::Vec3 HorizontalForward(const rs::core::Vec3& v);
+
+// ベクトルの方位角[度]。atan2(x, z)で、DecomposeFreePlacementのyawと同じ規約。
+// 水平成分がほぼ0なら0。
+float HeadingDeg(const rs::core::Vec3& v);
+
+// 常に鉛直に立つ物(架線柱・橋脚)の姿勢。上はワールドの上で、勾配やカントでは傾かない。
+struct UprightFrame {
+    rs::core::Vec3 forward;
+    rs::core::Vec3 up;
+    rs::core::Vec3 right;  // Cross(up, forward)
+};
+
+// 接線の水平成分を前にし、ワールドの上を軸にyawOffsetDeg回した姿勢を返す。
+// 方位は HeadingDeg(tangent) + yawOffsetDeg になる。
+UprightFrame ResolveUprightFrame(const rs::core::Vec3& tangent, float yawOffsetDeg);
+
 // ScenePlacementをワールド行列へ解決する(計算はfloat。TrackFrame自体がfloat精度のため、
 // double/float境界はTrackPosition::s側の弧長計算で満たされている)。
 // TrackPlacementでedgeがgraphに存在しない場合は単位行列を返す。

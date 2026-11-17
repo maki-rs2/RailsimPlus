@@ -1,5 +1,5 @@
 //
-// TaaShader.h - TAA の解決パスの HLSL(DXC、SM6.6。ResourceDescriptorHeap[] で SRV を番号から引く)
+// TaaShader.h - TAA の解決パスの HLSL(DXC、SM6.0。bindless テーブルの配列で SRV を番号から引く)
 //
 #pragma once
 
@@ -92,10 +92,10 @@ float2 PixelToNdc(float2 pixelCenter) {
 }
 
 float4 PSResolve(VSOut input) : SV_Target {
-    Texture2D<float4> colorTex = ResourceDescriptorHeap[gColorIdx];
-    Texture2D<float4> historyTex = ResourceDescriptorHeap[gHistoryIdx];
-    Texture2D<float> depthTex = ResourceDescriptorHeap[gDepthIdx];
-    Texture2D<float2> velocityTex = ResourceDescriptorHeap[gVelocityIdx];
+    Texture2D<float4> colorTex = gBindlessTex2D[gColorIdx];
+    Texture2D<float4> historyTex = gBindlessTex2D[gHistoryIdx];
+    Texture2D<float> depthTex = gBindlessTex2DR[gDepthIdx];
+    Texture2D<float2> velocityTex = gBindlessTex2DRg[gVelocityIdx];
 
     int2 pixel = int2(input.pos.xy);
     int2 maxPixel = int2(gSize) - 1;

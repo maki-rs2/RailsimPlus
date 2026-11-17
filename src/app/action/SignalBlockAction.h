@@ -9,11 +9,15 @@
 #include <string>
 #include <vector>
 
-#include "../../editor/tool/Editor.h"
+#include "../../editor/tool/SpeedSignalOwnerCandidate.h"
+#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/WarpLinkTable.h"
 #include "SignalAspectSource.h"
 #include "SignalPluginRules.h"
 #include "SwitchList.h"
 #include "../workspace/RailLabelPresentation.h"
+
+namespace rs::editor { class Editor; }
 
 namespace rs::app {
 

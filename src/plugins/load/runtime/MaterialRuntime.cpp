@@ -114,6 +114,35 @@ void PartMaterialRuntime::CollectTextureTriggerSwitches(
     }
 }
 
+void PartMaterialRuntime::ApplyTextureEntries(
+    const rs::legacy_pi::SwitchResolver& resolve, const std::vector<std::string>* excludedSwitches,
+    std::vector<MaterialApplyResult>& out) const {
+    for (const MaterialTexEntry& e : texEntries_) {
+        if (e.materialId < 0 || size_t(e.materialId) >= out.size()) continue;
+        if (excludedSwitches != nullptr &&
+            rs::legacy_pi::TriggerReferencesAnySwitch(e.trig, *excludedSwitches))
+            continue;
+        if (!rs::legacy_pi::IsTriggerActive(e.trig, resolve)) continue;
+        MaterialApplyResult& r = out[size_t(e.materialId)];
+        r.hasTextureOverride = true;
+        r.base = e.base;
+        r.normal = e.normal;
+        r.pbr = e.pbr;
+    }
+}
+
+std::vector<MaterialApplyResult> PartMaterialRuntime::ResolveTextureOverridesExcludingSwitches(
+    const rs::legacy_pi::SwitchResolver& resolve,
+    const std::vector<std::string>& excludedSwitches) const {
+    std::vector<MaterialApplyResult> out(baseMaterials_.size());
+    for (size_t i = 0; i < baseMaterials_.size(); ++i) {
+        out[i].materialId = int(i);
+        out[i].color = baseMaterials_[i];
+    }
+    ApplyTextureEntries(resolve, &excludedSwitches, out);
+    return out;
+}
+
 std::vector<MaterialApplyResult> PartMaterialRuntime::Apply(
     const rs::legacy_pi::SwitchResolver& resolve, uint64_t generation, float dayAlpha) const {
     if (generation == cachedGeneration_) return cachedResults_;
@@ -132,15 +161,7 @@ std::vector<MaterialApplyResult> PartMaterialRuntime::Apply(
     using rs::legacy_pi::IsTriggerActive;
 
     // --- テクスチャ: 宣言順、最後に active だったもの勝ち。
-    for (const auto& e : texEntries_) {
-        if (e.materialId < 0 || size_t(e.materialId) >= out.size()) continue;
-        if (!IsTriggerActive(e.trig, resolve)) continue;
-        MaterialApplyResult& r = out[e.materialId];
-        r.hasTextureOverride = true;
-        r.base = e.base;
-        r.normal = e.normal;
-        r.pbr = e.pbr;
-    }
+    ApplyTextureEntries(resolve, nullptr, out);
 
     // --- EnvMap / BumpMap / AlphaZeroTest / Transparent / NoCastShadow / NoReceiveShadow:
     // 条件が成り立つ指定に載った材質のフラグを立てる。baseMaterials_ は読込時の指定を反映する前の

@@ -37,6 +37,8 @@ struct ViewModeTraits {
     bool pluginInfo = true;
     bool clickOpensPluginSettings = false;
     bool cameraOperations = true;
+    // 視点操作が「ドラッグ」のとき、左ドラッグで注目点を動かすか(範囲選択などで左ドラッグを使うモードは偽)。
+    bool leftDragMovesCamera = false;
     bool editContext = false;
     bool ownsBoxSelect = false;
     bool editorCommands = false;
@@ -46,7 +48,7 @@ inline constexpr ViewModeTraits kViewModeCatalog[] = {
     {.mode = ViewMode::Rail, .displayName = "レール", .switchOrder = 1, .trackEditing = true,
      .trackOverlay = true, .arcOverlay = true, .placementHighlight = true, .editContext = true, .editorCommands = true},
     {.mode = ViewMode::Train, .displayName = "列車", .switchOrder = 2, .train = true,
-     .trackOverlay = true, .arcOverlay = true, .sceneEntityOverlay = true, .editContext = true},
+     .trackOverlay = true, .arcOverlay = true, .sceneEntityOverlay = true, .leftDragMovesCamera = true, .editContext = true},
     {.mode = ViewMode::Scenery, .displayName = "情景", .switchOrder = 3, .scenery = true,
      .placementHighlight = true, .sceneEntityOverlay = true, .editContext = true, .ownsBoxSelect = true, .editorCommands = true},
     {.mode = ViewMode::StationDia, .displayName = "ダイヤ", .switchOrder = 4, .stationDia = true,
@@ -56,7 +58,7 @@ inline constexpr ViewModeTraits kViewModeCatalog[] = {
     {.mode = ViewMode::GameSettings, .displayName = "ゲーム設定", .switchOrder = 6, .gameSettings = true},
     {.mode = ViewMode::SaveData, .displayName = "セーブデータ", .switchOrder = 7, .saveData = true},
     {.mode = ViewMode::Spectator, .displayName = "鑑賞", .switchOrder = 0,
-     .pluginInfo = false, .clickOpensPluginSettings = true},
+     .pluginInfo = false, .clickOpensPluginSettings = true, .leftDragMovesCamera = true},
 };
 
 static_assert(std::size(kViewModeCatalog) == magic_enum::enum_count<ViewMode>());

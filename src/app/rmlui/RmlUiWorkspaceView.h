@@ -41,7 +41,6 @@
 #include "RmlUiTrainInfoCardView.h"
 #include "RmlUiCabinHudView.h"
 #include "RmlUiDiaCardView.h"
-#include "RmlUiPointHandMarkView.h"
 #include "RmlUiRailLabelView.h"
 #include "RmlUiToastView.h"
 #include "RmlUiTemplateSaveView.h"
@@ -169,7 +168,6 @@ public:
     RmlUiCabinHudView& CabinHud() { return cabinHud_; }
     RmlUiRailLabelView& RailLabel() { return railLabel_; }
     RmlUiDiaCardView& DiaCard() { return diaCard_; }
-    RmlUiPointHandMarkView& PointHandMark() { return pointHandMark_; }
     // コンテキストメニューと確認ダイアログを、それを使う各ビューへ結ぶ。
     void RegisterPopups(RmlUiContextMenu& menu, RmlUiConfirmDialog& dialog) {
         templateSave_.RegisterPopups(menu, dialog);
@@ -231,7 +229,6 @@ private:
     RmlUiCabinHudView cabinHud_;
     RmlUiRailLabelView railLabel_;
     RmlUiDiaCardView diaCard_;
-    RmlUiPointHandMarkView pointHandMark_;
     RmlUiFormationImages formationImages_;
     // 最新のスナップショット。RefreshViewModel()で更新し、Snapshot()/IsModalOverlayVisible()はこれを返す
     // (マウスメッセージのたびにShellから作り直さないため)。shell_の状態を変える経路は必ずRefreshViewModel()を呼ぶ。

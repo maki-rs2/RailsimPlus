@@ -3,8 +3,9 @@
 #include <string>
 #include <vector>
 
-#include "../schema/PluginSchema.h"
 #include "../../render/mesh/Mesh.h"
+
+namespace rs::legacy_pi { struct PluginDefinition; }
 
 namespace rs::legacy_plugin {
 

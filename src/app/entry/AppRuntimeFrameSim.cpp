@@ -22,6 +22,7 @@
 #include "../../platform/text/Encoding.h"
 #include "../../world/time/SceneSharedSwitches.h"
 #include "../scene/PlacedSoundRequestCollector.h"
+#include "../../editor/tool/Editor.h"
 
 namespace rs::app {
 

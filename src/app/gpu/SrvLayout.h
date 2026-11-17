@@ -60,11 +60,12 @@ constexpr UINT kSceneEntityMaxParts = 128;
 constexpr UINT kSceneEntitySrvStride =
     kSceneEntityMaxTextures + kTransBufSrvCount + kPartWorldSrvCount + kInstanceMatOverrideSrvCount;
 // 同ストライドのスロットを可変長で何個確保できるかの総枠。全スロットが同一
-// ストライド(262)を要求する。SrvRangeAllocatorにはストライドちょうど(262)の
-// サイズクラスがあり、切り上げが起きないため、約1563スロットが確保できる
-// (切り上げが起きると各スロットが1024スロットを消費し、400スロットしか取れず、
+// ストライド(kSceneEntitySrvStride)を要求する。SrvRangeAllocatorにはストライドちょうどの
+// サイズクラスがあり、切り上げが起きないため、総枠÷ストライドのスロットが確保できる
+// (切り上げが起きると各スロットが1024スロットを消費し、取れる数が約1/4になり、
 // 大規模レイアウトの動的配置がSRV枯渇で非表示になる)。
-constexpr UINT kSceneSrvPoolCapacity = 1024u * 400u;
+// 配置物の多い大規模レイアウトでは約1540スロットでも足りないので、約2300スロット分にしている。
+constexpr UINT kSceneSrvPoolCapacity = 1024u * 600u;
 // 上のスロット数拡大は「ストライドがサイズクラスと完全一致していること」に依存する。
 // どちらかを変更して一致が崩れると黙って1024へ切り上げられ枠が1/4に戻るため、
 // コンパイル時に検出する。
@@ -218,6 +219,9 @@ constexpr SrvLayout BuildSrvLayout() {
 inline constexpr SrvLayout kSrvLayout = BuildSrvLayout();
 
 static_assert(!kSrvLayout.reservations.Overflowed(), "SrvHeapReserver::kMaxReservations を増やすこと");
+// シェーダから見えるSRVヒープは、リソースバインディングTier 1/2のGPUでは100万枠までしか作れない。
+static_assert(kSrvLayout.total <= 1'000'000u,
+              "SRVヒープの総数がTier 1/2の上限を超える(プールの総枠を減らすこと)");
 static_assert(kSrvLayout.imgui == 0, "ImGuiのフォントはヒープの先頭");
 static_assert(kSrvLayout.ibl == kSrvLayout.atmosphere + rs::render::AtmosphereLuts::kSrvCount,
               "環境ソースは大気LUTの直後");

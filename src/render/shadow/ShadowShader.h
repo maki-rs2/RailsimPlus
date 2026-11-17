@@ -148,7 +148,7 @@ float SunShadowScale(float3 wpos, float3 vertexNormal, float3 toLight) {
 
     float sinTheta = sqrt(saturate(1.0 - cosTheta * cosTheta));
     uint tapCount = (uint)gShadowParams2.w;
-    Texture2DArray<float> shadowMap = ResourceDescriptorHeap[gShadowIndex.x];
+    Texture2DArray<float> shadowMap = gBindlessTex2DArrR[gShadowIndex.x];
 
     float viewDepth = mul(float4(wpos, 1.0), gViewProj).w;
     uint last = max(gShadowIndex.y, 1u) - 1u;

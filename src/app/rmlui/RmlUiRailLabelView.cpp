@@ -29,8 +29,8 @@ struct RailLabelModel {
     Rml::String colorClass;
     int verticalIndex = 0;
     bool shown = false;
-    Rml::String left;
-    Rml::String top;
+    Rml::String left = "0px";
+    Rml::String top = "0px";
     bool disabled = false;
     Rml::String title;
     bool operator==(const RailLabelModel&) const = default;

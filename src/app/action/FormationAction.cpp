@@ -236,6 +236,9 @@ CabinHudViewModel FormationAction::CabinHud() const {
     const rs::world::TrainId trainId = refs_.cabinCamera.followedTrainId;
     if (!refs_.cabinCamera.active || rs::world::GuidIsNil(trainId)) return out;
     out.active = true;
+    out.trainId = trainId;
+    out.targetSpeedKmh = static_cast<float>(refs_.sceneRenderer.GroupTargetSpeedKmh(trainId));
+    out.diaState = refs_.sceneRenderer.GroupDiaState(trainId);
     const rs::world::TrainRunInfo* runInfo = refs_.sceneRenderer.DiaRuntime().RunInfoRegistry().RunInfo(trainId);
     if (runInfo != nullptr) {
         out.trainType = runInfo->type;

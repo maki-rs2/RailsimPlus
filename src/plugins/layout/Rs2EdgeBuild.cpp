@@ -19,6 +19,7 @@
 #include "../../world/alignment/EdgeShapeBuild.h"
 #include "../../world/alignment/TrackQuery.h"
 #include "../../world/alignment/TrackTraversal.h"
+#include "../../world/scene/ScenePlacement.h"
 
 namespace rs::legacy_layout {
 
@@ -229,9 +230,12 @@ void AppendImportedPluginLinks(std::vector<ImportedPluginLink>& out, const Track
         ifl.s = *projectedS;
         ifl.lateralOffsetM = Vec3::Dot(delta, right);
         ifl.verticalOffsetM = Vec3::Dot(delta, frame.up);
-        // 個体の向き(水平成分)が接線と逆向きなら、軌道へ載せたあとも逆向きに描く。
-        const float facing = inst.dir.x * frame.tangent.x + inst.dir.z * frame.tangent.z;
-        ifl.yawOffsetDeg = facing < 0.0f ? 180.0f : 0.0f;
+        // 個体の向き(水平成分)と接線の方位差を、軌道へ載せたあとも保つ。向きが接線と
+        // 斜めの柱や橋脚も、保存どおりの向きで描くため。範囲は(-180, 180]。
+        float yawDeg = std::fmod(rs::world::HeadingDeg(inst.dir) - rs::world::HeadingDeg(frame.tangent), 360.0f);
+        if (yawDeg > 180.0f) yawDeg -= 360.0f;
+        if (yawDeg <= -180.0f) yawDeg += 360.0f;
+        ifl.yawOffsetDeg = yawDeg;
         ifl.address = link.address;
         out.push_back(std::move(ifl));
     }

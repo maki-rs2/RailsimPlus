@@ -37,7 +37,7 @@ bool MeshPipelineSharedState::CreateInstancedPsos(
     // インスタンス描画用 PSO。psoSolid_/psoCutout_ と rootSig_・
     // InputLayout・ブレンド・深度設定を完全に同一のまま VS のみ VSMainInstanced に
     // 差し替える(コピー生成。reversed-Z GREATER/GREATER_EQUALの符号や
-    // CBV_SRV_UAV_HEAP_DIRECTLY_INDEXEDフラグ等、正しさが自明でない設定を
+    // ルートシグネチャ等、正しさが自明でない設定を
     // 再現し直さずそのまま継承するため)。
     D3D12_GRAPHICS_PIPELINE_STATE_DESC pi = pd;
     pi.VS = vsInstanced;

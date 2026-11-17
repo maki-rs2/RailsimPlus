@@ -23,8 +23,6 @@
 #include "EnvFlag.h"
 #include "SubmeshAlphaClassify.h"
 #include "../sky/AtmosphereMath.h"
-#include "../resource/RenderTuning.h"
-#include "../sky/EnvironmentState.h"
 #include "../rhi/RetirementQueue.h"
 
 namespace rs::render {

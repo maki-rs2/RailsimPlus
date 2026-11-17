@@ -2,6 +2,7 @@
 // PlatformRoutineAction.cpp - 番線ルーチン表のアプリサービス
 //
 #include "PlatformRoutineAction.h"
+#include "../../editor/tool/Editor.h"
 
 #include <algorithm>
 #include <memory>

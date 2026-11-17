@@ -8,8 +8,9 @@
 //
 #pragma once
 
-#include "../../editor/tool/Editor.h"
 #include "../ui/ViewMode.h"
+
+namespace rs::editor { class Editor; }
 
 namespace rs::app {
 

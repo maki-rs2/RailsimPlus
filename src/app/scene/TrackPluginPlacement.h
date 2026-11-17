@@ -15,6 +15,7 @@
 //
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -37,7 +38,7 @@ bool IsDiscreteRailPlacementType(rs::legacy_pi::PluginType type);
 
 // エントリの複線一括本数(RailSim II の TrackNum)。格納先は種別ごとに異なる(Pier=def.pier、
 // Girder=def直下、Pole=def.pole、それ以外は1固定)。1=単線用(実レールに配置)、
-// >1=複線一括(trackCount一致の中心線に配置)。手動追加/移動時のretarget判定(ResolveCenterlineEdgeFor)にも同じ規約で使う。
+// >1=複線一括(中心線に配置。束ねる本数は問わない)。手動追加/移動時のretarget判定(ResolveCenterlineEdgeFor)にも同じ規約で使う。
 int MultiTrackNum(const rs::legacy_pi::PluginDefinition& def, rs::legacy_pi::PluginType type);
 
 // エントリの並走軌道間隔[m](TrackInterval)。格納先はMultiTrackNumと同じ。それ以外の種別は0。
@@ -54,10 +55,10 @@ MultiTrackMismatch ConfirmMultiTrack(const rs::legacy_pi::PluginDefinition& def,
                                      float trackInterval);
 
 // 複線一括仕様(trackNum>1)のPier/Poleを手動追加/移動する際、クリックされたedge
-// (pickedEdge)が実レールのままだと自動配置と同じ中心線routing(trackCount一致
-// のcenterlineOnly edge)に乗らない(CenterlineChainsForと同じ規約)。
-// pickedEdge自体が該当中心線ならそのまま返し、実レールなら「trackCountが一致し
-// trackEdgesにpickedEdgeを含む」中心線edgeのguidを探して返す。見つからなければ
+// (pickedEdge)が実レールのままだと自動配置と同じ中心線routing(centerlineOnly edge。
+// 束ねる本数は問わない)に乗らない(CenterlineChainsForと同じ規約)。
+// pickedEdge自体が中心線ならそのまま返し、実レールなら「trackEdgesにpickedEdgeを
+// 含む」中心線edgeのguidを探して返す。見つからなければ
 // NilGuid(単線プラグイン、または対応する中心線が無いレイアウト)。
 // trackNum<=1(単線)を渡すのは呼び出し側の誤りだが、この関数はNilGuidを返すのみで
 // 安全側に倒す(単線はrouting不要)。
@@ -78,7 +79,14 @@ std::vector<float> WireLateralOffsetsFor(const TrackPluginEntry& poleEntry);
 struct TrackPluginPlacementItem {
     std::string folderUtf8;
     rs::world::TrackPlacement placement;
+    // 軌道に載らない柱(ワールド座標へ直接アンカーした個体)の配置。値があるときは
+    // placementを使わず、この位置・向きで描く。
+    std::optional<rs::world::FreePlacement> worldPlacement;
 };
+
+// 項目のワールド行列。worldPlacementがあればそれ、無ければplacementで解決する。
+rs::core::Mat4 ResolvePlacementItemWorldMatrix(const TrackPluginPlacementItem& item,
+                                               const rs::world::TrackGraph& graph);
 
 // Pier のrun走査中に得られる、edge始点基準の走査方向位相アンカー。
 struct PierCarryRecord {

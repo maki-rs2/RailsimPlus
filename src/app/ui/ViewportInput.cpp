@@ -160,7 +160,7 @@ bool PickTrackPluginPlacement(const std::vector<TrackPluginPlacementItem>& items
     candidates.reserve(items.size());
     itemIndices.reserve(items.size());
     for (size_t i = 0; i < items.size(); ++i) {
-        const rs::core::Mat4 m = rs::world::ResolveWorldMatrix(items[i].placement, graph);
+        const rs::core::Mat4 m = ResolvePlacementItemWorldMatrix(items[i], graph);
         bool skip = false;
         ScreenPickCandidate cand =
             MakeTrackPluginPickCandidate(m, items[i].folderUtf8, selector, sceneRenderer, log, skip);

@@ -10,9 +10,9 @@
 #include <cstdint>
 #include <string_view>
 
-#include "../resource/RenderTuning.h"
-
 namespace rs::render {
+
+struct RenderTuning;
 
 enum class ShadowDistance : std::uint8_t {
     Near,
@@ -21,17 +21,17 @@ enum class ShadowDistance : std::uint8_t {
     Count,
 };
 
-// 画面の選択肢の並びはこの表と同じ。keyは保存する文字列、metersは距離[m]を持つRenderTuningのメンバ。
+// 画面の選択肢の並びはこの表と同じ。keyは保存する文字列。距離[m]を持つRenderTuningのメンバは ShadowDistance.cpp に置く
+// (RenderTuning が変わるたびに、この表を読む .cpp が再コンパイルにならないようにするため)。
 struct ShadowDistanceChoice {
     ShadowDistance distance;
     const char* key;
-    float RenderTuning::* meters;
 };
 
 constexpr std::array<ShadowDistanceChoice, static_cast<std::size_t>(ShadowDistance::Count)> kShadowDistanceChoices = {{
-    {ShadowDistance::Near, "near", &RenderTuning::shadowDistanceNear},
-    {ShadowDistance::Standard, "standard", &RenderTuning::shadowDistanceStandard},
-    {ShadowDistance::Far, "far", &RenderTuning::shadowDistanceFar},
+    {ShadowDistance::Near, "near"},
+    {ShadowDistance::Standard, "standard"},
+    {ShadowDistance::Far, "far"},
 }};
 
 constexpr ShadowDistance kDefaultShadowDistance = ShadowDistance::Standard;
@@ -49,8 +49,6 @@ constexpr const char* ShadowDistanceKey(ShadowDistance distance) {
 }
 
 // 選択肢の距離[m]。
-inline float ShadowDistanceMeters(const RenderTuning& tuning, ShadowDistance distance) {
-    return tuning.*(kShadowDistanceChoices[static_cast<std::size_t>(distance)].meters);
-}
+float ShadowDistanceMeters(const RenderTuning& tuning, ShadowDistance distance);
 
 } // namespace rs::render

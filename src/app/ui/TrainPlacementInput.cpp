@@ -56,10 +56,16 @@ void HandleTrainPlacementInput(const EditorViewportContext& ctx,
     if (!ctx.input.AllowsPointer(rs::app::input::InputContext::Edit)) return;
     if (!IsMouseInViewport(mouse, ctx.width, ctx.height)) return;
 
+    // 左ドラッグでカメラを動かす設定のときは、押した瞬間でなく、動かさずに離したときに確定する
+    // (ドラッグの始まりで配置・選択が起きないようにする)。
+    const rs::app::input::PointerButton selectButton = ctx.input.ButtonFor(rs::app::input::PointerAction::Select);
+    const bool selectConfirmed =
+        ctx.camera.leftDragMovesTarget ? ctx.input.ButtonTapped(selectButton) : ctx.input.ButtonClicked(selectButton);
+
     // マウス直下に配置済み車両があるときは配置せず選択に回す(同じクリックで
     // 車両の下のedgeにも当たるため、配置と選択が同時に走るのを防ぐ)。
     if (trainHovered) {
-        if (ctx.input.ButtonClicked(ctx.input.ButtonFor(rs::app::input::PointerAction::Select))) {
+        if (selectConfirmed) {
             gEditor.SelectSceneEntity(gEditor.hoveredSceneEntityId);
             // 選んだ列車の編成情報カードを広げる。
             const rs::world::SceneEntity* const entity = ctx.sceneRegistry.FindEntity(gEditor.hoveredSceneEntityId);
@@ -108,7 +114,7 @@ void HandleTrainPlacementInput(const EditorViewportContext& ctx,
         ctx.layoutSession.activeIndex);
     preview.valid = true;
 
-    if (ctx.input.ButtonClicked(ctx.input.ButtonFor(rs::app::input::PointerAction::Select))) {
+    if (selectConfirmed) {
         const rs::world::TrackPosition head = preview.head;
         if (preview.blocked) {
             ctx.log.push_back(fitsOnTrack ? "[scene] 編成配置: 0両(衝突のため配置できません)"
@@ -137,6 +143,8 @@ void HandleTrainPlacementInput(const EditorViewportContext& ctx,
 void SyncTrainPlacementPreview(const EditorViewportContext& ctx) {
     const TrainPlacementPreview& preview = ctx.trainPlacementUi.preview;
     const std::vector<FormationCar>& cars = ctx.selector.SelectedFormationCars();
+    // 列車モードで編成を選んだ時点で、カーソルを線路に乗せる前から車の解析を進めておく。
+    if (GetViewModeTraits(ctx.viewMode).train && !cars.empty()) ctx.sceneRenderer.PrefetchTrainPlacementPreview(cars);
     // 置けない位置(他の編成との重なり・終端にはみ出し)では車両モデルを出さない。
     // 先頭の横棒(赤)だけが置けないことを示す。
     if (!preview.valid || preview.blocked || cars.empty()) {

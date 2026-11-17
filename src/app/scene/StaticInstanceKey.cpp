@@ -4,6 +4,7 @@
 #include "StaticInstanceKey.h"
 #include "../../plugins/load/PluginPaths.h"
 #include "../../platform/text/AsciiCase.h"
+#include "../../world/scene/SceneEntity.h"
 
 namespace rs::app {
 

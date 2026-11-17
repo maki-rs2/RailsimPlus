@@ -125,6 +125,11 @@ void UpdateCameraAndEditor(FrameLoopState& loopState, FrameScratch& scratch) {
     state.input.SetContextActive(input::InputContext::Edit, traits.editContext);
     state.input.SetContextActive(input::InputContext::View, traits.cameraOperations);
     state.input.SetContextActive(input::InputContext::Drive, globals.cabinCamera.active);
+    // 視点操作が「ドラッグ」のとき、中ドラッグはどのモードでも、左ドラッグは対象のモードだけで基準点を動かす
+    // (MainWindowは表示モードを参照しないので、ここで決めた値をカメラ経由で渡す)。
+    const bool dragView = state.userSettings.viewOperation == ViewOperationMode::Drag;
+    globals.camera.middleDragMovesTarget = dragView;
+    globals.camera.leftDragMovesTarget = dragView && traits.leftDragMovesCamera;
 
     if (UpdateCabinView(loopState, scratch)) {
         // カブ視点が確定した(俯瞰カメラのWASD/右ドラッグ更新は行わない)。
@@ -268,6 +273,7 @@ void RenderFrameAndCapture(FrameLoopState& loopState, FrameScratch& scratch) {
     globals.app.SetCameraFinder(photo.finderRect);
     globals.app.SetDepthOfFieldCamera(photo.dofCamera);
     globals.app.SetPhotoExposureMultiplier(photo.exposureMultiplier);
+    globals.app.SetPhotoShutterSeconds(photo.shutterSeconds);
     globals.app.SetLuminanceMeter(photo.luminanceMeter);
     const CameraView& particleView = scratch.view;
     const rs::core::DVec3 particleCamera = {particleView.eye[0], particleView.eye[1], particleView.eye[2]};

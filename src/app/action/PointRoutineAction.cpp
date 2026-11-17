@@ -2,6 +2,7 @@
 // PointRoutineAction.cpp - 分岐のルーチン表のアプリサービスのうち、要素・条件・所属駅の編集
 //
 #include "PointRoutineAction.h"
+#include "../../editor/tool/Editor.h"
 
 #include <algorithm>
 #include <utility>

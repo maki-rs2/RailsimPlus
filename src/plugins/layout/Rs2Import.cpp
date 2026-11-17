@@ -18,6 +18,7 @@
 #include "../../world/alignment/PlatformRegistry.h"
 #include "../../world/alignment/PointName.h"
 #include "../../world/alignment/TrackTraversal.h"
+#include "../../world/scene/ScenePlacement.h"
 #include "../../world/time/SolarModeNames.h"
 #include "Rs2CurveFit.h"
 #include "Rs2EdgeBuild.h"
@@ -172,7 +173,9 @@ std::vector<ImportedPlacement> ImportPlacements(const Rs2Scene& scene,
             warnings.push_back(p.kind + ": プラグイン未指定または未解決、プレースホルダ扱い");
         }
         const Vec3 up = p.hasUp ? p.up : Vec3(0.0f, 1.0f, 0.0f);
-        ip.placement = rs::world::DecomposeFreePlacement(p.pos, p.dir, up);
+        // 架線柱(Upキー無し)は常に鉛直に立つ。OrigDirの勾配は姿勢へ反映せず、水平成分だけ使う。
+        const Vec3 dir = p.hasUp ? p.dir : rs::world::HorizontalForward(p.dir);
+        ip.placement = rs::world::DecomposeFreePlacement(p.pos, dir, up);
         ip.switchOptions = p.switchOptions;
         out.push_back(ip);
     }

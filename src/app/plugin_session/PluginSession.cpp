@@ -191,7 +191,7 @@ void PluginSession::ApplySwitchOptionsAndBake(
     ApplySwitchEvaluationAndBake(BuildSwitchEvaluationInput(&switchOptions, camDistBand, sharedState));
 }
 
-void PluginSession::ApplySwitchEvaluationAndBake(const SwitchEvaluationInput& input) {
+void PluginSession::ApplySwitchEvaluationAndBake(const SwitchEvaluationInput& input, BakeMode mode) {
     UserSwitches() = input.userSwitches;
     SystemSwitches() = input.systemSwitches;
     RoutineSwitchOverrides() = input.routineSwitchOverrides;
@@ -243,15 +243,24 @@ void PluginSession::ApplySwitchEvaluationAndBake(const SwitchEvaluationInput& in
         if (rt.Empty()) continue;
         std::vector<rs::legacy_plugin::MaterialApplyResult> results =
             rt.Apply(resolve, SwitchGeneration(), DayAlpha());
+        // 実行時評価のセッションでは、テクスチャだけシステムスイッチ依存の指定を除いて決める。
+        std::vector<rs::legacy_plugin::MaterialApplyResult> textureResults;
+        if (mode == BakeMode::RuntimeEvaluated)
+            textureResults = rt.ResolveTextureOverridesExcludingSwitches(
+                resolve, rs::legacy_pi::AllSystemSwitchNames());
         for (const rs::legacy_plugin::MaterialApplyResult& r : results) {
             const size_t matIdx = static_cast<size_t>(pl.matBase) + static_cast<size_t>(r.materialId);
             if (matIdx >= plugin.assemblyMesh.materials.size()) continue;
             rs::render::Material& mat = plugin.assemblyMesh.materials[matIdx];
-            if (r.hasTextureOverride) {
+            const rs::legacy_plugin::MaterialApplyResult& tex =
+                (mode == BakeMode::RuntimeEvaluated && static_cast<size_t>(r.materialId) < textureResults.size())
+                    ? textureResults[static_cast<size_t>(r.materialId)]
+                    : r;
+            if (tex.hasTextureOverride) {
                 // 法線/ORMはEnvMap/BumpMap指定が成り立つ材質だけ使う(実行時の経路と同じ規則)。
-                mat.texturePath = r.base;
-                mat.normalPath = r.AllowsNormal() ? r.normal : std::string();
-                mat.ormPath = r.AllowsOrm() ? r.pbr : std::string();
+                mat.texturePath = tex.base;
+                mat.normalPath = r.AllowsNormal() ? tex.normal : std::string();
+                mat.ormPath = r.AllowsOrm() ? tex.pbr : std::string();
             }
             mat.useEnvMap = r.color.useEnvMap;
             mat.useBumpMap = r.color.useBumpMap;

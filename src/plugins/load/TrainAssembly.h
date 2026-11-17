@@ -8,6 +8,7 @@
 //
 #pragma once
 
+#include <cstddef>
 #include <functional>
 #include <vector>
 
@@ -16,7 +17,8 @@
 #include "../../sim/TrainOccupiedPath.h"
 #include "../../world/alignment/TrackTraversal.h"
 #include "../../world/alignment/WarpTraversal.h"
-#include "../schema/PluginSchema.h"
+
+namespace rs::legacy_pi { struct PluginDefinition; }
 
 namespace rs::legacy_plugin {
 
@@ -97,6 +99,11 @@ std::vector<rs::core::Mat4> SolvePartWorlds(const rs::world::TrackGraph& graph,
                                              const rs::sim::TrainOccupiedPath* occupiedPath = nullptr,
                                              double pathBaseOffsetM = 0.0,
                                              std::vector<AxleContact>* axleContactsOut = nullptr);
+
+// パーツのアンカーを選び、配置空間から物理姿勢への変換を返す。アンカーが無ければ false。
+bool FindPartPlacementToWorld(const rs::legacy_pi::PluginDefinition& def,
+    const TrainVehicleTemplate& tmpl, const std::vector<rs::core::Mat4>& solved,
+    size_t partIndex, rs::core::Mat4& out);
 
 // SolvePartWorlds の結果(solved)へ、可動部込みで解き直した行列(dynamicWorlds、
 // rs::app::ResolveDynamicPartWorlds の戻り値。プラグインのローカル座標)を合成する。

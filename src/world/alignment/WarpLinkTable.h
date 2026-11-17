@@ -11,11 +11,12 @@
 #pragma once
 
 #include <cstddef>
+#include <functional>
 #include <optional>
 #include <unordered_map>
 #include <vector>
 
-#include "TrackGraph.h"
+#include "Guid.h"
 
 namespace rs::world {
 

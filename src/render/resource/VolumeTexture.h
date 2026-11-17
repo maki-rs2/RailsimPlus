@@ -37,7 +37,7 @@ public:
     std::uint32_t Width() const;
     std::uint32_t Height() const;
     std::uint32_t Depth() const;
-    // シェーダが ResourceDescriptorHeap[] で引く絶対番号。
+    // シェーダが bindless テーブルの配列で引く絶対番号。
     std::uint32_t SrvIndex() const;
     std::uint32_t UavIndex() const;
 

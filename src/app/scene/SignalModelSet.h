@@ -9,17 +9,20 @@
 //
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "../../plugins/schema/PluginSchema.h"
 #include "../../plugins/schema/sidecar/StationSidecar.h"
 #include "../../world/alignment/TrackGraph.h"
 #include "../../world/scene/SceneEntity.h"
 #include "../../world/scene/SceneRegistry.h"
+
+namespace rs::legacy_pi { struct SwitchDef; }
 
 namespace rs::app {
 

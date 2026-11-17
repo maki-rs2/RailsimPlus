@@ -17,6 +17,22 @@ int NormalizeCursor(int cursor, int count) {
 
 }  // namespace
 
+const char* DiaActionKey(DiaAction action) {
+    switch (action) {
+    case DiaAction::Stop: return "stop";
+    case DiaAction::Reverse: return "reverse";
+    case DiaAction::Pass: return "pass";
+    }
+    return "stop";
+}
+
+std::optional<DiaAction> DiaActionFromKey(std::string_view key) {
+    for (const DiaAction action : {DiaAction::Stop, DiaAction::Reverse, DiaAction::Pass}) {
+        if (key == DiaActionKey(action)) return action;
+    }
+    return std::nullopt;
+}
+
 ResolvedPlatformRoutine ResolveTrainRoutine(
     const std::vector<PlatformTrainRoutine>& trainRoutines,
     const std::vector<PlatformTagRoutine>& tagRoutines,

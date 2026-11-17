@@ -56,7 +56,7 @@ public:
     // 出力先・ビューポートは書き換えるので、呼び出し側が元へ戻す。
     void Record(const rs::rhi::CommandList& commandList, PrepassDepthTarget& depth, const AoFrameParams& params);
 
-    // 結果(ぼかし後の R8)の SRV 絶対番号。メッシュのシェーダが ResourceDescriptorHeap で引く。
+    // 結果(ぼかし後の R8)の SRV 絶対番号。メッシュのシェーダが bindless テーブル で引く。
     std::uint32_t ResultSrvIndex() const;
 
 private:

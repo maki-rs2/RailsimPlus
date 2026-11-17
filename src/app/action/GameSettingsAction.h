@@ -81,6 +81,8 @@ public:
     void SetDateTime(const rs::world::DateParts& date, int hour, int minute);
     // 全画面表示の設定を保存し、ウィンドウへ反映する。同じ値なら何もしない。
     void SetFullscreen(bool enabled);
+    // 俯瞰カメラの視点操作を設定へ保存する。カメラへは毎フレーム設定の値から反映される。同じ値なら何もしない。
+    void SetViewOperation(ViewOperationMode mode);
     void SetEarthRotationMode(int mode);
     void SetEarthRevolutionMode(int mode);
     void SetLayoutSaveDirectory(const std::string& directoryUtf8);

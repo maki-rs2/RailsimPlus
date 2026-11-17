@@ -100,6 +100,7 @@ PhotoRenderInputs ResolvePhotoRender(FrameLoopState& loopState, FrameScratch& sc
         const double iso = PhotoEffectiveIso(photoCamera, autoIso);
         inputs.exposureMultiplier =
             static_cast<float>(PhotoExposureMultiplier(iso, photoCamera.aperture, photoCamera.shutterSeconds));
+        inputs.shutterSeconds = static_cast<float>(photoCamera.shutterSeconds);
         // ISOオート中は、決まったISOを撮影カメラの画面の7セグへ渡す。
         workspaceView->CameraScreen().SetAutoIso(photoCamera.isoAuto ? std::optional<double>(iso) : std::nullopt);
     }

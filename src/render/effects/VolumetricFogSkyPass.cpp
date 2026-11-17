@@ -10,6 +10,7 @@
 
 #include "../postprocess/PostProcessFormats.h"
 #include "../resource/DxcShaderCompiler.h"
+#include "../resource/BindlessDescriptors.inl"
 
 using Microsoft::WRL::ComPtr;
 
@@ -45,7 +46,7 @@ VSOut VSMain(uint id : SV_VertexID) {
 
 // 空は格子の最後のスライスの値を使う。固定機能のブレンドが 出力.rgb + 下の色 × 出力.a にする。
 float4 PSMain(VSOut i) : SV_Target {
-    Texture3D<float4> integrated = ResourceDescriptorHeap[gIntegratedIdx];
+    Texture3D<float4> integrated = gBindlessTex3D[gIntegratedIdx];
     return integrated.SampleLevel(gLinearSmp, float3(i.uv, 1.0), 0);
 }
 )HLSL";
@@ -53,6 +54,7 @@ float4 PSMain(VSOut i) : SV_Target {
 } // namespace
 
 struct VolumetricFogSkyPass::Impl {
+    rs::rhi::SrvHeap srvHeap;
     ComPtr<ID3D12RootSignature> rootSig;
     ComPtr<ID3D12PipelineState> pso;
 };
@@ -60,17 +62,21 @@ struct VolumetricFogSkyPass::Impl {
 VolumetricFogSkyPass::VolumetricFogSkyPass() = default;
 VolumetricFogSkyPass::~VolumetricFogSkyPass() = default;
 
-bool VolumetricFogSkyPass::Init(const rs::rhi::Device& device) {
+bool VolumetricFogSkyPass::Init(const rs::rhi::Device& device, const rs::rhi::SrvHeap& srvHeap) {
     impl_.reset();
-    if (!device.Valid()) return false;
+    if (!device.Valid() || !srvHeap.Valid()) return false;
     ID3D12Device* native = device.Native();
     std::unique_ptr<Impl> impl = std::make_unique<Impl>();
+    impl->srvHeap = srvHeap;
 
-    D3D12_ROOT_PARAMETER param = {};
+    const BindlessDescriptorRanges ranges = MakeBindlessDescriptorRanges();
+    D3D12_ROOT_PARAMETER params[2] = {};
+    D3D12_ROOT_PARAMETER& param = params[0];
     param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
     param.Constants.ShaderRegister = 0;
     param.Constants.Num32BitValues = kConstantDwordCount;
     param.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    params[1] = MakeBindlessDescriptorTable(ranges);
     D3D12_STATIC_SAMPLER_DESC sampler = {};
     sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
     sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
@@ -80,11 +86,10 @@ bool VolumetricFogSkyPass::Init(const rs::rhi::Device& device) {
     sampler.ShaderRegister = 1;
     sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     D3D12_ROOT_SIGNATURE_DESC rootDesc = {};
-    rootDesc.NumParameters = 1;
-    rootDesc.pParameters = &param;
+    rootDesc.NumParameters = _countof(params);
+    rootDesc.pParameters = params;
     rootDesc.NumStaticSamplers = 1;
     rootDesc.pStaticSamplers = &sampler;
-    rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
     ComPtr<ID3DBlob> signature, error;
     if (FAILED(D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error))) {
         if (error) spdlog::error("[volumetric_fog] rootsig: {}", static_cast<const char*>(error->GetBufferPointer()));
@@ -96,8 +101,8 @@ bool VolumetricFogSkyPass::Init(const rs::rhi::Device& device) {
 
     DxcShaderCompiler dxc;
     ComPtr<IDxcBlob> vs, ps;
-    if (!dxc.Init() || !dxc.Compile(kSkyShader, L"VSMain", L"vs_6_6", {}, "volumetric_fog", vs) ||
-        !dxc.Compile(kSkyShader, L"PSMain", L"ps_6_6", {}, "volumetric_fog", ps))
+    if (!dxc.Init() || !dxc.Compile(kSkyShader, L"VSMain", L"vs_6_0", {}, "volumetric_fog", vs) ||
+        !dxc.Compile(kSkyShader, L"PSMain", L"ps_6_0", {}, "volumetric_fog", ps))
         return false;
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC pd = {};
@@ -138,6 +143,7 @@ void VolumetricFogSkyPass::Record(const rs::rhi::CommandList& commandList, std::
     if (!impl_ || !commandList.Valid()) return;
     ID3D12GraphicsCommandList* list = commandList.Native();
     list->SetGraphicsRootSignature(impl_->rootSig.Get());
+    SetGraphicsBindlessTable(list, 1, impl_->srvHeap.Native());
     list->SetPipelineState(impl_->pso.Get());
     const SkyShaderConstants constants{integratedSrvIndex};
     list->SetGraphicsRoot32BitConstants(0, kConstantDwordCount, &constants, 0);

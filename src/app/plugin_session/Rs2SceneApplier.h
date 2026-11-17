@@ -18,7 +18,8 @@
 #include "../../plugins/layout/Rs2PlatformParent.h"
 #include "../../world/alignment/TrackGraph.h"
 #include "../../world/scene/ManualPlacementOverlay.h"
-#include "../../world/scene/SceneEntity.h"
+
+namespace rs::world { struct SceneEntity; }
 
 namespace rs::world {
 class SceneRegistry;

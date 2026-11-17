@@ -118,7 +118,9 @@ void TickOpenedPlugin(AppRuntimeGlobals& globals, AppRuntimeState& state) {
         AttachOpenedSession(state, session);
         opened.attachedEntityId = opened.entityId;
         opened.attachedGeneration = slot->residency.generation;
-        opened.cameraFitted = false;
+        // カメラ合わせはやり直さない。スイッチを変えるとスロットが入れ替わって世代が進むので、
+        // ここで合わせ直すと、操作のたびにユーザーが動かしたカメラが戻ってしまう。
+        // 別のプラグインを開いたときは OpenPlugin が状態ごと初期化する。
     }
 
     // 当たり判定の箱は最初のTickで決まる。決まったら、プラグイン全体が収まる位置へカメラを合わせる。

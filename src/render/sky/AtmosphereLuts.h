@@ -61,7 +61,7 @@ public:
     // 月用のSky-View LUT(SRV状態)のGPUハンドル。未生成でも有効なSRV(中身は引かれない前提)。
     std::uint64_t MoonSkyViewSrvGpuHandle() const;
 
-    // 透過率LUTの共有SRVヒープ内の絶対番号(メッシュのシェーダが ResourceDescriptorHeap[] で引く)。
+    // 透過率LUTの共有SRVヒープ内の絶対番号(メッシュのシェーダが bindless テーブルの配列で引く)。
     // Init 前は0。
     std::uint32_t TransmittanceSrvIndex() const;
 

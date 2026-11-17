@@ -5,6 +5,7 @@
 
 #include "ProfileMaterial.h"
 #include "runtime/StretchZyRuntime.h"
+#include "../schema/PluginSchema.h"
 
 namespace rs::legacy_plugin {
 namespace {

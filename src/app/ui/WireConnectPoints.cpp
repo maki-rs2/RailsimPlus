@@ -1,5 +1,6 @@
 #include "WireConnectPoints.h"
 
+#include <cmath>
 #include <numbers>
 #include <unordered_map>
 
@@ -13,7 +14,8 @@ bool ResolvePoleFrame(const rs::world::TrackGraph& graph, const rs::world::Place
                       rs::world::TrackFrame& outFrame) {
     if (pole.hasWorldAnchor) {
         outFrame.pos = pole.worldPos;
-        outFrame.tangent = rs::core::Vec3(0.0f, 0.0f, 1.0f);
+        const float yawRad = pole.worldYawDeg * std::numbers::pi_v<float> / 180.0f;
+        outFrame.tangent = rs::core::Vec3(std::sin(yawRad), 0.0f, std::cos(yawRad));
         outFrame.up = rs::core::Vec3(0.0f, 1.0f, 0.0f);
         return true;
     }
@@ -27,16 +29,16 @@ bool ResolvePoleFrame(const rs::world::TrackGraph& graph, const rs::world::Place
 rs::core::Vec3 MaterializedWireBasePos(const rs::world::TrackFrame& frame,
                                        const rs::world::PlacedIndividual& pole,
                                        float branchOffsetM, float lineHeight) {
+    // 接続点の並びは柱自身の向き基準の右方向(常に鉛直に立つ柱の姿勢。ResolveWorldMatrixの
+    // keepUprightと同じ)。軌道と逆向きに置かれた柱では左右が入れ替わる。ワールドアンカーPoleは
+    // frame.tangentが個体の向きそのもの。
+    const float poleYawDeg = pole.hasWorldAnchor ? 0.0f : static_cast<float>(pole.yawOffsetDeg);
+    const rs::core::Vec3 poleRight = rs::world::ResolveUprightFrame(frame.tangent, poleYawDeg).right;
     // ワールドアンカーPoleは軌道フレームの横オフセットを持たない(worldPosが個体そのものの位置)が、
-    // トロリ線高さ(line.height分の引き下げ)が要る点は軌道アンカーPoleと同じ。
-    if (pole.hasWorldAnchor) return frame.pos - frame.up * lineHeight;
+    // トロリ線高さ(line.height分の引き下げ)と枝ごとの横オフセットは軌道アンカーPoleと同じ。
+    if (pole.hasWorldAnchor) return frame.pos + poleRight * branchOffsetM - frame.up * lineHeight;
+    // 柱の位置は軌道の右方向で測った横オフセット(ResolveWorldMatrixと同じ)。
     const rs::core::Vec3 trackRight = rs::core::Vec3::Cross(frame.up, frame.tangent).Normalized();
-    // 柱の位置は軌道の右方向で測った横オフセット(ResolveWorldMatrixと同じ)。接続点の並びは
-    // 柱自身の向き基準なので、軌道と逆向きに置かれた柱では左右が入れ替わる。
-    const float yawRad = static_cast<float>(pole.yawOffsetDeg) * std::numbers::pi_v<float> / 180.0f;
-    const rs::core::Vec3 poleForward =
-        rs::world::RotateAroundAxis(frame.tangent, frame.up, yawRad).Normalized();
-    const rs::core::Vec3 poleRight = rs::core::Vec3::Cross(frame.up, poleForward).Normalized();
     return frame.pos + trackRight * static_cast<float>(pole.lateralOffsetM) +
            poleRight * branchOffsetM +
            frame.up * (static_cast<float>(pole.verticalOffsetM) - lineHeight);

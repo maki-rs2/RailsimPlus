@@ -6,6 +6,8 @@
 #include "../../platform/EnvironmentVariable.h"
 #include "SceneSlotSyncInternal.h"
 
+#include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstdlib>
 #include <unordered_set>
@@ -50,6 +52,36 @@ size_t SceneSlotSynchronizer::JobPhaseTotal() const {
         case LoadJobPhase::Finalize: return loadJob_.carPendingUploads.size();
     }
     return 0;
+}
+
+namespace {
+
+// 全体の進み具合でのフェーズごとの重み(LoadJobPhaseの並び順)。大規模レイアウトでの
+// おおよその所要時間の比。件数が0のフェーズは通過した時点で重みぶん進む。
+constexpr std::array<double, 4> kLoadPhaseWeights = {
+    40.0, // Prefetch
+    5.0,  // Pass1
+    45.0, // Pass2
+    10.0, // Finalize
+};
+
+} // namespace
+
+double SceneSlotSynchronizer::JobOverallFraction() const {
+    if (!loadJob_.active) return 1.0;
+    const size_t current = static_cast<size_t>(loadJob_.phase);
+    const size_t first = loadJob_.startedWithPrefetch ? 0 : static_cast<size_t>(LoadJobPhase::Pass1);
+    double totalWeight = 0.0;
+    double doneWeight = 0.0;
+    for (size_t i = first; i < kLoadPhaseWeights.size(); ++i) {
+        totalWeight += kLoadPhaseWeights[i];
+        if (i < current) doneWeight += kLoadPhaseWeights[i];
+    }
+    const size_t total = JobPhaseTotal();
+    const double phaseFraction =
+        total > 0 ? static_cast<double>(std::min(JobPhaseDone(), total)) / static_cast<double>(total) : 0.0;
+    if (current >= first) doneWeight += kLoadPhaseWeights[current] * phaseFraction;
+    return totalWeight > 0.0 ? doneWeight / totalWeight : 1.0;
 }
 
 void SceneSlotSynchronizer::ParkStaleSlots(SyncContext& ctx) {
@@ -101,14 +133,16 @@ void SceneSlotSynchronizer::StartLoadJob(SyncContext& ctx) {
     loadJob_.pass1Total = ctx.registry.Entities().size();
     loadJob_.pass1Index = 0;
 
-    // Prefetch: Scenery配置のうちParsedPluginCache未登録の出どころ(フォルダ+定義ファイル名)を
+    // Prefetch: Scenery・Car配置のうちParsedPluginCache未登録の出どころ(フォルダ+定義ファイル名)を
     // distinctに集め、Pass1に入る前にワーカースレッドへ並列ロードを投げる
-    // (非ブロッキング、StepPrefetchが完了をポーリングする)。
+    // (非ブロッキング、StepPrefetchが完了をポーリングする)。CarもPass2で同じキーの
+    // LoadIntoを通るので、ここで解析しておけばメインスレッドでの直列読込が無くなる。
     std::vector<PluginSource> newScenerSources;
     {
         std::unordered_set<std::string> seen;
         for (const rs::world::SceneEntity& e : ctx.registry.Entities()) {
-            if (e.category != rs::world::SceneEntityCategory::Scenery) continue;
+            if (e.category != rs::world::SceneEntityCategory::Scenery &&
+                e.category != rs::world::SceneEntityCategory::Car) continue;
             const PluginSource source(e.folderUtf8, e.definitionFile);
             if (ctx.staticMeshCache.ParsedPlugins().Contains(source)) continue;
             if (!seen.insert(MakePluginSourceKey(source)).second) continue;
@@ -127,8 +161,10 @@ void SceneSlotSynchronizer::StartLoadJob(SyncContext& ctx) {
         loadJob_.prefetchTotal = loadJob_.prefetchSources.size();
         loadJob_.prefetchDone = 0;
         loadJob_.phase = LoadJobPhase::Prefetch;
+        loadJob_.startedWithPrefetch = true;
     } else {
         loadJob_.phase = loadJob_.pass1Total > 0 ? LoadJobPhase::Pass1 : LoadJobPhase::Pass2;
+        loadJob_.startedWithPrefetch = false;
     }
     loadJob_.startTime = std::chrono::steady_clock::now();
     loadJob_.active = true;

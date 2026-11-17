@@ -20,7 +20,7 @@ namespace rs::app {
 
 // エントリの複線一括本数(RailSim II の TrackNum)。格納先は種別ごとに異なる(Pier=def.pier、
 // Girder=def直下、Pole=def.pole)。
-// 1=単線用(実レールに配置)、>1=複線一括(trackCount一致の中心線に配置)。
+// 1=単線用(実レールに配置)、>1=複線一括(中心線に配置。束ねる本数は問わない)。
 // ヘッダで公開し、app層(手動追加のtrackNum判定、ResolveCenterlineEdgeForと組み合わせ)
 // からも同じ規約を再利用できるようにする。
 int MultiTrackNum(const rs::legacy_pi::PluginDefinition& def, rs::legacy_pi::PluginType type) {
@@ -59,13 +59,12 @@ rs::world::Guid ResolveCenterlineEdgeFor(const rs::world::TrackGraph& graph,
                                          const rs::world::Guid& pickedEdge, int trackNum) {
     if (trackNum <= 1) return rs::world::NilGuid();
     const auto pickedIt = graph.edges.find(pickedEdge);
-    if (pickedIt != graph.edges.end() && pickedIt->second.centerlineOnly &&
-        pickedIt->second.trackCount == trackNum) {
+    if (pickedIt != graph.edges.end() && rs::world::EdgeAcceptsTrackNum(pickedIt->second, trackNum)) {
         return pickedEdge;
     }
     for (const auto& kv : graph.edges) {
         const rs::world::TrackEdge& e = kv.second;
-        if (!e.centerlineOnly || e.trackCount != trackNum) continue;
+        if (!rs::world::EdgeAcceptsTrackNum(e, trackNum)) continue;
         if (std::find(e.trackEdges.begin(), e.trackEdges.end(), pickedEdge) !=
             e.trackEdges.end()) {
             return kv.first;
@@ -87,6 +86,14 @@ std::vector<float> WireLateralOffsetsFor(const TrackPluginEntry& poleEntry) {
     return offsets;
 }
 
+rs::core::Mat4 ResolvePlacementItemWorldMatrix(const TrackPluginPlacementItem& item,
+                                               const rs::world::TrackGraph& graph) {
+    if (item.worldPlacement.has_value()) {
+        return rs::world::ResolveWorldMatrix(rs::world::ScenePlacement{*item.worldPlacement}, graph);
+    }
+    return rs::world::ResolveWorldMatrix(item.placement, graph);
+}
+
 namespace {
 
 // 1つのPierエントリについて、各チェーンのrunへ間隔配置し、配置件数をlogへ書く。
@@ -103,7 +110,7 @@ void CollectPierEntryPlacements(const TrackPluginEntry& entry, const rs::world::
     // 橋脚までの距離。負の値の挙動は未確認なので0として扱う。
     const float startOffsetM = std::max(entry.def.pier.offset, 0.0f);
 
-    // 複線一括(trackNum>1)は実レールではなく trackCount 一致の中心線edgeへ
+    // 複線一括(trackNum>1)は実レールではなく中心線edge(束ねる本数は問わない)へ
     // 配置する。単線(trackNum<=1)は実レールchain。中心線chainは
     // 1-edge chain として同じ run/interval 配置ループへ流す(factoring)。
     const int trackNum = MultiTrackNum(entry.def, entry.type);

@@ -1,4 +1,5 @@
 #include "EdgePick.h"
+#include "../../editor/tool/Editor.h"
 
 #include <algorithm>
 

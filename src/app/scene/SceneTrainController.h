@@ -92,7 +92,8 @@ public:
                               double nightThresholdSin,
                               std::vector<SceneSlotPool::Slot>& slots, float viewerFovYRadians,
                               const WheelSoundFrame& wheelFrame,
-                              std::vector<rs::sim::WheelSoundEvent>& wheelEvents);
+                              std::vector<rs::sim::WheelSoundEvent>& wheelEvents,
+                              const rs::legacy_plugin::TrackingTargetTable* trackingTargets = nullptr);
     void ResetWarpFade(std::vector<SceneSlotPool::Slot>& slots);
     // Sceneの並べ替え(oldToNew[旧]=新)に合わせて、Scene番号を持つ走行状態を付け替える。
     // 先読みの結果は次のtickで作り直されるので捨てる。
@@ -202,6 +203,7 @@ private:
 
     // SubmitRenderSnapshotがスロットごとの提出へ渡す、フレーム内で共通の入力と計測の集計。
     struct SubmitFrame {
+        const rs::legacy_plugin::TrackingTargetTable* trackingTargets = nullptr;
         App* app = nullptr;
         const rs::world::TrackGraph* activeGraph = nullptr;
         const float* eye = nullptr;

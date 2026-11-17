@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "../../core/Color.h"
-#include "SceneEntity.h"
+#include "TrainId.h"
 
 namespace rs::world {
 

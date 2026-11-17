@@ -12,6 +12,7 @@
 #include "../../core/Epsilon.h"
 #include "ProfileMaterial.h"
 #include "../../core/Math.h"
+#include "../schema/PluginSchema.h"
 
 namespace rs::legacy_plugin {
 

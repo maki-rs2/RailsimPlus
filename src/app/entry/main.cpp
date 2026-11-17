@@ -40,6 +40,7 @@
 #include "../plugin_session/Rs2SceneApplier.h"
 #include "../scene/TrackPluginPlacement.h"
 #include "../ui/EditorViewport.h"
+#include "../../editor/tool/Editor.h"
 
 using rs::app::App;
 using rs::app::RunTestX;

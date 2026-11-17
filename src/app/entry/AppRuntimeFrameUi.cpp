@@ -16,6 +16,7 @@
 #include "../action/SceneAction.h"
 #include "../ui/EditorViewport.h"
 #include "../ui/ImGuiFontManager.h"
+#include "../../editor/tool/Editor.h"
 
 namespace rs::app {
 

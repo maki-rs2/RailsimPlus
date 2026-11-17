@@ -27,6 +27,7 @@
 
 #include "../plugin_session/PluginSession.h"
 #include "../../plugins/load/TrainAssembly.h"
+#include "../../plugins/load/runtime/TrackingMoveSolve.h"
 #include "../../render/mesh/Mesh.h"
 #include "../../sim/TrainKinematics.h"
 #include "../../sim/TrainRuntime.h"
@@ -54,6 +55,7 @@ class CameraController;
 
 class SceneRenderer {
 public:
+    rs::legacy_plugin::TrackingTargetTable& TrackingTargets() { return trackingTargets_; }
     struct PlacementPreviewSpec {
         std::string folderUtf8;
         rs::core::Mat4 world = rs::core::Mat4::Identity();
@@ -86,6 +88,9 @@ public:
     // アップロードは編成の中身が変わったときだけで、毎フレーム呼んでよい。
     void SetTrainPlacementPreview(App& app, const std::optional<TrainPreviewSpec>& preview,
                                   std::vector<std::string>& log);
+    // 編成配置プレビューに使う車の解析を先読みへ出す。カーソルが線路に乗る前から解析を進めておくため、
+    // 編成を選んでいる間は毎フレーム呼んでよい(同じ並びでは1回だけ出す)。
+    void PrefetchTrainPlacementPreview(const std::vector<FormationCar>& cars);
     // SceneRegistryとの差分を反映する(追加分をロード/アップロード、削除分を解放)。
     // 空きスロットが無い場合、新規エンティティは無視されlogに警告を出す。
     // category==Trainのエンティティは、ロードに成功すると併せて
@@ -106,11 +111,9 @@ public:
     // シミュレーション/信号/編成Tick・編集入力・Undo・Scene切替・新規読込要求・
     // 自動復元スナップショットの書き込みを一時停止すること。進捗表示にも使う。
     bool SyncJobActive() const { return synchronizer_.JobActive(); }
-    // 現在のフェーズと、そのフェーズ内でのdone/total(進捗オーバーレイのラベル・
-    // バー表示に使う、LoadProgressOverlay.cpp)。
+    // 現在のフェーズ(進捗表示のラベル)と、ジョブ全体の進み具合0〜1(進捗バーと%表示)。
     LoadJobPhase SyncJobPhase() const { return synchronizer_.JobPhase(); }
-    size_t SyncJobPhaseDone() const { return synchronizer_.JobPhaseDone(); }
-    size_t SyncJobPhaseTotal() const { return synchronizer_.JobPhaseTotal(); }
+    double SyncJobOverallFraction() const { return synchronizer_.JobOverallFraction(); }
 
     // 毎フレーム、使用中スロットの各パーツのワールド行列を再計算して反映する
     // (Joint3D階層+mover込み。dtはmover位相更新に使う)。Trainカテゴリはtrain_group_idごとにグループ化し、
@@ -400,6 +403,7 @@ public:
                                     const rs::world::Guid& entityId, ScenePickItem& out) const;
 
 private:
+    rs::legacy_plugin::TrackingTargetTable trackingTargets_;
 
     using Slot = SceneSlotPool::Slot;
     // スロットの保持・割当・保管(park/revive/evict)はSceneSlotPoolが受け持つ。

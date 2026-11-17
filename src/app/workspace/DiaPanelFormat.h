@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <optional>
 #include <string>
 #include <string_view>
 
@@ -24,10 +23,8 @@ inline constexpr std::array<DiaRunInfoFieldName, 5> kDiaRunInfoFieldNames = {{
 
 std::string DiaRunInfoFieldLabel(rs::world::RunInfoChange::Field field);
 
-// 画面の動作の名前('stop' / 'reverse' / 'pass')と、動作の日本語の表示名。
-const char* DiaActionKey(rs::world::DiaAction action);
+// 動作の日本語の表示名。画面の動作の名前は rs::world::DiaActionKey。
 const char* DiaActionLabel(rs::world::DiaAction action);
-std::optional<rs::world::DiaAction> DiaActionFromKey(std::string_view key);
 
 // 発車時刻の表示。秒が0なら「時:分」、そうでなければ「時:分:秒」。
 std::string FormatDiaTime(const rs::world::DiaTimeOfDay& time);

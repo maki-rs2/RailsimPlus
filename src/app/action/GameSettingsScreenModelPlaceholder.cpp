@@ -1,5 +1,6 @@
 #include "GameSettingsScreenModel.h"
 #include "InputSettingsRows.h"
+#include "../settings/ViewOperationMode.h"
 
 namespace rs::app {
 workspace::GameSettingsPresentation BuildGameSettingsPresentation(workspace::GameSettingsPresentation presentation,
@@ -35,12 +36,13 @@ workspace::InputSettingsPresentation BuildInputSettingsPresentation(workspace::I
     presentation.confirmMessage_ = localization.Text("game_settings.input_conflict_message");
     presentation.confirmLabel_ = localization.Text("game_settings.input_confirm");
     presentation.cancelLabel_ = localization.Text("game_settings.input_cancel");
-    presentation.note_ = localization.Text("game_settings.placeholder");
     presentation.unassignableMessage_ = localization.Text("game_settings.input_unassignable_key");
     presentation.reservedKeyMessage_ = localization.Text("game_settings.input_reserved_key");
     presentation.resetAllConfirmMessage_ = localization.Text("game_settings.input_reset_all_message");
-    presentation.mouseChoices_ = {{"wasd", localization.Text("game_settings.mouse_operation.wasd")},
-                                  {"drag", localization.Text("game_settings.mouse_operation.drag")}};
+    presentation.mouseChoices_.clear();
+    for (const ViewOperationChoice& choice : kViewOperationChoices) {
+        presentation.mouseChoices_.push_back({choice.key, localization.Text(choice.labelKey)});
+    }
     return presentation;
 }
 } // namespace rs::app

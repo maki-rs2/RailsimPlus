@@ -64,7 +64,8 @@ void SceneTrainController::SubmitRenderSnapshot(
     App& app, const rs::world::TrackGraph& activeGraph, const float eye[3],
     const rs::world::GameClock& clock, const rs::world::SolarState& sun, double latitudeDeg,
     double nightThresholdSin, std::vector<SceneSlotPool::Slot>& slots, float viewerFovYRadians,
-    const WheelSoundFrame& wheelFrame, std::vector<rs::sim::WheelSoundEvent>& wheelEvents) {
+    const WheelSoundFrame& wheelFrame, std::vector<rs::sim::WheelSoundEvent>& wheelEvents,
+    const rs::legacy_plugin::TrackingTargetTable* trackingTargets) {
     using ProfileClock = std::chrono::steady_clock;
     lastRenderSubmitStats_ = {};
     const ProfileClock::time_point submitStart = ProfileClock::now();
@@ -79,6 +80,7 @@ void SceneTrainController::SubmitRenderSnapshot(
     frame.viewerFovYRadians = viewerFovYRadians;
     frame.wheelFrame = &wheelFrame;
     frame.wheelEvents = &wheelEvents;
+    frame.trackingTargets = trackingTargets;
 
     batching_.BeginFrame(app, slots);
     for (size_t slotIndex = 0; slotIndex < slots.size(); ++slotIndex) {
@@ -179,21 +181,6 @@ void SceneTrainController::SubmitCarSlot(SubmitFrame& frame, size_t slotIndex, S
         batching_.RefreshSlotBatchKey(slotIndex, slot);
     }
 
-    // 可動部を持つ車両は、ResolveDynamicPartWorlds で全パーツを
-    // 解き直す(親の可動部が Joint3D の子へ伝わり、ZY系も今の姿勢で解ける)。
-    std::vector<rs::core::Mat4> dynamicWorlds;
-    if (session.movablePartCount > 0) {
-        dynamicWorlds = rs::app::ResolveDynamicPartWorlds(
-            session.plugin.def, session.moverRuntimes, switchResolver, session.SwitchGeneration(),
-            rs::render::ToGpuFloat(slot.carSnapshot.carSnapshotDeltaSeconds), kDynamicRotateSpeedScale,
-            frame.clock->SecondsOfDay());
-    }
-    if (session.hasTimedAnimation) {
-        session.animationClockSeconds += slot.carSnapshot.carSnapshotDeltaSeconds;
-    }
-    lastRenderSubmitStats_.runtimeMs +=
-        std::chrono::duration<double, std::milli>(ProfileClock::now() - runtimeStart).count();
-
     const ProfileClock::time_point partWorldStart = ProfileClock::now();
     const std::vector<rs::core::Mat4> solved = rs::legacy_plugin::SolvePartWorlds(
         activeGraph, slot.carSnapshot.carSnapshotHead, slot.carSnapshot.trainTemplate,
@@ -201,6 +188,30 @@ void SceneTrainController::SubmitCarSlot(SubmitFrame& frame, size_t slotIndex, S
         &slot.carSnapshot.tiltState, 1.0, 1.0, nullptr, slot.carSnapshot.carSnapshotReversed,
         runtime_.GroupOccupiedPath(slot.carSnapshot.carSnapshotTrainId),
         slot.carSnapshot.carSnapshotPathOffsetM, &slot.carSnapshot.carAxleContacts);
+    const double solveMs =
+        std::chrono::duration<double, std::milli>(ProfileClock::now() - partWorldStart).count();
+    rs::legacy_plugin::TrackingMoveContext tracking;
+    tracking.targets = frame.trackingTargets;
+    tracking.placementToWorld = [&](size_t partIndex, rs::core::Mat4& out) {
+        return rs::legacy_plugin::FindPartPlacementToWorld(
+            session.plugin.def, slot.carSnapshot.trainTemplate, solved, partIndex, out);
+    };
+    // 可動部を持つ車両は、ResolveDynamicPartWorlds で全パーツを
+    // 解き直す(親の可動部が Joint3D の子へ伝わり、ZY系も今の姿勢で解ける)。
+    std::vector<rs::core::Mat4> dynamicWorlds;
+    if (session.movablePartCount > 0) {
+        dynamicWorlds = rs::app::ResolveDynamicPartWorlds(
+            session.plugin.def, session.moverRuntimes, switchResolver, session.SwitchGeneration(),
+            rs::render::ToGpuFloat(slot.carSnapshot.carSnapshotDeltaSeconds), kDynamicRotateSpeedScale,
+            frame.clock->SecondsOfDay(), &tracking);
+    }
+    if (session.hasTimedAnimation) {
+        session.animationClockSeconds += slot.carSnapshot.carSnapshotDeltaSeconds;
+    }
+    lastRenderSubmitStats_.runtimeMs +=
+        std::chrono::duration<double, std::milli>(ProfileClock::now() - runtimeStart).count() - solveMs;
+
+    const ProfileClock::time_point composeWorldStart = ProfileClock::now();
     CollectCarWheelSounds(slot, activeGraph, runtime_.GroupOdometerM(slot.carSnapshot.carSnapshotTrainId),
                           *frame.wheelFrame, *frame.wheelEvents);
     // SolvePartWorldsの結果はpartDefIndex添字のワールド行列なので、可動部の変位を
@@ -261,7 +272,7 @@ void SceneTrainController::SubmitCarSlot(SubmitFrame& frame, size_t slotIndex, S
     slot.carSnapshot.carSnapshotDeltaSeconds = 0.0;
     slot.carSnapshot.carSnapshotDistanceMeters = 0.0;
     lastRenderSubmitStats_.partWorldMs +=
-        std::chrono::duration<double, std::milli>(ProfileClock::now() - partWorldStart).count();
+        solveMs + std::chrono::duration<double, std::milli>(ProfileClock::now() - composeWorldStart).count();
 
     const bool addedToBatch = batching_.TryAddInstance(app, slotIndex, slot, slot.carSnapshot.carPartWorlds);
     if (addedToBatch) {

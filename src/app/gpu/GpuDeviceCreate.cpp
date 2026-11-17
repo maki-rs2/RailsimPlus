@@ -1,4 +1,4 @@
-// GpuContext のD3D12デバイス作成(アダプタ選択と Shader Model 確認)
+// GpuContext のD3D12デバイス作成(アダプタ選択と描画要件の確認)
 #include "GpuContext.h"
 
 #include <spdlog/spdlog.h>
@@ -7,7 +7,7 @@
 
 namespace rs::app {
 
-// ハードウェアGPUを性能順に試してデバイスを作り、Shader Model 6.6(Bindless描画に必須)を確認する。
+// ハードウェアGPUを性能順に試してデバイスを作り、SM 6.0 と Resource Binding Tier 3 を確認する。
 // 使えなければ false を返し、initFailure_ に理由を入れる(各アダプタの結果はログへ出す)。
 bool GpuContext::CreateDevice() {
     GpuInitFailure& failure = initFailure_;
@@ -43,22 +43,31 @@ bool GpuContext::CreateDevice() {
         failure.kind = GpuInitFailure::Kind::NoDevice;
         return false;
     }
-    // D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED
-    // (ResourceDescriptorHeap[]直接参照)はShader Model 6.6が必要。最低要件は
-    // RTX 3050級だが、無言クラッシュを避けるため起動時に明示チェックする。
-    D3D12_FEATURE_DATA_SHADER_MODEL sm = {D3D_SHADER_MODEL_6_6};
+    // 上限なしのテクスチャ配列を使うため、シェーダの版とリソースのバインド能力を別々に確かめる。
+    D3D12_FEATURE_DATA_SHADER_MODEL sm = {D3D_SHADER_MODEL_6_0};
     const HRESULT smHr = device_->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &sm, sizeof(sm));
-    if (FAILED(smHr) || sm.HighestShaderModel < D3D_SHADER_MODEL_6_6) {
+    if (FAILED(smHr) || sm.HighestShaderModel < D3D_SHADER_MODEL_6_0) {
         failure.kind = GpuInitFailure::Kind::ShaderModel;
         failure.shaderModelMajor = (sm.HighestShaderModel >> 4) & 0xF;
         failure.shaderModelMinor = sm.HighestShaderModel & 0xF;
         failure.hr = smHr;
-        spdlog::error("{}: このGPU/ドライバはShader Model 6.6に対応していません"
-                      "(Bindless描画に必須)。検出された最高: {}.{}、"
+        spdlog::error("{}: このGPU/ドライバはShader Model 6.0に対応していません。検出: {}.{}、"
                       "問い合わせ結果 HRESULT 0x{:08X}。GPUドライバを更新するか、"
-                      "対応GPU(RTX 3050以上目安)でお試しください。",
+                      "Shader Model 6.0対応GPUでお試しください。",
                       usedName, failure.shaderModelMajor, failure.shaderModelMinor,
                       static_cast<unsigned>(smHr));
+        return false;
+    }
+    D3D12_FEATURE_DATA_D3D12_OPTIONS options = {};
+    const HRESULT optionsHr = device_->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &options, sizeof(options));
+    if (FAILED(optionsHr) || options.ResourceBindingTier < D3D12_RESOURCE_BINDING_TIER_3) {
+        failure.kind = GpuInitFailure::Kind::ResourceBindingTier;
+        failure.resourceBindingTier = static_cast<unsigned>(options.ResourceBindingTier);
+        failure.hr = optionsHr;
+        spdlog::error("{}: このGPU/ドライバはResource Binding Tier 3に対応していません。検出: Tier {}、"
+                      "問い合わせ結果 HRESULT 0x{:08X}。GPUドライバを更新するか、"
+                      "Resource Binding Tier 3対応GPUでお試しください。",
+                      usedName, failure.resourceBindingTier, static_cast<unsigned>(optionsHr));
         return false;
     }
     return true;

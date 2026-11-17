@@ -18,6 +18,7 @@
 
 #include "../rhi/CommandList.h"
 #include "../rhi/RetirementQueue.h"
+#include "../rhi/SrvHeap.h"
 
 namespace rs::render {
 
@@ -36,6 +37,7 @@ public:
     static constexpr UINT kShadowConstantsRootParam = 4;
     // ルートシグネチャ内の視点の定数(b2、ルートCBV)の位置。
     static constexpr UINT kViewConstantsRootParam = 5;
+    static constexpr std::uint32_t kBindlessRootParam = 6;
 
     bool Init(ID3D12Device* device, DXGI_FORMAT rtvFormat);
 
@@ -86,7 +88,8 @@ public:
     // 各 Record は SetGraphicsRootSignature を直接呼ばずこれを使う。base.shadowConstantsAddress が0
     // (影を使わない描画。サムネイルなど)なら、ゼロ初期化のバッファを張る。視点の定数に空きは無く、
     // base.viewConstantsAddress が0なら張らずにエラーを1回だけ出す(呼び出し側の設定漏れ)。
-    void BindRootSignature(ID3D12GraphicsCommandList* cmdList, const MeshConstants& base) const;
+    void BindRootSignature(const rs::rhi::CommandList& commandList, const MeshConstants& base,
+                           const rs::rhi::SrvHeap& srvHeap) const;
     // 「影を使わない」ゼロ初期化の影定数(b1)のGPUアドレス。影を使わない描画(サムネイルなど)が張る。
     // 中身は不変なので、別スレッド・別キューで共有しても競合しない。
     D3D12_GPU_VIRTUAL_ADDRESS NullShadowConstants() const {

@@ -6,6 +6,7 @@
 
 #include "../postprocess/PostProcessFormats.h"
 #include "../resource/DxcShaderCompiler.h"
+#include "../resource/BindlessDescriptors.inl"
 #include "ParticleShader.h"
 
 using Microsoft::WRL::ComPtr;
@@ -20,7 +21,9 @@ ComPtr<ID3D12RootSignature> CreateRootSignature(ID3D12Device* device) {
     textureRange.NumDescriptors = kMaxParticleTextures;
     textureRange.BaseShaderRegister = 1;
     textureRange.OffsetInDescriptorsFromTableStart = 0;
-    D3D12_ROOT_PARAMETER params[3] = {};
+    const BindlessDescriptorRanges ranges = MakeBindlessDescriptorRanges();
+    D3D12_ROOT_PARAMETER params[kRootBindless + 1] = {};
+    params[kRootBindless] = MakeBindlessDescriptorTable(ranges);
     params[kRootInstances].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
     params[kRootInstances].Descriptor.ShaderRegister = 0;
     params[kRootInstances].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
@@ -44,7 +47,6 @@ ComPtr<ID3D12RootSignature> CreateRootSignature(ID3D12Device* device) {
     desc.pParameters = params;
     desc.NumStaticSamplers = 1;
     desc.pStaticSamplers = &sampler;
-    desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
     ComPtr<ID3DBlob> blob, error;
     if (FAILED(D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &blob, &error))) {
         if (error) spdlog::error("[particle] rootsig: {}", static_cast<const char*>(error->GetBufferPointer()));
@@ -66,8 +68,8 @@ bool CreateParticlePipeline(ID3D12Device* device, ComPtr<ID3D12RootSignature>& r
     if (!compiler.Init()) return false;
     const std::string source = BuildParticleShader();
     ComPtr<IDxcBlob> vs, ps;
-    if (!compiler.Compile(source, L"VSMain", L"vs_6_6", {}, "particle", vs) ||
-        !compiler.Compile(source, L"PSMain", L"ps_6_6", {}, "particle", ps)) return false;
+    if (!compiler.Compile(source, L"VSMain", L"vs_6_0", {}, "particle", vs) ||
+        !compiler.Compile(source, L"PSMain", L"ps_6_0", {}, "particle", ps)) return false;
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC pd = {};
     pd.pRootSignature = rootSig.Get();

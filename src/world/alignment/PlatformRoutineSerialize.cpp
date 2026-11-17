@@ -9,29 +9,10 @@ namespace {
 
 constexpr const char* kLogTag = "platform_stop_info_serialize";
 
-const char* DiaActionToString(DiaAction action) {
-    switch (action) {
-    case DiaAction::Stop:
-        return "stop";
-    case DiaAction::Reverse:
-        return "reverse";
-    case DiaAction::Pass:
-        return "pass";
-    }
-    return "stop";
-}
-
 DiaAction DiaActionFromJson(const nlohmann::json& json) {
     const std::string value = JsonReadValue(json, "action", std::string("stop"), kLogTag);
-    if (value == "reverse") {
-        return DiaAction::Reverse;
-    }
-    if (value == "pass") {
-        return DiaAction::Pass;
-    }
-    if (value != "stop") {
-        spdlog::warn("[platform_stop_info_serialize] unknown action '{}'; using Stop.", value);
-    }
+    if (const std::optional<DiaAction> action = DiaActionFromKey(value)) return *action;
+    spdlog::warn("[platform_stop_info_serialize] unknown action '{}'; using Stop.", value);
     return DiaAction::Stop;
 }
 
@@ -160,7 +141,7 @@ nlohmann::json PlatformRoutineElementToJson(const PlatformRoutineElement& elemen
     }
     nlohmann::json result = {
         { "enabled", element.enabled },
-        { "action", DiaActionToString(element.action) },
+        { "action", DiaActionKey(element.action) },
         { "timeType", DiaTimeTypeToString(element.timeType) },
         { "dwellSeconds", element.dwellSeconds },
         { "departureTimes", departureTimes },

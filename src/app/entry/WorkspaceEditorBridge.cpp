@@ -10,7 +10,6 @@
 #include "../action/LayoutPersistenceAction.h"
 #include "../action/MissingPluginRefreshGate.h"
 #include "../action/PluginRootAction.h"
-#include "../action/PointOpeningAction.h"
 #include "../action/PointRoutineAction.h"
 #include "../action/StationDiaAction.h"
 #include "../action/SceneEntitySwitchAction.h"
@@ -70,9 +69,6 @@ void WorkspaceEditorBridge::Tick(rmlui::RmlUiIntegration& rmlUi, const rs::app::
                     StationDiaAction(editor).RenamePlatform(id, name);
                 }
             });
-        view->PointHandMark().Attach([view, &editor, &renderer](rs::world::Guid nodeId, int linkIndex) {
-            ChangePointOpening(view->Toasts(), editor, nodeId, linkIndex, renderer.OccupiedBlocks());
-        });
         view->RailLabel().Attach(
             [&editor, &renderer](rs::world::Guid guid, bool ensureSelected) {
                 if (ensureSelected && editor.selectedBlock == guid) return;
@@ -301,7 +297,6 @@ void WorkspaceEditorBridge::Tick(rmlui::RmlUiIntegration& rmlUi, const rs::app::
                               editor.selectedBlock, services.layoutSession.activeIndex, deltaSeconds, document);
     const bool diaMode = GetViewModeTraits(viewMode).stationDia;
     view->DiaCard().Refresh(diaMode, editor, document);
-    view->PointHandMark().Refresh(diaMode, editor, document);
     if (trainProfile) {
         formationImages.EndFrame();
     } else {
@@ -349,7 +344,6 @@ void WorkspaceEditorBridge::UpdateTrainInfoCards(rmlui::RmlUiIntegration& rmlUi,
     view->TrainInfoCard().UpdatePositions(viewProj, eye, screenWidth, screenHeight);
     view->RailLabel().UpdatePositions(viewProj, screenWidth, screenHeight);
     view->DiaCard().UpdatePositions(viewProj, screenWidth, screenHeight);
-    view->PointHandMark().UpdatePositions(viewProj, screenWidth, screenHeight);
     view->SignalPanel().UpdatePositions(viewProj, screenWidth, screenHeight);
 }
 

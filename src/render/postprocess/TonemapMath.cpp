@@ -178,17 +178,17 @@ float InverseTonemapChannel(const TonemapParams& params, float targetLinear) {
 }
 
 TonemapMode TonemapModeFromEnvValue(const char* value) {
-    if (value == nullptr) return TonemapMode::Agx;
+    if (value == nullptr) return kDefaultTonemapMode;
     const std::string text = rs::platform_text::ToAsciiLower(value);
     for (std::size_t i = 0; i < kTonemapModeNames.size(); ++i) {
         if (text == kTonemapModeNames[i]) return static_cast<TonemapMode>(i);
     }
-    return TonemapMode::Agx;
+    return kDefaultTonemapMode;
 }
 
 const char* TonemapModeName(TonemapMode mode) {
     const std::size_t index = static_cast<std::size_t>(mode);
-    return kTonemapModeNames[index < kTonemapModeCount ? index : static_cast<std::size_t>(TonemapMode::Agx)].data();
+    return kTonemapModeNames[index < kTonemapModeCount ? index : static_cast<std::size_t>(kDefaultTonemapMode)].data();
 }
 
 float TonemapExposureFromTuning(const RenderTuning& tuning) {

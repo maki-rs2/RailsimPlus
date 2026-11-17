@@ -2,6 +2,7 @@
 // MeshPipelineSharedState.cpp から分離。
 
 #include "MeshPipelineSharedState.h"
+#include "../resource/BindlessDescriptors.inl"
 
 #include <array>
 
@@ -60,9 +61,11 @@ bool MeshPipelineSharedState::CreateShadowPsos(ID3D12Device* device,
     return true;
 }
 
-void MeshPipelineSharedState::BindRootSignature(ID3D12GraphicsCommandList* cmdList,
-                                                const MeshConstants& base) const {
+void MeshPipelineSharedState::BindRootSignature(const rs::rhi::CommandList& commandList,
+                                                const MeshConstants& base, const rs::rhi::SrvHeap& srvHeap) const {
+    ID3D12GraphicsCommandList* cmdList = commandList.Native();
     cmdList->SetGraphicsRootSignature(rootSig_.Get());
+    SetGraphicsBindlessTable(cmdList, kBindlessRootParam, srvHeap.Native());
     cmdList->SetGraphicsRootConstantBufferView(
         kShadowConstantsRootParam,
         base.shadowConstantsAddress != 0 ? base.shadowConstantsAddress : NullShadowConstants());

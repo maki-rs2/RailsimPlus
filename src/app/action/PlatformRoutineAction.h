@@ -8,8 +8,11 @@
 #include <string>
 #include <vector>
 
-#include "../../editor/tool/Editor.h"
-#include "../../world/scene/SceneEntity.h"
+#include "../../world/alignment/Guid.h"
+#include "../../world/alignment/PlatformRoutine.h"
+#include "../../world/scene/TrainId.h"
+
+namespace rs::editor { class Editor; }
 
 namespace rs::app {
 

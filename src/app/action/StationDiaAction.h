@@ -6,7 +6,10 @@
 #include <string>
 #include <vector>
 
-#include "../../editor/tool/Editor.h"
+#include "../../world/alignment/Guid.h"
+#include "../../world/alignment/TrackGraph.h"
+
+namespace rs::editor { class Editor; }
 
 namespace rs::app {
 

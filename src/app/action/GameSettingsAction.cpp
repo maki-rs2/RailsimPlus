@@ -63,6 +63,12 @@ void GameSettingsAction::SetFullscreen(bool enabled) {
     SaveUserSettingsOrWarn(refs_.userSettings, "Failed to save user settings after fullscreen selection.");
 }
 
+void GameSettingsAction::SetViewOperation(ViewOperationMode mode) {
+    if (refs_.userSettings.viewOperation == mode) return;
+    refs_.userSettings.viewOperation = mode;
+    SaveUserSettingsOrWarn(refs_.userSettings, "Failed to save user settings after view operation selection.");
+}
+
 void GameSettingsAction::SetEarthRotationMode(int mode) {
     refs_.world.solarOverrides.earthRotationMode = rs::world::EarthRotationModeFromIndex(mode);
     // 地球の自転の扱いは .rsl の world.environment に保存する値なので、レイアウトの編集として数える。

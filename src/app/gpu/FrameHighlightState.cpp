@@ -36,6 +36,8 @@ bool FrameHighlightState::UploadMesh(
     if (which >= kHighlightSlots) return false;
 
     gpu.WaitForGpu();
+    // 前に輪郭を出したもののテクスチャをプールから外す(理由は PlacementPreviewState::UploadMesh と同じ)。
+    highlightPipelines_[which].Reset();
     keepAlive.clear();
     gpu.ResetCmdList();
     DirectX::ResourceUploadBatch upload(gpu.Device());

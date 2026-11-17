@@ -10,6 +10,7 @@
 
 #include "../../platform/text/Encoding.h"
 #include "ShaderCache.h"
+#include "BindlessHlsl.h"
 
 namespace rs::render {
 
@@ -55,14 +56,15 @@ bool DxcShaderCompiler::Compile(const std::string& source, const wchar_t* entry,
                                 const std::vector<std::wstring>& defines, const char* logTag,
                                 ComPtr<IDxcBlob>& blob) const {
     if (!utils_ || !compiler_) return false;
+    const std::string fullSource = std::string(kBindlessHlsl) + source;
     ComPtr<IDxcBlobEncoding> srcBlob;
-    if (FAILED(utils_->CreateBlob(source.c_str(), UINT32(source.size()), DXC_CP_UTF8, &srcBlob))) return false;
+    if (FAILED(utils_->CreateBlob(fullSource.c_str(), UINT32(fullSource.size()), DXC_CP_UTF8, &srcBlob))) return false;
     DxcBuffer srcBuffer = {};
     srcBuffer.Ptr = srcBlob->GetBufferPointer();
     srcBuffer.Size = srcBlob->GetBufferSize();
     srcBuffer.Encoding = DXC_CP_UTF8;
 
-    // HEAP_DIRECTLY_INDEXED(ResourceDescriptorHeap[])はHLSL 2021構文が必要。
+    // 全シェーダを HLSL 2021 でそろえる。
     std::vector<LPCWSTR> args = {L"-E", entry, L"-T", target, L"-HV", L"2021"};
     for (const std::wstring& define : defines) {
         args.push_back(L"-D");
@@ -78,7 +80,7 @@ bool DxcShaderCompiler::Compile(const std::string& source, const wchar_t* entry,
     // キャッシュのキー。コンパイル結果を変えうる引数(-E/-T/-HV/-D/-Zi/-Od/-O3)を全部、順序どおりに入れる。
     ShaderCacheKey cacheKey;
     cacheKey.compiler = compilerId_;
-    cacheKey.source = source;
+    cacheKey.source = fullSource;
     cacheKey.entry = rs::platform_text::WideToUtf8(entry);
     cacheKey.target = rs::platform_text::WideToUtf8(target);
     for (LPCWSTR arg : args) cacheKey.options.push_back(rs::platform_text::WideToUtf8(arg));

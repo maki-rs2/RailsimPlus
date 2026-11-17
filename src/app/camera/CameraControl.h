@@ -27,6 +27,10 @@ public:
     float renderDistance = kDefaultRenderDistance;
     // true の間は Shift+ホイールで視野角を変えない(ファインダー中は撮影カメラの焦点距離が視野角を決める)。
     bool fovAdjustLocked = false;
+    // 視点操作の設定と表示モードから、呼び出し側が毎フレーム入れる。偽の間は、その
+    // ボタンのドラッグでは注目点を動かさない(Shift+左ドラッグの高さ調節はこれによらず使える)。
+    bool middleDragMovesTarget = false;
+    bool leftDragMovesTarget = false;
 
     // カメラをAABBへフィットさせる。
     void FitToAabb(const float mn[3], const float mx[3]);
@@ -59,15 +63,19 @@ public:
     // ---- Win32入力(WndProcから委譲。キャプチャ自体は呼び出し側が行う) ----
     void OnRightDown(int x, int y); // 右ドラッグ回転を開始
     void OnRightUp();
-    // Shift+左ドラッグ = 基準点の高さ調節。Shift押下時のみ受け付け、受け付けたら
-    // true を返す(呼び出し側は true のときだけ SetCapture する)。実際の高さ調節は、
+    // 左ドラッグ = 基準点の移動。Shift押下中は垂直(高さ調節)、Shiftなしは leftDragMovesTarget のときだけ水平。
+    // 受け付けたら true を返す(呼び出し側は true のときだけ SetCapture する)。実際の移動は、
     // 押したまま数px動いてから始まる(動かさず離したクリックは何もしない)。
     bool OnLeftDown(int x, int y, bool shiftDown);
-    // 高さドラッグ中だったら true を返す(呼び出し側は ReleaseCapture の判断に使う)。
+    // 左ボタンのドラッグ(待ちを含む)だったら true を返す(呼び出し側は ReleaseCapture の判断に使う)。
     bool OnLeftUp();
-    // 高さドラッグ中か(エディタの左クリック処理との衝突回避に使う)。
-    bool HeightDragging() const { return heightDragging_; }
-    void OnMouseMove(int x, int y);
+    // 中ドラッグ = 基準点の移動。middleDragMovesTarget のときだけ受け付け、Shift押下中は垂直に動かす。
+    bool OnMiddleDown(int x, int y, bool shiftDown);
+    bool OnMiddleUp();
+    // 左・中ドラッグによる基準点の移動中か(エディタの左クリック処理との衝突回避に使う)。
+    bool HeightDragging() const { return moveDrag_ == MoveDragPhase::Moving; }
+    // fastDown は倍率キー(Ctrl)の押下。基準点の移動中の倍率に使う。
+    void OnMouseMove(int x, int y, bool fastDown);
     void OnWheel(float delta, bool shiftDown);
 
     // ---- 毎フレーム ----
@@ -109,11 +117,21 @@ private:
     float flyToElapsedSeconds_ = 0.0f;
     float flyToDurationSeconds_ = 0.0f;
 
-    // ドラッグ操作の状態(右ドラッグ=回転 / Shift+左ドラッグ=高さ調節)
+    // 左・中ボタンの移動ドラッグを始める。待ちの状態にして、しきい値を超えたら Moving へ進む。
+    void BeginMoveDrag(rs::app::input::PointerButton button, int x, int y, bool vertical);
+    // 押したボタンが button のときだけ移動ドラッグを終え、そのボタンが捕捉していたら true を返す。
+    bool EndMoveDrag(rs::app::input::PointerButton button);
+    // 移動ドラッグの1回分(dx, dy はpx)。
+    void ApplyMoveDrag(float dx, float dy, bool fastDown);
+
+    // ドラッグ操作の状態(右ドラッグ=回転 / 左・中ドラッグ=基準点の移動)
+    enum class MoveDragPhase { None, Pending, Moving };
     bool rotating_ = false;
-    bool heightDragging_ = false;
-    // Shift+左ボタンを押して、まだドラッグのしきい値を超えていない間。
-    bool heightPressed_ = false;
+    // Pending は、ボタンを押して、まだドラッグのしきい値を超えていない間。
+    MoveDragPhase moveDrag_ = MoveDragPhase::None;
+    rs::app::input::PointerButton moveDragButton_ = rs::app::input::PointerButton::Left;
+    // 垂直(高さ)に動かすか。水平なら false。押した時点で決まる。
+    bool moveDragVertical_ = false;
     POINT lastDragPos_ = {0, 0};
 };
 

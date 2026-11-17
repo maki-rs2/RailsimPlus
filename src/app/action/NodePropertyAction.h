@@ -6,9 +6,11 @@
 #include <cstddef>
 #include <vector>
 
-#include "../../editor/tool/Editor.h"
 #include "../../editor/tool/WarpLinkAuthoring.h"
 #include "../../world/alignment/EdgeSplitMerge.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::editor { class Editor; }
 
 namespace rs::app {
 

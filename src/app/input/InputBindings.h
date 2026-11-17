@@ -32,7 +32,7 @@ std::vector<InputBinding> DefaultInputBindings();
 
 enum class PointerAction {
     Select, Cancel, CameraRotate, CameraHeight, CameraFov, EditorHeight, CameraDash,
-    AngleSnap, EdgeSplit, SelectionExtend, PlacementReverse, TransformSnap,
+    AngleSnap, EdgeSplit, SelectionExtend, PlacementReverse, TransformSnap, CameraPan,
 };
 
 struct PointerBinding {

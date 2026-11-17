@@ -15,8 +15,7 @@ LayoutLoadProgress LayoutPersistenceAction::LoadProgress() const {
     progress.jobActive = refs_.sceneRenderer.SyncJobActive();
     if (!progress.jobActive) return progress;
     progress.phase = refs_.sceneRenderer.SyncJobPhase();
-    progress.done = refs_.sceneRenderer.SyncJobPhaseDone();
-    progress.total = refs_.sceneRenderer.SyncJobPhaseTotal();
+    progress.fraction = refs_.sceneRenderer.SyncJobOverallFraction();
     return progress;
 }
 

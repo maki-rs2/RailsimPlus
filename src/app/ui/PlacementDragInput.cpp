@@ -180,7 +180,7 @@ void BeginPlacementDrag(const EditorViewportContext& ctx) {
             gEditor.placementDragUi.previewLateralOffsetM = item.placement.lateralOffsetM;
             gEditor.placementDragUi.originDir = item.placement.position.direction;
             gEditor.placementDragUi.direction = item.placement.position.direction;
-            const rs::core::Mat4 m = rs::world::ResolveWorldMatrix(item.placement, gEditor.graph);
+            const rs::core::Mat4 m = ResolvePlacementItemWorldMatrix(item, gEditor.graph);
             gEditor.placementDragUi.planeY = m.m[13]; // ComposeRigidのorigin.y格納位置
             break;
         }

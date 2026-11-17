@@ -14,6 +14,7 @@ namespace particle_detail {
 inline constexpr std::uint32_t kRootInstances = 0;
 inline constexpr std::uint32_t kRootTextures = 1;
 inline constexpr std::uint32_t kRootConstants = 2;
+inline constexpr std::uint32_t kRootBindless = 3;
 
 struct Constants {
     float viewProj[16];
@@ -30,8 +31,8 @@ struct Constants {
     std::uint32_t adaptation[4];
 };
 inline constexpr std::uint32_t kConstantDwords = sizeof(Constants) / sizeof(std::uint32_t);
-// ルートSRVの2 DWORDとテーブルの1 DWORDを含め、ルート署名の上限に収める。
-static_assert(kConstantDwords + 3 <= 64);
+// ルートSRVの2 DWORDとテーブル2つの各1 DWORDを含め、ルート署名の上限に収める。
+static_assert(kConstantDwords + 4 <= 64);
 
 } // namespace particle_detail
 
@@ -63,8 +64,14 @@ StructuredBuffer<Instance> gInstances : register(t0);
 Texture2D<float4> gTex[MAX_PARTICLE_TEXTURES] : register(t1);
 
 float3 ParticleSunColor(float3 toLight) {
-    Texture2D<float4> lut = ResourceDescriptorHeap[gIndices.y];
+    Texture2D<float4> lut = gBindlessTex2D[gIndices.y];
     return SunColorFromTransmittance(lut, gSampler, toLight);
+}
+
+// 太陽が照らす直射光(太陽色×強さの調整値。式は SunColorShader.h)。月の光には ParticleSunColor を使う。
+float3 ParticleSunLight(float3 toSun) {
+    Texture2D<float4> lut = gBindlessTex2D[gIndices.y];
+    return SunLightFromTransmittance(lut, gSampler, toSun);
 }
 
 float3 ParticleLighting(float3 toCamera) {
@@ -75,7 +82,7 @@ float3 ParticleLighting(float3 toCamera) {
     float3 toSun = normalize(-gLightDir.xyz);
     float adaptationGain = AdaptationGainFromTexture();
     float3 sunColor = float3(1.0, 1.0, 1.0);
-    if (iblOn) sunColor = pluginSky ? gPluginDirectional.rgb : ParticleSunColor(toSun) * adaptationGain;
+    if (iblOn) sunColor = pluginSky ? gPluginDirectional.rgb : ParticleSunLight(toSun) * adaptationGain;
     // 標準の空は透過率と地球の影で日没を扱うため、昼夜係数を重ねて掛けない。
     float directFade = standardSky ? 1.0 : dayAlpha;
     float3 direct = sunColor * directFade * saturate(0.5 + 0.5 * dot(toCamera, toSun));
@@ -93,7 +100,7 @@ float3 ParticleLighting(float3 toCamera) {
         if (gAdaptation.y != 0u) nightFloor = float3(0.0, 0.0, 0.0);
         ambient = KAMBIENT_INTENSITY * dayAlpha;
         if (iblOn) {
-            TextureCube<float4> cube = ResourceDescriptorHeap[gIndices.x];
+            TextureCube<float4> cube = gBindlessTexCube[gIndices.x];
             // 位置も基底もワールド空間なので、キューブへ渡す方向にビュー回転を掛けない。
             ambient = 0.5 * (cube.SampleLevel(gSampler, float3(0.0, 1.0, 0.0), 0).rgb +
                              cube.SampleLevel(gSampler, toCamera, 0).rgb) * gDepthParams.z;
@@ -139,7 +146,7 @@ float4 PSMain(VSOut i) : SV_TARGET {
     Instance inst = gInstances[i.instance];
     // sRGBのSRVが画像のRGBだけをリニアに変換する。粒のRGBは既にリニア。
     float4 color = inst.color * gTex[NonUniformResourceIndex(inst.textureSlot)].Sample(gSampler, i.uv);
-    Texture2D<float> sceneDepth = ResourceDescriptorHeap[gIndices.w];
+    Texture2D<float> sceneDepth = gBindlessTex2DR[gIndices.w];
     float depth = sceneDepth.Load(int3(int2(i.position.xy), 0));
     // depth = A + B / viewDepth。クリア値0も遠クリップの距離へ戻る。
     float sceneDepthMeters = gDepthParams.y / (depth - gDepthParams.x);

@@ -296,6 +296,8 @@ public:
     // フォトモードの露出。ファインダーが出ているときだけ、トーンマップの露出に掛ける倍率を渡す(出ていなければ nullopt)。
     // ブルームの重みにも同じ露出が使われる。毎フレーム呼んでよい。
     void SetPhotoExposureMultiplier(std::optional<float> multiplier) { photoExposureMultiplier_ = multiplier; }
+    // ファインダー中の撮影カメラのシャッター速度[秒]。モーションブラーの長さを連動させる(FrameRenderer::SetPhotoShutterSeconds)。
+    void SetPhotoShutterSeconds(std::optional<float> seconds) { renderer_.SetPhotoShutterSeconds(seconds); }
     // フォトモードの ISO オートの測光(撮影カメラの露出を掛ける前のシーンの明るさ)を走らせるか。毎フレーム呼んでよい。
     // 走る・走らないが切り替わったときだけ、次の Render の先頭で資源を作る。結果は毎フレーム Render のあとに Poll で取る
     // (数フレームに1回、対数輝度の格子が返る)。

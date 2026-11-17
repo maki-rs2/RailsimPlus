@@ -2,6 +2,7 @@
 
 #include "../../plugins/schema/sidecar/SwitchAssignmentResolve.h"
 #include "../action/SignalPluginRules.h"
+#include "../../plugins/schema/PluginSchema.h"
 
 namespace rs::app {
 

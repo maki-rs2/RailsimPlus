@@ -18,7 +18,6 @@
 #include "RmlUiUpdateVariable.h"
 #include "RmlUiUpdatePhase.h"
 #include "../action/GameSettingsScreenModel.h"
-#include "../action/SettingsPlaceholderAction.h"
 #include "../settings/UserSettings.h"
 #include "../../platform/text/Encoding.h"
 

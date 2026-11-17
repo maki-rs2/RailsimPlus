@@ -14,6 +14,7 @@
 
 #include "../../editor/tool/BlockCommand.h"
 #include "../workspace/RailLabelPresentation.h"
+#include "../../editor/tool/Editor.h"
 
 namespace rs::app {
 namespace {

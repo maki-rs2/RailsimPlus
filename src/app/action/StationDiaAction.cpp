@@ -2,6 +2,7 @@
 // StationDiaAction.cpp - 駅・ダイヤ編集のアプリサービス
 //
 #include "StationDiaAction.h"
+#include "../../editor/tool/Editor.h"
 
 #include <algorithm>
 #include <array>

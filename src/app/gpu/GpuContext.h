@@ -182,15 +182,34 @@ public:
     void RunUploadCommandsChunked(size_t itemCount, size_t itemsPerBatch, Fn&& fn) {
         if (itemCount == 0) return;
         const size_t safeItemsPerBatch = std::max<size_t>(itemsPerBatch, 1);
+        // 1つ前のチャンクの完了だけを待つ。GPUのコピー中に次のチャンクのCPU処理(デコード・
+        // 記録)を進めつつ、ステージング用のメモリは2チャンク分までに抑える。戻る時点では全部終わっている。
+        // 提出はRunUploadCommands(NoWait)に任せ、積まれた完了待ちをここで引き取る。
+        std::future<void> previous;
         for (size_t begin = 0; begin < itemCount; begin += safeItemsPerBatch) {
             const size_t end = std::min(begin + safeItemsPerBatch, itemCount);
             RunUploadCommands([&](ID3D12Device* device, DirectX::ResourceUploadBatch& upload) {
                 fn(device, upload, begin, end);
-            });
+            }, UploadCompletion::NoWait);
+            std::future<void> finished = std::move(pendingUploads_.back());
+            pendingUploads_.pop_back();
+            WaitUpload(previous);
+            previous = std::move(finished);
         }
+        WaitUpload(previous);
     }
 
 private:
+    // 完了待ちが残っていれば待つ。失敗はログへ出してから投げ直す。
+    void WaitUpload(std::future<void>& upload) {
+        if (!upload.valid()) return;
+        try {
+            upload.get();
+        } catch (const std::exception& e) {
+            LogUploadFailure(e.what());
+            throw;
+        }
+    }
     bool deviceLost_ = false;
     GpuInitFailure initFailure_;
     // 失敗をログに出し、initFailure_ に Other として記録して false を返す。

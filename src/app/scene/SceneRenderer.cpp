@@ -81,11 +81,23 @@ void SceneRenderer::ClearMeshPlacementPreview(App& app) {
     meshPreviewShown_ = false;
 }
 
+void SceneRenderer::PrefetchTrainPlacementPreview(const std::vector<FormationCar>& cars) {
+    trainPreviewModel_.PrefetchReady(cars, kSceneEntityMaxParts);
+}
+
 void SceneRenderer::SetTrainPlacementPreview(App& app, const std::optional<TrainPreviewSpec>& preview,
                                              std::vector<std::string>& log) {
     const bool hasCars = preview.has_value() && preview->cars != nullptr &&
                          preview->graph != nullptr && !preview->cars->empty();
     if (!hasCars) {
+        if (trainPreviewShown_) {
+            app.SetPlacementPreviewActive(false);
+            trainPreviewShown_ = false;
+        }
+        return;
+    }
+    // 未解析の車があるうちは車両モデルを出さない(解析は先読みのスレッドで進み、済んだフレームで出す)。
+    if (!trainPreviewModel_.PrefetchReady(*preview->cars, kSceneEntityMaxParts)) {
         if (trainPreviewShown_) {
             app.SetPlacementPreviewActive(false);
             trainPreviewShown_ = false;
@@ -186,7 +198,7 @@ void SceneRenderer::SubmitTrainRenderSnapshot(App& app, const rs::world::TrackGr
                                                 std::vector<rs::sim::WheelSoundEvent>& wheelEvents) {
     trainController_.SubmitRenderSnapshot(app, activeGraph, eye, clock, sun, latitudeDeg,
                                             nightThresholdSin, Slots(), viewerFovYRadians,
-                                            wheelFrame, wheelEvents);
+                                            wheelFrame, wheelEvents, &trackingTargets_);
 }
 void SceneRenderer::ResetTrainWarpFade() { trainController_.ResetWarpFade(Slots()); }
 void SceneRenderer::RemapTrainSceneIndices(const std::vector<size_t>& oldToNew) { trainController_.RemapSceneIndices(oldToNew); }

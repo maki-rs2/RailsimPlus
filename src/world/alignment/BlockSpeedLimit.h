@@ -1,13 +1,19 @@
 #pragma once
 
+#include <cstddef>
 #include <functional>
 #include <optional>
 
 #include "IntervalList.h"
-#include "TrackGraph.h"
+#include "Guid.h"
 #include "WarpLinkTable.h"
 
 namespace rs::world {
+
+struct Block;
+struct SpeedSignal;
+struct TrackEdge;
+struct TrackGraph;
 
 // 信号1本が、ある列車に課す制限速度[km/h]を返す関数。nulloptなら制限なし。
 // 現示は列車ごとに違う(自分が入った閉塞の信号では止まらない)ため、列車ごとに作って渡す。

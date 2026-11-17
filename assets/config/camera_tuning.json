@@ -10,6 +10,8 @@
   "flyMouseSensitivity": 0.005,
   "flyPitchLimitRadians": 1.5533,
   "viewHeightSensitivity": 0.01,
+  "viewDragPerPixel": 0.001,
+  "viewDragFastMultiplier": 10.0,
   "viewDistMoveMinMeters": 2.0,
   "viewDashMultiplier": 3.0,
   "viewZoomStepIn": 0.869565248,

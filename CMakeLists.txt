@@ -507,6 +507,8 @@ add_library(RailsimPlusCore STATIC
     src/plugins/load/PierShaftMeshBuilder.cpp
     src/plugins/load/RailMeshBuilder.cpp
     src/plugins/load/LineWireMeshBuilder.cpp
+    src/plugins/load/LineWireGeometry.cpp
+    src/plugins/load/runtime/TrackingMoveSolve.cpp
     src/plugins/load/StretchZyMeshBuilder.h
     src/plugins/load/StretchZyMeshBuilder.cpp
     src/plugins/load/StretchZyMeshAssembly.h
@@ -618,6 +620,7 @@ add_library(RailsimPlusCore STATIC
     src/render/effects/HeadlightFlare.cpp
     src/render/shadow/CascadeFit.cpp
     src/render/shadow/ShadowUpdateSchedule.cpp
+    src/render/shadow/ShadowDistance.cpp
     src/render/shadow/ShadowMap.cpp
     src/render/shadow/ShadowPass.cpp
     src/render/postprocess/TonemapMath.cpp
@@ -835,7 +838,6 @@ add_library(RailsimPlusCore STATIC
     src/app/entry/ScreenshotFileName.cpp
     src/app/workspace/TrainInfoCardTuning.cpp
     src/app/workspace/DiaCardCandidates.cpp
-    src/app/workspace/PointHandMarks.cpp
     src/app/workspace/RailLabelHover.cpp
     src/app/workspace/RailLabelHoverTuning.cpp
     src/app/workspace/RailLabelPresentation.cpp
@@ -905,7 +907,6 @@ add_library(RailsimPlusCore STATIC
     src/app/action/RenderQualityPreset.cpp
     src/app/action/GameSettingsScreenModel.cpp
     src/app/action/GameSettingsScreenModelPlaceholder.cpp
-    src/app/action/SettingsPlaceholderAction.cpp
     src/app/action/InputBindingAction.cpp
     src/app/action/InputSettingsRows.cpp
     src/app/action/RenderSettingsRows.cpp
@@ -1129,7 +1130,6 @@ add_executable(RailsimPlus
     src/app/rmlui/RmlUiCabinHudView.cpp
     src/app/rmlui/RmlUiDiaCardView.cpp
     src/app/rmlui/RmlUiInlineRename.cpp
-    src/app/rmlui/RmlUiPointHandMarkView.cpp
     src/app/rmlui/RmlUiRailLabelView.cpp
     src/app/rmlui/RmlUiFormationImages.cpp
     src/app/rmlui/RmlUiUpdatePhase.cpp
@@ -1332,6 +1332,7 @@ add_executable(RailsimPlusTests
     tests/PiCustomizerSchemaTests.cpp
     tests/ZyLinkageTests.cpp
     tests/MoverRuntimeTests.cpp
+    tests/TrackingMoveSolveTests.cpp
     tests/SwitchExprTests.cpp
     tests/RailMeshBuildTests.cpp
     tests/AlignmentTests.cpp
@@ -1469,6 +1470,23 @@ target_precompile_headers(RailsimPlus PRIVATE ${RS_PCH_HEADERS})
 if(RS_BUILD_TESTS)
     target_precompile_headers(RailsimPlusTests PRIVATE ${RS_PCH_HEADERS})
 endif()
+
+# 自前ターゲットのコンパイル速度の設定。
+# - C++ モジュールは使わないので依存スキャンを止める。スキャンが有効だと MSBuild が .cpp ごとに
+#   別の cl を起動し、プロセスごとに PCH を読み直すうえ、std モジュールの準備も毎回走る。
+# - スキャンを止めると cl が1本で直列に回るので、/MP で並列にする。
+# - デバッグ情報は .obj に埋め込む(/Z7)。/Zi だと並列の cl が1つの PDB へ mspdbsrv 経由で
+#   書き込み、そこで順番待ちになる。リンク時に PDB へまとめるので、デバッグには影響しない。
+set(RS_SPEED_TARGETS RailsimPlusCore RailsimPlus imgui_dx12)
+if(RS_BUILD_TESTS)
+    list(APPEND RS_SPEED_TARGETS RailsimPlusTests RailsimPlusDepsSmokeTest)
+endif()
+foreach(_rs_target IN LISTS RS_SPEED_TARGETS)
+    set_target_properties(${_rs_target} PROPERTIES
+        CXX_SCAN_FOR_MODULES OFF
+        MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+    target_compile_options(${_rs_target} PRIVATE /MP)
+endforeach()
 
 # ポータブル版のパッケージ(install / CPack)
 include(cmake/ReleasePackage.cmake)

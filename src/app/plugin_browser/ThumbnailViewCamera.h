@@ -34,13 +34,12 @@ struct ThumbnailCameraPlan {
     float toCamera[3] = {};    // target から eye へ向かう単位ベクトル(光の向きの基準)
     float fovYRadians = 0.0f;
     float renderDistance = 0.0f;
+    // カメラの方位を0(+Z 側から -Z 向き)へ合わせるための、モデルのY軸まわりの回転[rad](=使った方位)。
+    // 回転後の点 (x', z') = (x cos a - z sin a, x sin a + z cos a)(a=方位)で、方位 a の向きが +Z へ移る。
+    float modelYawRadians = 0.0f;
 };
 
-// 変種のカメラの方位を0(+Z 側から -Z 向き)へ合わせるための、モデルのY軸まわりの回転[rad]。
-// 回転後の点 (x', z') = (x cos a - z sin a, x sin a + z cos a)(a=方位)で、方位 a の向きが +Z へ移る。
-float ThumbnailModelYawRadians(ThumbnailView view);
-
-// ベクトルをY軸まわりに ThumbnailModelYawRadians の向きへ回す(位置・法線に同じく使う)。
+// ベクトルをY軸まわりに modelYawRadians の向きへ回す(位置・法線に同じく使う)。
 void RotateAboutY(const float in[3], float yawRadians, float out[3]);
 
 // メッシュのAABBから、変種ごとのカメラを決める。
@@ -49,6 +48,9 @@ void RotateAboutY(const float in[3], float yawRadians, float out[3]);
 // SideFace: AABBの中心を見て、側面の矩形(長さZ×高さY)が画面に収まる最小の距離に置く。
 // EndFace: 前後の端面(方位が +Z 側なら aabbMax.z、-Z 側なら aabbMin.z)の中心を見て、
 //          端面の断面(X・Yの広がり)が収まる距離に置く。
+// TrainPhoto: 編成写真の構図。+Z 側の端(先頭)の端面が画面の高さに決まった割合で写り、先頭を右端・最後尾を
+//          左端に余白つきで合わせる距離と視野角を逆算する。方位は編成の長さ(AABBのZの長さ)で補間する。
+//          距離が上限に当たるときは先頭の大きさを優先し、最後尾は左端より内側に残す。
 ThumbnailCameraPlan ComputeThumbnailCamera(ThumbnailView view, const float aabbMin[3], const float aabbMax[3],
                                            float aspect);
 

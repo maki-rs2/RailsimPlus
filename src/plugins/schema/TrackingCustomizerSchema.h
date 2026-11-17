@@ -1,8 +1,8 @@
 //
 // TrackingCustomizerSchema.h - 架線に追従する可動部 TrackingMove / TrackingRotation の定義の型
 //
-// RailSim II の CTrackingMove / CTrackingRotation が読む customizer。ここでは書かれた値を保持するだけで、
-// 描画にも可動部の実行時にも使わない(StaticCustomizer とは別の入れ物に持ち、MoverRuntime は読まない)。
+// RailSim II の CTrackingMove / CTrackingRotation が読む customizer。
+// TrackingMove は StaticCustomizer の添字から実行時に参照する。TrackingRotation は値の保持のみ。
 // 読み込みは ParseTrackingMove / ParseTrackingRotation(CustomizerParsers.h)。
 // TrackingRotation は、TrackingID 以外が必須かどうかは未確認。省略しても捨てず、既定値で持つ。
 //

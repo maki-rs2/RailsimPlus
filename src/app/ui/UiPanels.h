@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "../../core/Math.h"
-#include "../../editor/tool/Editor.h"
 #include "../../editor/tool/WarpLinkAuthoring.h"
 #include "../../render/mesh/Mesh.h"
 #include "../camera/CameraControl.h"
@@ -34,6 +33,8 @@
 // 「編成」パネル(TrainPlacementUiState/DrawFormationListPanel)はFormationPanel.h/.cppにある。
 // UiPanels.hをincludeする側から使えるよう、ここでもincludeする。
 #include "FormationPanel.h"
+
+namespace rs::editor { class Editor; }
 
 namespace rs::world {
 class SceneRegistry;

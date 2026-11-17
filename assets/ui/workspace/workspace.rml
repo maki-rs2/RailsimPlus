@@ -789,16 +789,6 @@
     </div>
 </div>
 
-<!-- 分岐の左右の印(ダイヤモードで分岐を選んでいる間だけ。結線はRmlUiPointHandMarkView.cpp)。分かれる線のレール上の
-     画面上へ出し、押すとその線へ開通先を切り替える。今開いている側は選択の見た目にする。 -->
-<div data-for="mark : pointHandMarks">
-    <div class="point-hand-mark" data-attr-data-mark-id="mark.id" data-class-is-selected="mark.selected"
-         data-style-left="mark.left" data-style-top="mark.top">
-        <button class="flat point-hand-mark-button" title="この線へ開通先を切り替える"
-                data-event-click="change_point_hand(mark.node, mark.link)">{{ mark.label }}</button>
-    </div>
-</div>
-
 <!-- 閉塞ラベルは信号モードだけ。同じアンカーの閉塞は一覧の順で縦に並べる。 -->
 <div data-for="label : railLabels">
     <div class="rail-label" data-if="label.shown" data-attr-data-block-id="label.id"
@@ -815,7 +805,8 @@
 </div>
 
 <!-- 運転台視点中の左上の戻るボタンと右上のパネル(結線はRmlUiCabinHudView.cpp。固定UIを消す切り替えはWorkspaceShell)。
-     パネルは上から、種別・行先、前駅→次駅、次駅の番線、現在速度。値が空の段は出さない。 -->
+     パネルは上から、種別・行先、前駅→次駅、次駅の番線、速度ボタン(後退・停止・前進)、現在速度(運行状態は色)、
+     目標速度と微調整(丸い−/+、押している間は連続)。速度の段は編成情報カードと同じイベント・クラスを使う。値が空の段は出さない。 -->
 <button class="flat cabin-back" data-if="cabinView && !loadingVisible" title="運転台視点をやめる (Esc)" data-event-click="leave_cabin_view"><span class="ui-icon ic-chevron-left"></span>戻る</button>
 <div class="cabin-hud" data-if="cabinView && cabinHud.shown && !loadingVisible">
     <div class="cabin-hud-run" data-if="cabinHud.trainType != '' || cabinHud.destination != ''">
@@ -824,7 +815,20 @@
     </div>
     <div class="cabin-hud-next" data-if="cabinHud.previousStation != '' || cabinHud.nextStation != ''">{{ cabinHud.previousStation != '' ? cabinHud.previousStation : '--' }} → {{ cabinHud.nextStation != '' ? cabinHud.nextStation : '--' }}</div>
     <div class="cabin-hud-platform" data-if="cabinHud.nextPlatform != ''">{{ cabinHud.nextPlatform }}</div>
-    <div class="cabin-hud-speed"><span class="train-card-speed-value">{{ cabinHud.speedKmh }}</span><span class="train-card-speed-unit">km/h</span></div>
+    <div class="segmented compact train-card-speed-select">
+        <div class="segment-indicator"></div>
+        <div class="segment" data-class-selected="cabinHud.speedDirection == 'reverse'" data-event-click="set_train_speed(cabinHud.trainId, 'reverse')"><span>後退</span></div>
+        <div class="segment" data-class-selected="cabinHud.speedDirection == 'stop'" data-event-click="set_train_speed(cabinHud.trainId, 'stop')"><span>停止</span></div>
+        <div class="segment" data-class-selected="cabinHud.speedDirection == 'forward'" data-event-click="set_train_speed(cabinHud.trainId, 'forward')"><span>前進</span></div>
+    </div>
+    <div data-attr-class="'cabin-hud-speed train-card-speed ' + cabinHud.speedClass"><span class="train-card-speed-value">{{ cabinHud.speedKmh }}</span><span class="train-card-speed-unit">km/h</span></div>
+    <div class="train-card-step-row">
+        <button class="train-card-step ic-minus" data-step="-1" data-attr-data-train-id="cabinHud.trainId"
+                data-event-mousedown="begin_train_speed_step(cabinHud.trainId, -1)"></button>
+        <div class="train-card-target"><span class="train-card-target-value">{{ cabinHud.targetKmh }}</span><span class="train-card-target-unit">km/h</span></div>
+        <button class="train-card-step ic-plus" data-step="1" data-attr-data-train-id="cabinHud.trainId"
+                data-event-mousedown="begin_train_speed_step(cabinHud.trainId, 1)"></button>
+    </div>
 </div>
 
 <!-- 編成情報カード(列車モードだけ。結線はRmlUiTrainInfoCardView.cpp)。配置済みの編成ごとに先頭車の画面上へ1枚。
@@ -1497,7 +1501,6 @@
             </div>
 
             <div class="game-settings-scroll" data-if="gsTab == 'input'">
-                <!-- 視点操作の切り替えは未実装なので、画面からは一時的に外している。結線と表示データは残してある。
                 <div class="form-row">
                     <div class="form-label">{{ gsInput.mouseLabel }}</div>
                     <div class="segmented compact">
@@ -1505,9 +1508,7 @@
                         <div class="segment" data-for="choice : gsInput.mouseChoices" data-class-selected="gsInput.mouseMode == choice.key"
                              data-event-click="gs_mouse_mode(choice.key)"><span>{{ choice.label }}</span></div>
                     </div>
-                    <div class="float-window-note">{{ gsInput.note }}</div>
                 </div>
-                -->
                 <div class="tab-title form-section">{{ gsInput.keysLabel }}</div>
                 <div data-for="row, ri : gsInput.rows">
                     <div class="form-section" data-if="row.section != ''">{{ row.section }}</div>
@@ -1575,15 +1576,19 @@
     </div>
 </div>
 
-<!-- 共通トースト。配列の順に、古い通知を上・新しい通知を下に並べる。 -->
+<!-- 共通トースト。配列の順に、古い通知を上・新しい通知を下に並べる。
+     data-for は外側の .toast-row に置く。data-for と同じ要素に data-class を付けると、通知が減ったときに
+     消える行の値を先に読みにいき、範囲外の警告が出る(RmlUi は同じ深さのビューの更新順を決めないため)。 -->
 <div class="toast-stack">
-    <div class="toast-item" data-for="toast, i : toasts" data-class-info="toast.severity == 'info'"
-         data-class-warning="toast.severity == 'warning'" data-class-error="toast.severity == 'error'">
-        <!-- 種類は左の帯とアイコンで表し、文字は通常の色にする。 -->
-        <span class="ui-icon toast-icon ic-help" data-if="toast.severity == 'info'"></span>
-        <span class="ui-icon toast-icon ic-status-warning" data-if="toast.severity != 'info'"></span>
-        {{ toast.text }}
-        <button class="flat toast-action" data-if="toast.action != ''" data-event-click="toast_action(i)">{{ toast.action }}</button>
+    <div class="toast-row" data-for="toast, i : toasts">
+        <div class="toast-item" data-class-info="toast.severity == 'info'"
+             data-class-warning="toast.severity == 'warning'" data-class-error="toast.severity == 'error'">
+            <!-- 種類は左の帯とアイコンで表し、文字は通常の色にする。 -->
+            <span class="ui-icon toast-icon ic-help" data-if="toast.severity == 'info'"></span>
+            <span class="ui-icon toast-icon ic-status-warning" data-if="toast.severity != 'info'"></span>
+            {{ toast.text }}
+            <button class="flat toast-action" data-if="toast.action != ''" data-event-click="toast_action(i)">{{ toast.action }}</button>
+        </div>
     </div>
 </div>
 

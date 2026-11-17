@@ -19,6 +19,7 @@
 #include "../../core/DebugDraw.h"
 #include "../gpu/App.h"
 #include "../scene/SceneRenderer.h"
+#include "../../editor/tool/Editor.h"
 
 namespace rs::app {
 namespace {

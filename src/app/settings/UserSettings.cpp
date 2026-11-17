@@ -218,6 +218,11 @@ UserSettingsData UserSettings::Load(const std::filesystem::path& path) {
         if (finderGrid != document.end() && finderGrid->is_boolean()) data.cameraFinderGrid = finderGrid->get<bool>();
         const nlohmann::json::const_iterator finderHorizon = document.find("cameraFinderHorizon");
         if (finderHorizon != document.end() && finderHorizon->is_boolean()) data.cameraFinderHorizon = finderHorizon->get<bool>();
+        const nlohmann::json::const_iterator viewOperation = document.find("viewOperation");
+        if (viewOperation != document.end() && viewOperation->is_string()) {
+            // 読めない値は既定(WASD)へそろえる。
+            data.viewOperation = ViewOperationModeFromKey(viewOperation->get<std::string>());
+        }
         const nlohmann::json::const_iterator ambientOcclusion = document.find("ambientOcclusion");
         if (ambientOcclusion != document.end() && ambientOcclusion->is_string()) {
             // 読めない値は既定(中)へそろえる。
@@ -302,6 +307,7 @@ bool UserSettings::Save(const std::filesystem::path& path, const UserSettingsDat
                                      {"volumetricFog", data.volumetricFog},
                                      {"cameraFinderGrid", data.cameraFinderGrid},
                                      {"cameraFinderHorizon", data.cameraFinderHorizon},
+                                     {"viewOperation", ViewOperationModeKey(data.viewOperation)},
                                      {"aa", data.antiAliasing},
                                      {"ambientOcclusion", data.ambientOcclusion},
                                      {"vsync", data.vsync},

@@ -9,6 +9,7 @@
 #include <spdlog/spdlog.h>
 
 #include "../resource/DxcShaderCompiler.h"
+#include "../resource/BindlessDescriptors.inl"
 #include "PostProcessFormats.h"
 
 using Microsoft::WRL::ComPtr;
@@ -55,16 +56,18 @@ bool FullscreenPassPipelines::Init(const rs::rhi::Device& device, const rs::rhi:
     impl->tag = tag;
     impl->constantDwordCount = constantDwordCount;
 
-    // ルート署名: 32bit 定数 b0 だけ。SRV は ResourceDescriptorHeap[] から番号で引き、画素は Load で読む。
-    D3D12_ROOT_PARAMETER param = {};
+    // 定数 b0 と、ヒープ全体を番号で引くテーブル。画素は Load で読む。
+    const BindlessDescriptorRanges ranges = MakeBindlessDescriptorRanges();
+    D3D12_ROOT_PARAMETER params[2] = {};
+    D3D12_ROOT_PARAMETER& param = params[0];
     param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
     param.Constants.ShaderRegister = 0;
     param.Constants.Num32BitValues = constantDwordCount;
     param.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    params[1] = MakeBindlessDescriptorTable(ranges);
     D3D12_ROOT_SIGNATURE_DESC rootDesc = {};
-    rootDesc.NumParameters = 1;
-    rootDesc.pParameters = &param;
-    rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
+    rootDesc.NumParameters = _countof(params);
+    rootDesc.pParameters = params;
     ComPtr<ID3DBlob> signature, error;
     if (FAILED(D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error))) {
         if (error) spdlog::error("[{}] rootsig: {}", impl->tag, static_cast<const char*>(error->GetBufferPointer()));
@@ -74,7 +77,7 @@ bool FullscreenPassPipelines::Init(const rs::rhi::Device& device, const rs::rhi:
                                                  IID_PPV_ARGS(&impl->rootSig))))
         return false;
 
-    if (!impl->dxc.Init() || !impl->dxc.Compile(impl->source, L"VSMain", L"vs_6_6", {}, impl->tag.c_str(), impl->vs))
+    if (!impl->dxc.Init() || !impl->dxc.Compile(impl->source, L"VSMain", L"vs_6_0", {}, impl->tag.c_str(), impl->vs))
         return false;
     impl_ = std::move(impl);
     return true;
@@ -86,7 +89,7 @@ bool FullscreenPassPipelines::AddPixelShader(const wchar_t* entry, HdrTargetForm
     DXGI_FORMAT dxgiFormat = DXGI_FORMAT_UNKNOWN;
     if (!ToDxgiFormat(format, dxgiFormat)) return false;
     ComPtr<IDxcBlob> ps;
-    if (!impl.dxc.Compile(impl.source, entry, L"ps_6_6", {}, impl.tag.c_str(), ps)) return false;
+    if (!impl.dxc.Compile(impl.source, entry, L"ps_6_0", {}, impl.tag.c_str(), ps)) return false;
     D3D12_GRAPHICS_PIPELINE_STATE_DESC pd = {};
     pd.pRootSignature = impl.rootSig.Get();
     pd.VS = {impl.vs->GetBufferPointer(), impl.vs->GetBufferSize()};
@@ -116,6 +119,7 @@ void FullscreenPassPipelines::Bind(const rs::rhi::CommandList& commandList, cons
     ID3D12DescriptorHeap* heaps[] = {impl_->srvHeap.Native()};
     list->SetDescriptorHeaps(1, heaps);
     list->SetGraphicsRootSignature(impl_->rootSig.Get());
+    SetGraphicsBindlessTable(list, 1, impl_->srvHeap.Native());
     list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     list->IASetVertexBuffers(0, 0, nullptr);
     list->IASetIndexBuffer(nullptr);

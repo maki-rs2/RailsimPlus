@@ -46,7 +46,7 @@ DiaPanelElement MakeElement(const rs::world::PlatformRoutineElement& source) {
     element.summary_ = ElementSummary(source);
     element.overwrite_ = !source.runInfoChanges.empty();
     element.disabled_ = !source.enabled;
-    element.operation_ = DiaActionKey(source.action);
+    element.operation_ = rs::world::DiaActionKey(source.action);
     element.departure_ = source.timeType == rs::world::DiaTimeType::ElapsedFromArrival ? "seconds" : "time";
     element.seconds_ = FormatDiaSeconds(source.dwellSeconds);
     for (const rs::world::DiaTimeOfDay& time : source.departureTimes) {

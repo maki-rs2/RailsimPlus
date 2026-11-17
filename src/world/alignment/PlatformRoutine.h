@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "../scene/TrainId.h"
@@ -29,6 +30,11 @@ enum class DiaAction {
     Reverse = 1,
     Pass = 2,
 };
+
+// 動作の名前('stop' / 'reverse' / 'pass')。保存と画面で同じ名前を使う。
+const char* DiaActionKey(DiaAction action);
+// 名前から動作を引く。知らない名前ならnullopt。
+std::optional<DiaAction> DiaActionFromKey(std::string_view key);
 
 // 発車条件の種別(DiaElement.TimeType)。
 enum class DiaTimeType {

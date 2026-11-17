@@ -4,7 +4,8 @@
 #include <vector>
 
 #include "../../../sim/particle/ParticleEmitterParams.h"
-#include "../../schema/PluginSchema.h"
+
+namespace rs::legacy_pi { struct PluginDefinition; }
 
 namespace rs::app {
 

@@ -32,7 +32,7 @@ std::vector<rs::core::Mat4> UpdatePartMoverLocals(
     const rs::legacy_pi::PluginDefinition& def,
     std::vector<PartMoverRuntime>& moverRuntimes,
     const rs::legacy_pi::SwitchResolver& resolve, uint64_t switchGeneration, float dt,
-    float dynamicRotateSpeedScale, double clockSecondsOfDay);
+    float dynamicRotateSpeedScale, double clockSecondsOfDay, bool deferTracking = false);
 
 } // namespace rs::legacy_plugin
 
@@ -47,7 +47,8 @@ std::vector<rs::core::Mat4> ResolveDynamicPartWorlds(
     const rs::legacy_pi::PluginDefinition& def,
     std::vector<rs::legacy_plugin::PartMoverRuntime>& moverRuntimes,
     const rs::legacy_pi::SwitchResolver& resolve, uint64_t switchGeneration, float dt,
-    float dynamicRotateSpeedScale, double clockSecondsOfDay);
+    float dynamicRotateSpeedScale, double clockSecondsOfDay,
+    const rs::legacy_plugin::TrackingMoveContext* tracking = nullptr);
 
 // 静的インスタンス化の焼き込み用。moverRuntimesをBuildし直し(前回の位相を引き継がない)、
 // 発動判定(UpdateActivation)の後、Pre/ReverseDelayと位相をすべて目標まで進め切ってから

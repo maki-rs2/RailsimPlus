@@ -2,6 +2,7 @@
 // AppRuntime.cpp
 //
 #include "AppRuntime.h"
+#include "../../editor/tool/Editor.h"
 #include "AppRuntimeSettingsInit.h"
 #include "AppRuntimeFrameInternal.h"
 #include "FramePacer.h"

@@ -10,7 +10,7 @@
 #include "../world/alignment/TrackGraph.h"
 #include "../world/alignment/TrackTraversal.h"
 #include "../world/alignment/WarpForwardScan.h"
-#include "../world/scene/SceneEntity.h"
+#include "../world/scene/TrainId.h"
 #include "TrainOccupiedPath.h"
 
 namespace rs::sim {

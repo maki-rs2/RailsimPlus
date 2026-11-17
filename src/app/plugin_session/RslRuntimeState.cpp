@@ -32,25 +32,12 @@ bool RoutineLayerFromJson(const nlohmann::json& item, int& outLayerKey) {
     return false;
 }
 
-const char* DiaActionToString(rs::world::DiaAction action) {
-    switch (action) {
-    case rs::world::DiaAction::Stop: return "stop";
-    case rs::world::DiaAction::Reverse: return "reverse";
-    case rs::world::DiaAction::Pass: return "pass";
-    }
-    return "stop";
-}
-
 bool DiaActionFromJson(const nlohmann::json& json, rs::world::DiaAction& outAction) {
     if (!json.is_string()) return false;
     const std::string value = json.get<std::string>();
-    if (value == "stop") outAction = rs::world::DiaAction::Stop;
-    else if (value == "reverse") outAction = rs::world::DiaAction::Reverse;
-    else if (value == "pass") outAction = rs::world::DiaAction::Pass;
-    else {
-        spdlog::warn("[rsl_runtime] 未知のdiaアクション '{}' のためStopとして扱います。", value);
-        outAction = rs::world::DiaAction::Stop;
-    }
+    const std::optional<rs::world::DiaAction> action = rs::world::DiaActionFromKey(value);
+    if (!action) spdlog::warn("[rsl_runtime] 未知のdiaアクション '{}' のためStopとして扱います。", value);
+    outAction = action.value_or(rs::world::DiaAction::Stop);
     return true;
 }
 
@@ -153,7 +140,7 @@ nlohmann::json RslRuntimeStateToJson(
                                { "departureScheduled", dia.departureScheduled },
                                { "departureAt", dia.departureAbsSeconds },
                                { "doorCloseAt", dia.doorCloseAbsSeconds },
-                               { "action", DiaActionToString(dia.currentAction) } };
+                               { "action", rs::world::DiaActionKey(dia.currentAction) } };
         }
         trains.push_back(std::move(trainJson));
     }

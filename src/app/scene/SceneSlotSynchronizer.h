@@ -49,12 +49,14 @@ public:
 
     // フレーム分割ジョブが進行中か(読込中オーバーレイ表示・一時停止判定に使う)。
     bool JobActive() const { return loadJob_.active; }
-    // 現在のフェーズと、そのフェーズ内でのdone/total(進捗オーバーレイ表示用)。
+    // 現在のフェーズ(進捗表示のラベル用)。
     LoadJobPhase JobPhase() const { return loadJob_.phase; }
-    size_t JobPhaseDone() const;
-    size_t JobPhaseTotal() const;
+    // ジョブ全体の進み具合(0〜1)。フェーズごとの重みで1本につなぐので、フェーズが変わっても戻らない。
+    double JobOverallFraction() const;
 
 private:
+    size_t JobPhaseDone() const;
+    size_t JobPhaseTotal() const;
     using Slot = SceneSlotPool::Slot;
     SceneSlotPool slotPool_;
     uint64_t pluginGeneration_ = 0;
@@ -87,6 +89,8 @@ private:
         std::vector<PluginSource> prefetchSources;
         size_t prefetchTotal = 0;
         size_t prefetchDone = 0;
+        // ジョブ開始時にPrefetchから始めたか。始めていなければ全体の進み具合からPrefetchの重みを外す。
+        bool startedWithPrefetch = false;
         // パス1: ジョブ開始時点のregistry.Entities()へのインデックスで進行位置を持つ
         // (id文字列化は不要。Sync()冒頭のtargetRevision不一致検知により、ジョブ実行中は
         // registry.Entities()が安定である前提が成り立っている)。pass1Totalはジョブ開始時の

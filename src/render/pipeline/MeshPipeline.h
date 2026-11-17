@@ -328,7 +328,7 @@ public:
     }
 
     // texSlotOffset(パイプライン内相対スロット添字。baseの位置。+1=normal、
-    // +2=ormがあれば続く)から、シェーダの ResourceDescriptorHeap[] が直接参照する
+    // +2=ormがあれば続く)から、シェーダの bindless テーブルの配列が直接参照する
     // 絶対ヒープ添字を求める。texSlotOffset=0は常にダミー(白/平坦法線/既定ORM、
     // UploadMesh()で必ず先頭3スロットに常駐)を指す。
     uint32_t AbsoluteTexIndex(uint32_t texSlotOffset) const {

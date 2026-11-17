@@ -207,6 +207,11 @@ LRESULT MainWindow::HandleMessage(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 : camera_->OnLeftDown(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), heightHeld);
             if (started) SetCapture(hwnd);
         }
+        // 中ドラッグの基準点の移動は俯瞰カメラだけ。垂直にするキーは高さ調節と同じ。
+        if (!cabinActive && button == input::GetPointerBinding(PointerAction::CameraPan).button) {
+            const bool verticalHeld = input::MatchesPointerBinding(PointerAction::CameraHeight, modifiers);
+            if (camera_->OnMiddleDown(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), verticalHeld)) SetCapture(hwnd);
+        }
         return 0;
     }
     case WM_LBUTTONUP:
@@ -227,13 +232,18 @@ LRESULT MainWindow::HandleMessage(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 ReleaseCapture();
             }
         }
+        if (button == input::GetPointerBinding(PointerAction::CameraPan).button && camera_->OnMiddleUp()) {
+            ReleaseCapture();
+        }
         return 0;
     }
     case WM_MOUSEMOVE:
         if (cabinCamera_ != nullptr && cabinCamera_->active) {
             cabinCamera_->OnMouseMove(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
         } else {
-            camera_->OnMouseMove(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
+            const input::KeyModifiers modifiers{(wp & MK_CONTROL) != 0, (wp & MK_SHIFT) != 0, false};
+            camera_->OnMouseMove(GET_X_LPARAM(lp), GET_Y_LPARAM(lp),
+                                 input::MatchesPointerBinding(PointerAction::CameraDash, modifiers));
         }
         return 0;
     case WM_MOUSEWHEEL:

@@ -1,4 +1,5 @@
 #include "SwitchAssignmentResolve.h"
+#include "../PluginSchema.h"
 
 namespace rs::legacy_pi::sidecar {
 

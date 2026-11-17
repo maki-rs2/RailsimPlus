@@ -25,7 +25,7 @@ enum class ThumbnailView {
     FrontFace,          // 前面(+Z 側の端)を正面から(編成カードの先頭アイコン)
     FrontFaceOpposite,  // 後面(-Z 側の端)を正面から(先頭が反転しているときの先頭アイコン。反転車両の前面)
     LayingSet,          // 敷設プラグインセットの合成(Rail・Tie・Girder・Line を重ねた直線。斜め上から縦長に)
-    TrainTemplate,      // 編成テンプレートのカード(編成の全車両を直線に並べ、浅い角度の斜め前から)
+    TrainTemplate,      // 編成テンプレートのカード(編成の全車両を直線に並べ、低い位置の斜め前から編成写真の構図で)
     RailTemplate,       // 敷設テンプレートのカード(LayingSet と同じ合成を、ブラウザのカードの4:3で)
 };
 
@@ -37,6 +37,7 @@ enum class ThumbnailFit {
     BoundingBox,     // AABBの8隅
     SideFace,        // 車体の側面の矩形(長さ Z × 高さ Y)
     EndFace,         // 前後どちらかの端面の断面
+    TrainPhoto,      // 編成写真の構図(+Z 側の先頭車を右に大きく、最後尾を左端へ。距離と視野角は逆算)
 };
 
 // 撮影解像度。ブラウザのカード用は 4:3。
@@ -58,7 +59,7 @@ struct ThumbnailViewTraits {
     float azimuthDeg;        // 方位
     float elevationDeg;      // 俯角
     ThumbnailFit fit;
-    float fovYDeg;           // 縦の視野角。狭いほど遠近の歪みが減り、カメラは遠くなる
+    float fovYDeg;           // 縦の視野角。狭いほど遠近の歪みが減り、カメラは遠くなる。TrainPhoto は逆算するので使わない
     float fitMargin;         // 収めるものに掛ける余白の倍率(1.1=10%)。BoundingBox は表によらず ThumbnailViewCamera の値
     std::uint32_t width;     // 撮影解像度
     std::uint32_t height;
@@ -77,8 +78,9 @@ inline constexpr ThumbnailViewTraits kThumbnailViews[] = {
      kFrontIconThumbnailSize, kFrontIconThumbnailSize},
     {ThumbnailView::LayingSet, 'g', 165.0f, 15.0f, ThumbnailFit::BoundingBox, 15.0f, 1.1f, kLayingSetThumbnailWidth,
      kLayingSetThumbnailHeight},
-    // 角度と視野角は仮の値(実機で決める)。編成は延長線に対して浅い角度の斜め前から、狭い視野角で撮る。
-    {ThumbnailView::TrainTemplate, 't', 14.0f, 6.0f, ThumbnailFit::BoundingBox, 10.0f, 1.1f, kCardThumbnailWidth,
+    // 方位は短い編成のときの値。長い編成ほど正面寄りへ補間する(BrowserTuning の trainPhoto*)。
+    // 俯角が負なのは、レール面に近い低い位置から少し見上げるため。
+    {ThumbnailView::TrainTemplate, 't', 15.0f, -1.0f, ThumbnailFit::TrainPhoto, 0.0f, 1.0f, kCardThumbnailWidth,
      kCardThumbnailHeight},
     {ThumbnailView::RailTemplate, 'p', 165.0f, 15.0f, ThumbnailFit::BoundingBox, 15.0f, 1.1f, kCardThumbnailWidth,
      kCardThumbnailHeight},

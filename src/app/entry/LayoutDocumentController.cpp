@@ -131,11 +131,9 @@ void LayoutDocumentController::UpdateLoadingDisplay(const LayoutDocumentServices
     if (!loadingDisplayed_) services.rmlUi.WorkspaceView()->ReturnToSpectate();
     const LayoutLoadProgress progress = services.action.LoadProgress();
     if (progress.jobActive) {
-        const float fraction =
-            progress.total > 0 ? static_cast<float>(progress.done) / static_cast<float>(progress.total) : 1.0f;
-        loading.Set(true, LoadPhaseLabel(progress.phase, services.localization), fraction,
-                    std::vformat(services.localization.Text("layout.loading.entities"),
-                                 std::make_format_args(progress.done, progress.total)));
+        loading.Set(true, LoadPhaseLabel(progress.phase, services.localization),
+                    static_cast<float>(progress.fraction),
+                    LoadProgressPercentText(progress.fraction, services.localization));
     } else {
         loading.Set(true, services.localization.Text(kLoadPendingKey), 0.0f, {});
     }

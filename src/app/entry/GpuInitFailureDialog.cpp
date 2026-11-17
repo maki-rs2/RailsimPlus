@@ -18,6 +18,9 @@ std::string GpuInitFailureReason(const Localization& text, const GpuInitFailure&
         return std::vformat(text.Text("app.gpu_init_failed.reason_shader_model"),
                             std::make_format_args(version));
     }
+    case Kind::ResourceBindingTier:
+        return std::vformat(text.Text("app.gpu_init_failed.reason_binding_tier"),
+                            std::make_format_args(failure.resourceBindingTier));
     case Kind::Other:
         if (failure.hr != S_OK) {
             const std::string code = std::format("0x{:08X}", static_cast<unsigned>(failure.hr));

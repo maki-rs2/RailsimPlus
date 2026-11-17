@@ -80,7 +80,7 @@ public:
 
     rs::rhi::CpuDescriptor Rtv() const;
 
-    // 自分の SRV の、ヒープ内の番号。ピクセルシェーダが ResourceDescriptorHeap[] で引くのに使う。
+    // 自分の SRV の、ヒープ内の番号。ピクセルシェーダが bindless テーブルの配列で引くのに使う。
     std::uint32_t SrvIndex() const;
 
     // source(同じ大きさ・形式)の中身を自分へそっくりコピーする。自分は ShaderResource 状態になり、

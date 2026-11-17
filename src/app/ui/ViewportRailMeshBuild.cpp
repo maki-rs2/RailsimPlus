@@ -97,18 +97,12 @@ void AppendEdgeExtrusions(const EditorViewportContext& ctx, const IntervalCache&
             const bool isExtrudable = rs::legacy_pi::GetPluginTypeTraits(entry.type).edgeExtrusion;
             if (!isExtrudable || !entry.def.hasRailInfo) continue;
             // 複線一括Girder(trackNum>1)は中心線edgeにのみ、単線Girder/Rail/Tieは
-            // 実レールedgeにのみ押し出す(trackNum routingのGirder版)。
-            if (rs::legacy_pi::GetPluginTypeTraits(entry.type).multiTrackSource ==
-                rs::legacy_pi::MultiTrackSource::Profile) {
-                const int trackNum = MultiTrackNum(entry.def, entry.type);
-                if (trackNum > 1) {
-                    if (!edge.centerlineOnly || edge.trackCount != trackNum) continue;
-                } else if (edge.centerlineOnly) {
-                    continue;
-                }
-            } else if (edge.centerlineOnly) {
-                continue;
-            }
+            // 実レールedgeにのみ押し出す。Rail/TieはTrackNumを持たないので単線扱い。
+            const int trackNum = rs::legacy_pi::GetPluginTypeTraits(entry.type).multiTrackSource ==
+                                         rs::legacy_pi::MultiTrackSource::Profile
+                                     ? MultiTrackNum(entry.def, entry.type)
+                                     : 1;
+            if (!rs::world::EdgeAcceptsTrackNum(edge, trackNum)) continue;
             const double edgeTotal = static_cast<double>(edge.spline.back().s);
             const std::vector<std::pair<double, double>> ranges =
                 rs::world::FolderRanges(edge, entry.folderUtf8, edgeTotal);
@@ -220,7 +214,8 @@ void AppendAutoWireSpans(const EditorViewportContext& ctx, HangerModelCache& han
                 ctx.wireEditCache.spans.push_back({{refA, refB}, baseA, baseB, lineFolder});
 
                 AppendWireAndHangers(*run.lineEntry, lineBaseDir, baseA, a.up, baseB, b.up,
-                                     hangerModelCache, assembler, tmpLog, tmpMissing);
+                                     hangerModelCache, assembler, tmpLog, tmpMissing,
+                                     &ctx.sceneRenderer.TrackingTargets());
             }
         }
     }
@@ -255,7 +250,8 @@ void AppendImportedWireSpans(const EditorViewportContext& ctx,
         const rs::core::Vec3 baseB = poleOriginB - poleUpB * height;
 
         AppendWireAndHangers(*lineEntry, lineBaseDir, baseA, poleUpA, baseB, poleUpB,
-                             hangerModelCache, assembler, tmpLog, tmpMissing);
+                             hangerModelCache, assembler, tmpLog, tmpMissing,
+                             &ctx.sceneRenderer.TrackingTargets());
     }
 }
 
@@ -268,13 +264,14 @@ rs::render::Mesh BuildWireSpanMesh(const TrackPluginEntry& lineEntry, const rs::
     std::vector<std::string> log;
     int missing = 0;
     AppendWireAndHangers(lineEntry, rs::platform_text::Utf8ToWide(lineEntry.folderUtf8), baseA,
-                         upA, baseB, upB, hangerModelCache, assembler, log, missing);
+                         upA, baseB, upB, hangerModelCache, assembler, log, missing, nullptr);
     return assembler.Build();
 }
 
 // Rail/Tie/Girderの連続押し出しメッシュ + Line(架線)ワイヤーの再構築(g_editor.revision等が
 // 変化した際にメインのメッシュパイプラインへ上げる1枚のmergedメッシュを作る)。
 void RebuildExtrudedRailMesh(const EditorViewportContext& ctx) {
+    ctx.sceneRenderer.TrackingTargets().clear();
     // edges.empty()でもmerged(空)を上げること(下のメッシュが載っているときだけ)。
     // 上げないと、Undo等で最後の1本を消したときに直前のメッシュが画面に残る。
     rs::render::MeshAssembler assembler;

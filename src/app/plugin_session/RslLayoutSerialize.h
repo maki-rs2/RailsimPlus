@@ -5,9 +5,10 @@
 #include <string>
 #include <vector>
 
-#include "../../plugins/schema/PluginSchema.h"
 #include "../../world/alignment/Guid.h"
 #include "../action/LayoutActionResult.h"
+
+namespace rs::legacy_pi { enum class PluginType; }
 
 namespace rs::editor {
 class Editor;

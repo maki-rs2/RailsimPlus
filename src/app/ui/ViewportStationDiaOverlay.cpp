@@ -5,6 +5,7 @@
 #include "OverlayColorTuning.h"
 #include "OverlayLineTuning.h"
 #include "ViewportOverlayGeometry.h"
+#include "../../editor/tool/Editor.h"
 
 namespace rs::app {
 namespace {

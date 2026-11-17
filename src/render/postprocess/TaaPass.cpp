@@ -10,6 +10,7 @@
 #include <spdlog/spdlog.h>
 
 #include "../resource/DxcShaderCompiler.h"
+#include "../resource/BindlessDescriptors.inl"
 #include "PostProcessFormats.h"
 #include "TaaShader.h"
 
@@ -62,12 +63,15 @@ bool TaaPass::Init(const rs::rhi::Device& device, const rs::rhi::SrvHeap& srvHea
     impl->srvHeap = srvHeap;
     impl->firstSrvIndex = firstSrvIndex;
 
-    // ルート署名: 32bit 定数 b0 と、履歴を線形で引く静的サンプラ s0。SRV は ResourceDescriptorHeap[] から番号で引く。
-    D3D12_ROOT_PARAMETER param = {};
+    // 定数 b0 と、ヒープ全体を番号で引くテーブル、履歴用の静的サンプラ s0。
+    const BindlessDescriptorRanges ranges = MakeBindlessDescriptorRanges();
+    D3D12_ROOT_PARAMETER params[2] = {};
+    D3D12_ROOT_PARAMETER& param = params[0];
     param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
     param.Constants.ShaderRegister = 0;
     param.Constants.Num32BitValues = kConstantDwordCount;
     param.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    params[1] = MakeBindlessDescriptorTable(ranges);
     D3D12_STATIC_SAMPLER_DESC sampler = {};
     sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
     sampler.AddressU = sampler.AddressV = sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
@@ -75,11 +79,10 @@ bool TaaPass::Init(const rs::rhi::Device& device, const rs::rhi::SrvHeap& srvHea
     sampler.ShaderRegister = 0;
     sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     D3D12_ROOT_SIGNATURE_DESC rootDesc = {};
-    rootDesc.NumParameters = 1;
-    rootDesc.pParameters = &param;
+    rootDesc.NumParameters = _countof(params);
+    rootDesc.pParameters = params;
     rootDesc.NumStaticSamplers = 1;
     rootDesc.pStaticSamplers = &sampler;
-    rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
     ComPtr<ID3DBlob> signature, error;
     if (FAILED(D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error))) {
         if (error) spdlog::error("[taa] rootsig: {}", static_cast<const char*>(error->GetBufferPointer()));
@@ -91,8 +94,8 @@ bool TaaPass::Init(const rs::rhi::Device& device, const rs::rhi::SrvHeap& srvHea
 
     DxcShaderCompiler dxc;
     ComPtr<IDxcBlob> vs, ps;
-    if (!dxc.Init() || !dxc.Compile(kTaaShader, L"VSMain", L"vs_6_6", {}, "taa", vs) ||
-        !dxc.Compile(kTaaShader, L"PSResolve", L"ps_6_6", {}, "taa", ps))
+    if (!dxc.Init() || !dxc.Compile(kTaaShader, L"VSMain", L"vs_6_0", {}, "taa", vs) ||
+        !dxc.Compile(kTaaShader, L"PSResolve", L"ps_6_0", {}, "taa", ps))
         return false;
     D3D12_GRAPHICS_PIPELINE_STATE_DESC pd = {};
     pd.pRootSignature = impl->rootSig.Get();
@@ -173,6 +176,7 @@ void TaaPass::Record(const rs::rhi::CommandList& commandList, SceneHdrTarget& cu
     ID3D12DescriptorHeap* heaps[] = {impl.srvHeap.Native()};
     list->SetDescriptorHeaps(1, heaps);
     list->SetGraphicsRootSignature(impl.rootSig.Get());
+    SetGraphicsBindlessTable(list, 1, impl.srvHeap.Native());
     list->SetPipelineState(impl.pso.Get());
     list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     list->IASetVertexBuffers(0, 0, nullptr);

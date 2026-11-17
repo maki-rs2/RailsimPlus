@@ -14,14 +14,16 @@ struct GpuInitFailure {
     enum class Kind {
         None,
         NoDevice,    // 使えるハードウェアGPUがない(Feature Level 11_0 でデバイスを作れない)
-        ShaderModel, // 選んだGPUが Shader Model 6.6 に対応していない
+        ShaderModel, // 選んだGPUが Shader Model 6.0 に対応していない
+        ResourceBindingTier, // 選んだGPUが Resource Binding Tier 3 に対応していない
         Other,       // デバイス作成後の資源作成などの失敗(hr に原因)
     };
     Kind kind = Kind::None;
     std::string adapterName;       // 選んだGPU(NoDevice では空)
     int shaderModelMajor = 0;      // ShaderModel のとき、検出された最高の版
     int shaderModelMinor = 0;
-    HRESULT hr = S_OK;             // ShaderModel の問い合わせ結果、または Other の失敗コード
+    unsigned resourceBindingTier = 0; // ResourceBindingTier のとき、検出された Tier
+    HRESULT hr = S_OK;             // 機能の問い合わせ結果、または Other の失敗コード
 };
 
 } // namespace rs::app

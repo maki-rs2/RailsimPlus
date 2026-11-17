@@ -10,6 +10,7 @@
 
 #include "../../editor/tool/SpeedSignalCommand.h"
 #include "../../world/alignment/SpeedSignalRegistry.h"
+#include "../../editor/tool/Editor.h"
 
 namespace rs::app {
 

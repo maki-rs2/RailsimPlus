@@ -1,6 +1,8 @@
 //
 // RmlUiCabinHudView.h - 運転台視点中の右上パネル(速度・運行情報)と、左上の戻るボタンの値・イベントをデータモデル"workspace"へ結ぶ
 //
+// 速度ボタンと目標速度の微調整は、編成情報カードと同じイベント(set_train_speed・begin_train_speed_step)と
+// クラス(train-card-step)を使う。押しっぱなしの連続入力もカード側(RmlUiTrainInfoCardView)の処理がそのまま拾う。
 // 値の読み書きは編成の操作(FormationAction)を通す。RmlUiWorkspaceViewがメンバとして持ち、
 // CreateDataModelの中でRegisterModelを呼んで同じデータモデルへ変数とイベントを足す(別のdata-modelは作らない)。
 // 運転台視点中に左右タブなどを消す表示の切り替えは、WorkspaceShell(SetCabinView)側が担当する。

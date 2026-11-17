@@ -199,6 +199,9 @@ public:
     // モーションブラーを使うか(ユーザー設定がオンのとき)。
     void SetMotionBlur(bool enabled) { motionBlurEnabled_ = enabled; }
     bool MotionBlurEnabled() const { return motionBlurEnabled_; }
+    // ファインダー中の撮影カメラのシャッター速度[秒]。値があれば、モーションブラーの長さをシャッター速度に連動させる
+    // (無ければ調整値のシャッターの割合)。モーションブラーを掛けるかどうかはユーザー設定のまま変えない。
+    void SetPhotoShutterSeconds(std::optional<float> seconds) { photoShutterSeconds_ = seconds; }
     // ボリュメトリックフォグを使うか(ユーザー設定)。
     void SetVolumetricFog(bool enabled) { volumetricFogEnabled_ = enabled; }
     bool VolumetricFogEnabled() const { return volumetricFogEnabled_; }
@@ -494,6 +497,7 @@ private:
     bool                              temporalAa_ = false; // TAA を使うか(SetTemporalAa 参照)
     std::chrono::steady_clock::time_point lastMotionBlurTime_{}; // 前回 ResolveMotionBlur を呼んだ時刻(フレーム時間の算出用)
     bool                              motionBlurEnabled_ = false; // モーションブラーを使うか(SetMotionBlur 参照)
+    std::optional<float>              photoShutterSeconds_;       // 撮影カメラのシャッター速度(SetPhotoShutterSeconds 参照)
     rs::render::MotionBlurPass        motionBlur_;     // モーションブラーのパス
     struct DepthProbeState {
         bool requested = false; // 写す要求が残っている

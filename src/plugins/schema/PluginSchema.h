@@ -67,9 +67,9 @@ struct SoundEffectRef {
     TriggerInfo trig;          // 発動文脈（既定Always=空chain）
 };
 
-// StaticMove / StaticRotation / DynamicRotation / AnalogClock カスタマイザ(可動部)
+// StaticMove / StaticRotation / DynamicRotation / AnalogClock / TrackingMove カスタマイザ(可動部)
 struct StaticCustomizer {
-    enum class Kind { Move, Rotate, DynamicRotate, AnalogClock };
+    enum class Kind { Move, Rotate, DynamicRotate, AnalogClock, TrackingMove };
     Kind  kind = Kind::Move;
     float dispX = 0, dispY = 0, dispZ = 0;   // Move: Displacement
     float axisX = 0, axisY = 0, axisZ = 1;   // Rotate/DynamicRotate: RotationAxis(既定Z)
@@ -81,6 +81,7 @@ struct StaticCustomizer {
     float decelDegPerSec2 = 0;
     // AnalogClock: 針種別(RailSim II の CAnalogClock::m_HandType相当)。0=Hour/1=Minute/2=Second。
     int clockHandType = 0;
+    size_t trackingIndex = 0;                // ModelPart::trackingMoves の添字
     CustomizerTiming timing;
     TriggerInfo trig; // 発動文脈（既定 Always=空chain）。ChangeTextureRef等と同形。
 };
@@ -340,7 +341,7 @@ struct ModelPart {
     std::vector<WindTrackerCustomizer> windTrackers;
     std::vector<WindmillCustomizer>    windmills;
 
-    // TrackingMove / TrackingRotation(読むだけ。可動部の実行時は参照しない)。
+    // 追従の幾何条件。TrackingMove は customizers から添字で参照する。
     std::vector<TrackingMoveCustomizer>     trackingMoves;
     std::vector<TrackingRotationCustomizer> trackingRotations;
 

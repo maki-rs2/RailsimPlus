@@ -3,7 +3,7 @@
 //
 // FrameRenderer が毎フレーム1か所で組み立て、メッシュ描画の定数(MeshConstants)へ詰める。
 // DX12型を持たない。SRV番号は共有SRVヒープの絶対番号で、メッシュのシェーダが
-// ResourceDescriptorHeap[] で直接引く。
+// bindless テーブルの配列で直接引く。
 //
 // 環境変数(いずれも BuildEnvironmentState が起動後に1回だけ読む開発用。設定画面・JSONには出さない):
 //   RS_IBL=off          IBLの拡散・鏡面・太陽色・既定の金属ORMをすべて無効にし、固定の環境光に戻す。

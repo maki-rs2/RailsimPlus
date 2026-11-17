@@ -13,7 +13,7 @@ inline constexpr const char* kExposureShader = R"HLSL(
 // 直射光(太陽・月)に掛ける。IBLはキューブ側(環境ソースの焼き込み)で掛け済みなので、ここでは掛けない。発光にも掛けない。
 float AdaptationGainFromTexture() {
     if (gAdaptation.y == 0u) return 1.0;
-    Texture2D<float4> exposure = ResourceDescriptorHeap[gAdaptation.x];
+    Texture2D<float4> exposure = gBindlessTex2D[gAdaptation.x];
     return max(exposure.Load(int3(0, 0, 0)).x, 1.0);
 }
 
@@ -24,7 +24,7 @@ static const float kIblExposureCorrectionMin = 0.125;
 static const float kIblExposureCorrectionMax = 8.0;
 float IblExposureCorrection() {
     if (gAdaptation.y == 0u) return 1.0;
-    Texture2D<float4> exposure = ResourceDescriptorHeap[gAdaptation.x];
+    Texture2D<float4> exposure = gBindlessTex2D[gAdaptation.x];
     float4 now = exposure.Load(int3(0, 0, 0));
     float4 baked = exposure.Load(int3(1, 0, 0));
     float bakedProduct = baked.x * baked.y;

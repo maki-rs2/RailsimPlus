@@ -61,7 +61,7 @@ uint64_t MeshPipeline::WriteMeshConstantsTo(MeshConstantBuffer& target, const Me
         c.material[0] = RenderTuning::Embedded().semiAlphaHigh;
         c.material[2] = alphaSplit == AlphaSplit::SemiPart ? 2.0f : 1.0f;
     }
-    // ResourceDescriptorHeap[]が直接参照する絶対添字。テクスチャ
+    // bindless テーブルの配列が直接参照する絶対添字。テクスチャ
     // 無し(gt==nullptrまたはvalid=false)は常にダミー(texSlotOffset=0)を指す。
     c.texIndex[0] = texturePool_.AbsoluteTexIndex(hasTex ? gt->texSlotOffset : 0);
     c.texIndex[1] = c.texIndex[2] = c.texIndex[3] = 0;

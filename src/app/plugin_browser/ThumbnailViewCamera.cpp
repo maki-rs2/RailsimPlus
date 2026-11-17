@@ -126,9 +126,130 @@ float ComputeBoxCameraDistance(const float half[3], const float toCamera[3], flo
     return FitBox(half, toCamera, fovYRadians, aspect).distance;
 }
 
-float ThumbnailModelYawRadians(ThumbnailView view) {
-    return GetThumbnailView(view).azimuthDeg * rs::core::kDegToRadF;
+namespace {
+
+// 編成写真の構図(ThumbnailFit::TrainPhoto)の当てはめ結果。
+// カメラは先頭の端面の中心から toCamera へ distance 離れ、画面の右・上へ shiftRight・shiftUp だけずれた位置にある。
+struct TrainPhotoFit {
+    float shiftRight = 0.0f;
+    float shiftUp = 0.0f;
+    float tanHalfX = 0.0f;
+    float tanHalfY = 0.0f;
+    float frontHeightRatio = 0.0f; // 先頭の端面の高さが画面の高さに占める割合
+    float farDepth = 0.0f;         // いちばん遠い隅までの視線方向の距離[m]
+};
+
+// ずれの更新の繰り返し回数(端になる隅が入れ替わらなければ数回で収束する)。
+constexpr int kTrainPhotoFitIterations = 8;
+// 距離を求める二分探索の回数と、距離の下限[m]。
+constexpr int kTrainPhotoSearchSteps = 50;
+constexpr float kTrainPhotoMinDistanceM = 1.0f;
+// 隅がカメラの後ろへ回っても割り算が壊れないようにする、視線方向の距離の下限[m]。
+constexpr float kTrainPhotoMinDepthM = 0.05f;
+// 二分探索が距離の上限に当たったとみなす、先頭の割合の目標に対する超過の倍率。
+constexpr float kTrainPhotoRatioTolerance = 1.01f;
+
+// fixedTanHalfY が 0 なら、先頭を右端・最後尾を左端に余白つきで合わせる視野角を求める。
+// 正なら視野角はその値に固定し、先頭だけを右端に合わせる(最後尾は左端より内側に残る)。
+TrainPhotoFit FitTrainPhoto(const float aabbMin[3], const float aabbMax[3], const float front[3],
+                            const float toCamera[3], float distance, float aspect, float fixedTanHalfY) {
+    const BrowserTuning& tuning = BrowserTuning::Embedded();
+    const float margin = tuning.trainPhotoSideMargin;
+    const float safeAspect = std::max(aspect, 0.01f);
+    float right[3];
+    float up[3];
+    ScreenAxes(toCamera, right, up);
+    TrainPhotoFit fit;
+    for (int iteration = 0; iteration < kTrainPhotoFitIterations; ++iteration) {
+        float minX = 1e30f, maxX = -1e30f, frontMinY = 1e30f, frontMaxY = -1e30f;
+        float leftDepth = distance, rightDepth = distance, frontDepth = distance;
+        fit.farDepth = 0.0f;
+        for (int corner = 0; corner < 8; ++corner) {
+            const bool atFront = (corner & 4) != 0;
+            const float offset[3] = {((corner & 1) ? aabbMax[0] : aabbMin[0]) - front[0],
+                                     ((corner & 2) ? aabbMax[1] : aabbMin[1]) - front[1],
+                                     (atFront ? aabbMax[2] : aabbMin[2]) - front[2]};
+            const float depth = std::max(distance - Dot(offset, toCamera), kTrainPhotoMinDepthM);
+            fit.farDepth = std::max(fit.farDepth, depth);
+            const float x = (Dot(offset, right) - fit.shiftRight) / depth;
+            const float y = (Dot(offset, up) - fit.shiftUp) / depth;
+            if (x < minX) {
+                minX = x;
+                leftDepth = depth;
+            }
+            if (x > maxX) {
+                maxX = x;
+                rightDepth = depth;
+            }
+            if (atFront) {
+                frontMinY = std::min(frontMinY, y);
+                frontMaxY = std::max(frontMaxY, y);
+                frontDepth = depth;
+            }
+        }
+        // カメラを shift だけずらすと、距離 depth の隅は画面上で shift/depth だけ逆へ動く。
+        if (fixedTanHalfY > 0.0f) {
+            fit.tanHalfY = fixedTanHalfY;
+            fit.tanHalfX = fixedTanHalfY * safeAspect;
+            fit.shiftRight += (maxX - (1.0f - margin) * fit.tanHalfX) * rightDepth;
+        } else {
+            fit.shiftRight += 0.5f * (minX + maxX) / (0.5f * (1.0f / leftDepth + 1.0f / rightDepth));
+            fit.tanHalfX = 0.5f * (maxX - minX) / (1.0f - margin);
+            fit.tanHalfY = fit.tanHalfX / safeAspect;
+        }
+        fit.frontHeightRatio = (frontMaxY - frontMinY) / (2.0f * fit.tanHalfY);
+        const float frontCenterY = 0.5f * (frontMinY + frontMaxY);
+        fit.shiftUp += (frontCenterY - tuning.trainPhotoFrontCenterY * fit.tanHalfY) * frontDepth;
+    }
+    return fit;
 }
+
+// 編成の長さ[m]から方位[deg]を決める。長い編成ほど正面寄りにする。
+float TrainPhotoAzimuthDeg(const ThumbnailViewTraits& traits, float trainLengthM) {
+    const BrowserTuning& tuning = BrowserTuning::Embedded();
+    const float span = tuning.trainPhotoLongLengthM - tuning.trainPhotoShortLengthM;
+    const float ratio = span > 0.0f ? std::clamp((trainLengthM - tuning.trainPhotoShortLengthM) / span, 0.0f, 1.0f)
+                                    : 1.0f;
+    return std::lerp(traits.azimuthDeg, tuning.trainPhotoLongAzimuthDeg, ratio);
+}
+
+// plan.toCamera が決まった後に、目と注視点・視野角・遠クリップを決める。
+void PlaceTrainPhotoCamera(const float aabbMin[3], const float aabbMax[3], float aspect, float sphereRadius,
+                           ThumbnailCameraPlan& plan) {
+    const BrowserTuning& tuning = BrowserTuning::Embedded();
+    const float front[3] = {0.5f * (aabbMin[0] + aabbMax[0]), 0.5f * (aabbMin[1] + aabbMax[1]), aabbMax[2]};
+    const float targetRatio = tuning.trainPhotoFrontHeightRatio;
+    // 遠ざかるほど先頭の端面は画面の中で小さくなる。目標の割合になる距離を、対数の二分探索で求める。
+    float nearDistance = kTrainPhotoMinDistanceM;
+    float farDistance = std::max(tuning.trainPhotoMaxDistanceM, kTrainPhotoMinDistanceM);
+    for (int step = 0; step < kTrainPhotoSearchSteps; ++step) {
+        const float middle = std::sqrt(nearDistance * farDistance);
+        const TrainPhotoFit fit = FitTrainPhoto(aabbMin, aabbMax, front, plan.toCamera, middle, aspect, 0.0f);
+        if (fit.frontHeightRatio > targetRatio) {
+            nearDistance = middle;
+        } else {
+            farDistance = middle;
+        }
+    }
+    const float distance = std::sqrt(nearDistance * farDistance);
+    TrainPhotoFit fit = FitTrainPhoto(aabbMin, aabbMax, front, plan.toCamera, distance, aspect, 0.0f);
+    if (fit.frontHeightRatio > targetRatio * kTrainPhotoRatioTolerance) {
+        // 距離の上限でも先頭が大きすぎる(短い編成を正面寄りから撮るとき)。視野角を広げて先頭の大きさを合わせる。
+        fit = FitTrainPhoto(aabbMin, aabbMax, front, plan.toCamera, distance, aspect,
+                            fit.frontHeightRatio * fit.tanHalfY / targetRatio);
+    }
+    float right[3];
+    float up[3];
+    ScreenAxes(plan.toCamera, right, up);
+    for (int i = 0; i < 3; ++i) {
+        plan.eye[i] = front[i] + plan.toCamera[i] * distance + right[i] * fit.shiftRight + up[i] * fit.shiftUp;
+        plan.target[i] = plan.eye[i] - plan.toCamera[i] * distance;
+    }
+    plan.fovYRadians = 2.0f * std::atan(fit.tanHalfY);
+    plan.renderDistance = fit.farDepth + sphereRadius;
+}
+
+} // namespace
 
 void RotateAboutY(const float in[3], float yawRadians, float out[3]) {
     const float c = std::cos(yawRadians);
@@ -152,15 +273,23 @@ ThumbnailCameraPlan ComputeThumbnailCamera(ThumbnailView view, const float aabbM
     }
     const float sphereRadius = std::sqrt(half[0] * half[0] + half[1] * half[1] + half[2] * half[2]);
 
-    const float azimuth = traits.azimuthDeg * rs::core::kDegToRadF;
+    const float azimuthDeg = traits.fit == ThumbnailFit::TrainPhoto
+                                 ? TrainPhotoAzimuthDeg(traits, aabbMax[2] - aabbMin[2])
+                                 : traits.azimuthDeg;
+    const float azimuth = azimuthDeg * rs::core::kDegToRadF;
     const float elevation = traits.elevationDeg * rs::core::kDegToRadF;
     ThumbnailCameraPlan plan;
+    plan.modelYawRadians = azimuth;
     const float fovYRadians = traits.fovYDeg * rs::core::kDegToRadF;
     plan.fovYRadians = fovYRadians;
     const float horizontal = std::cos(elevation);
     plan.toCamera[0] = horizontal * std::sin(azimuth);
     plan.toCamera[1] = std::sin(elevation);
     plan.toCamera[2] = horizontal * std::cos(azimuth);
+    if (traits.fit == ThumbnailFit::TrainPhoto) {
+        PlaceTrainPhotoCamera(aabbMin, aabbMax, aspect, sphereRadius, plan);
+        return plan;
+    }
 
     float fitRadius = sphereRadius;
     for (int i = 0; i < 3; ++i) plan.target[i] = center[i];

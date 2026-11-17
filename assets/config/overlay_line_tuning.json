@@ -23,6 +23,5 @@
   "dragStartDistancePx": 4,
   "trainPlacementLineWidthPx": 6,
   "trainPlacementHeadBarHalfWidthM": 1.6,
-  "trainPlacementLiftM": 0.15,
-  "pointHandMarkDistanceM": 6
+  "trainPlacementLiftM": 0.15
 }

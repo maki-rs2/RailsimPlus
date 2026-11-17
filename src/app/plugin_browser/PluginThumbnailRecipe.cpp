@@ -58,7 +58,7 @@ void FillThumbnailCamera(ThumbnailRecipeResult& result, ThumbnailView thumbnailV
     const float aspect = height > 0 ? static_cast<float>(width) / static_cast<float>(height) : 1.0f;
     const ThumbnailCameraPlan plan = ComputeThumbnailCamera(thumbnailView, mesh.aabbMin, mesh.aabbMax, aspect);
 
-    const float yaw = ThumbnailModelYawRadians(thumbnailView);
+    const float yaw = plan.modelYawRadians;
     rs::app::CameraView view{};
     RotateAboutY(plan.target, yaw, view.target);
     RotateAboutY(plan.eye, yaw, view.eye);

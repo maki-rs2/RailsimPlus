@@ -40,6 +40,7 @@
 #include "../settings/UserSettings.h"
 #include "../../world/alignment/SpeedSignalRegistry.h"
 #include "../../world/scene/SceneRegistry.h"
+#include "../../editor/tool/Editor.h"
 
 namespace rs::app::rmlui {
 

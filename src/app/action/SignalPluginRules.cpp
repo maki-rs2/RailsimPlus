@@ -1,4 +1,5 @@
 #include "SignalPluginRules.h"
+#include "../../plugins/schema/PluginSchema.h"
 
 #include <algorithm>
 #include <cmath>

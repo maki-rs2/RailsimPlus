@@ -1,9 +1,6 @@
 #include "RmlUiPluginBrowserView.h"
 
 #include <optional>
-#include <format>
-#include <array>
-#include <cmath>
 #include <string>
 #include <vector>
 
@@ -38,6 +35,7 @@
 #include "../plugin_session/PluginSelector.h"
 #include "../settings/UserSettings.h"
 #include "../../world/scene/SceneRegistry.h"
+#include "../../editor/tool/Editor.h"
 
 namespace rs::app::rmlui {
 

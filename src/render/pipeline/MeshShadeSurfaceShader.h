@@ -156,7 +156,7 @@ SurfaceMaterial ResolveSurfaceMaterial(float3 albedo, float3 sampledOrm, bool us
 // gAdaptation.z=AOのSRV絶対番号 w=描画先の大きさ(幅 | 高さ<<16)。AOが半解像度でも、同じ画面のuvで引く。
 float SampleScreenAo(float4 svPosition) {
     if (gAdaptation.z == 0u) return 1.0;
-    Texture2D<float> aoTexture = ResourceDescriptorHeap[gAdaptation.z];
+    Texture2D<float> aoTexture = gBindlessTex2DR[gAdaptation.z];
     float2 invSize = 1.0 / float2(gAdaptation.w & 0xFFFFu, gAdaptation.w >> 16);
     return aoTexture.SampleLevel(gSmp, svPosition.xy * invSize, 0);
 }
@@ -219,7 +219,7 @@ float3 FresnelForIbl(SurfaceMaterial m, float3 f0, float f90, float ndv) {
 
 // 標準の空の鏡面(直射光・鏡面IBL)に掛ける多重散乱の補正。生成のBRDF LUT(縦軸=roughness)を引く。
 float3 StandardSkyEnergyCompensation(SurfaceMaterial m, float ndv) {
-    Texture2D<float4> brdfLut = ResourceDescriptorHeap[gIblIndex.z];
+    Texture2D<float4> brdfLut = gBindlessTex2D[gIblIndex.z];
     float2 ab = brdfLut.SampleLevel(gIblSmp, float2(ndv, m.roughness), 0).xy;
     return EnergyCompensation(m.specF0, ab);
 }
@@ -308,7 +308,7 @@ float3 IblSpecularLight(SurfaceView sv, SurfaceMaterial m, bool iblOn, bool plug
 
 // ライティング本体（不透明パス・半透明パス共通）。
 // albedo/emissive とテクスチャ有無フラグ・法線/ORM のサンプル済み値を受け取る。テクスチャの Sample は
-// 呼び出し側で済ませておく(ResourceDescriptorHeap[] 経由)。
+// 呼び出し側で済ませておく(bindless テーブルの配列経由)。
 // albedo: 直射光の拡散の反射率(テクスチャ × 材質Diffuse色)。
 // emissive: 発光(テクスチャ色 × 材質Emissive色。呼び出し側で掛けて渡す)。
 // ambientAlbedo: 環境光の反射率(テクスチャ × 材質Ambient色。XLoaderではAmbient=Diffuse)。
@@ -351,7 +351,7 @@ SurfaceShading ShadeSurface(float3 wpos, float3 nrm, float2 uv,
     // 直射光の色(IBL有効時は大気の透過率から求めた太陽色。dayAlphaの乗算は各項で済み)。
     float3 sunColor = float3(1.0, 1.0, 1.0);
     float adaptationGain = AdaptationGainFromTexture();
-    if (iblOn) sunColor = pluginSky ? gPluginDirectional.rgb : MeshSunColor(sv.l) * adaptationGain;
+    if (iblOn) sunColor = pluginSky ? gPluginDirectional.rgb : MeshSunLight(sv.l) * adaptationGain;
 
     DirectLighting sunLighting = EvaluateDirectLighting(n, wpos, sv.l, m, albedo, specColor, specPower, directFade, sunColor);
     // 影は太陽の直射光(拡散と鏡面)にだけ掛ける。環境光・IBL・発光・月の直射光には掛けない。

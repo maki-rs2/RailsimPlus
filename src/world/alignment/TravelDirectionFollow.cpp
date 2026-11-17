@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "RailLinkOverlay.h"
+#include "TrackGraph.h"
 
 namespace rs::world {
 

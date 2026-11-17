@@ -9,6 +9,7 @@
 #include "../../world/alignment/TrackTraversal.h"
 #include "../gpu/App.h"
 #include "OverlayColorTuning.h"
+#include "../../editor/tool/Editor.h"
 
 namespace rs::app {
 

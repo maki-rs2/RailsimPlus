@@ -75,6 +75,7 @@ float PartMoverRuntime::EasedPhase(size_t groupIdx, size_t itemIdx, float phase)
 bool PartMoverRuntime::ItemSettled(const rs::legacy_pi::StaticCustomizer& item,
                                     const MoverItemState& state, bool groupActive) {
     if (item.kind == StaticCustomizer::Kind::AnalogClock) return false; // 時刻は常に進むため常に未静止扱い(安全側)
+    if (item.kind == StaticCustomizer::Kind::TrackingMove && state.phase != 0.0f) return false;
     if (state.delayRemaining > 0.0f) return false;
     if (item.kind == StaticCustomizer::Kind::DynamicRotate) {
         if (state.curSpeedDegPerSec != 0.0f || groupActive) return false;
@@ -85,6 +86,7 @@ bool PartMoverRuntime::ItemSettled(const rs::legacy_pi::StaticCustomizer& item,
 
 void PartMoverRuntime::Build(const rs::legacy_pi::ModelPart& part) {
     groups_.clear();
+    trackingMoves_.clear();
     active_.clear();
     itemStates_.clear();
     itemEases_.clear();
@@ -105,6 +107,7 @@ void PartMoverRuntime::Build(const rs::legacy_pi::ModelPart& part) {
     // ("Object"/"Model" は RailSim II には無いブロック名だが、本ローダが自由配置オブジェクトの
     //  別名として受理しているため同じ扱いにする)
     if (part.kind != "Object3D" && part.kind != "Object" && part.kind != "Model") return;
+    trackingMoves_ = part.trackingMoves;
 
     for (const auto& c : part.customizers) {
         // 既存グループに同一トリガ(chain構造が完全一致)があれば追加、
@@ -135,7 +138,8 @@ void PartMoverRuntime::Build(const rs::legacy_pi::ModelPart& part) {
             const StaticCustomizer& item = groups_[i].items[k];
             itemEases_[i].push_back(BuildItemEase(item.timing));
             itemStates_[i][k].usesPhase = item.kind == StaticCustomizer::Kind::Move ||
-                                          item.kind == StaticCustomizer::Kind::Rotate;
+                                          item.kind == StaticCustomizer::Kind::Rotate ||
+                                          item.kind == StaticCustomizer::Kind::TrackingMove;
         }
         if (groups_[i].trig.chain.empty()) {
             // Always(空chain)トリガは Build 時点から適用済み扱い（即時 active, phase=1）。
@@ -175,7 +179,8 @@ bool PartMoverRuntime::HasTimeDrivenItems() const {
     for (const MoverGroup& group : groups_) {
         for (const StaticCustomizer& item : group.items) {
             if (item.kind == StaticCustomizer::Kind::DynamicRotate ||
-                item.kind == StaticCustomizer::Kind::AnalogClock)
+                item.kind == StaticCustomizer::Kind::AnalogClock ||
+                item.kind == StaticCustomizer::Kind::TrackingMove)
                 return true;
         }
     }
@@ -301,8 +306,10 @@ void PartMoverRuntime::Update(float dt, float dynamicSpeedScale, double clockSec
     localDirty_ = true;
 }
 
-void PartMoverRuntime::ComposeLocal(float out[16]) {
-    if (!localDirty_) {
+void PartMoverRuntime::ComposeLocal(float out[16], const rs::core::Mat4& base,
+                                   const TrackingTargetTable* targets,
+                                   const rs::core::Mat4* placementToWorld) {
+    if (!localDirty_ && !(HasTrackingMoves() && !Settled())) {
         std::memcpy(out, cachedLocal_.m, sizeof(cachedLocal_.m));
         return;
     }
@@ -318,6 +325,19 @@ void PartMoverRuntime::ComposeLocal(float out[16]) {
             rs::core::Mat4 m;
             if (c.kind == StaticCustomizer::Kind::Move) {
                 m = Translation(phase * c.dispX, phase * c.dispY, phase * c.dispZ);
+            } else if (c.kind == StaticCustomizer::Kind::TrackingMove) {
+                rs::core::DVec3 displacement{c.dispX, c.dispY, c.dispZ};
+                if (targets && placementToWorld && c.trackingIndex < trackingMoves_.size()) {
+                    const rs::legacy_pi::TrackingMoveCustomizer& move = trackingMoves_[c.trackingIndex];
+                    const TrackingTargetTable::const_iterator target = targets->find(move.trackingId);
+                    if (target != targets->end()) {
+                        displacement = SolveTrackingMove(ComposeTrackingWorld(acc, base, *placementToWorld),
+                                                        move, target->second).displacement;
+                    }
+                }
+                m = Translation(static_cast<float>(phase * displacement.x),
+                                static_cast<float>(phase * displacement.y),
+                                static_cast<float>(phase * displacement.z));
             } else if (c.kind == StaticCustomizer::Kind::DynamicRotate) {
                 float ax = c.axisX, ay = c.axisY, az = c.axisZ;
                 NormalizeAxisOrDefaultZ(ax, ay, az);

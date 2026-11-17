@@ -11,6 +11,7 @@
 #include "../action/ToolCancelAction.h"
 #include "EdgePickInput.h"
 #include "ViewportInput.h"
+#include "../../editor/tool/Editor.h"
 
 namespace rs::app {
 

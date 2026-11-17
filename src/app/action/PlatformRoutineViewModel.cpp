@@ -6,6 +6,7 @@
 
 #include "PlatformRoutineAction.h"
 #include "../../world/alignment/PlatformRegistry.h"
+#include "../../editor/tool/Editor.h"
 
 namespace rs::app {
 namespace {
