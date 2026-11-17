@@ -48,10 +48,10 @@ float TonemapChannel(const TonemapParams& params, float linearValue);
 float InverseTonemapChannel(const TonemapParams& params, float targetLinear);
 
 // 設定文字列の値からモードを決める。名前は aces/acesfitted/off/hable/reinhard/neutral/agx/triplesection
-// (大文字小文字を区別しない)。nullptr・空・その他は Agx。
+// (大文字小文字を区別しない)。nullptr・空・その他は既定(kDefaultTonemapMode)。
 TonemapMode TonemapModeFromEnvValue(const char* value);
 
-// モードの名前(--setting tonemap・settings.datで使う小文字の名前)。範囲外は既定(agx)の名前。
+// モードの名前(--setting tonemap・settings.datで使う小文字の名前)。範囲外は既定(kDefaultTonemapMode)の名前。
 const char* TonemapModeName(TonemapMode mode);
 
 // tuning.tonemapExposure から露出を決める(負数・NaN・無限大は1.0)。MakeTonemapParams と、

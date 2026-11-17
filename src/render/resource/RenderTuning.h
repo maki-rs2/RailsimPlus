@@ -52,7 +52,7 @@ struct RenderTuning {
     float nightAdaptationMaxGain = 1000000.0f;
     // 深夜の上乗せ。上の倍率に、太陽高度-10度から-13度にかけて1からこの値まで増える係数を掛ける
     // (render/sky/AtmosphereMath の NightAdaptationBoost)。月の有無によらず、深夜の画面全体を一律に明るくする。1なら上乗せなし。
-    float nightAdaptationBoost = 1.5f;
+    float nightAdaptationBoost = 1.2f;
     // 昼の曲線。太陽が低い昼から薄明にかけて、画面が暗く沈まないよう倍率を上げる。
     // dayAdaptationStart: この照度より暗いと上げ始める(太陽がほぼ真上の空の照度に置く)。
     float dayAdaptationStart = 0.17f;
