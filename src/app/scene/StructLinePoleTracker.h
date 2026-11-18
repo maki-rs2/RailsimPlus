@@ -12,9 +12,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../../plugins/schema/PluginSchema.h"
 #include "../../world/scene/SceneRegistry.h"
 #include "StructLinePoles.h"
+#include "../../plugins/schema/LineSchema.h"
 
 namespace rs::app {
 

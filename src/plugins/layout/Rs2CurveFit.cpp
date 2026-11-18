@@ -11,6 +11,7 @@
 #include "../../world/geometry/GeometrySolvers.h"
 #include "../../world/alignment/Alignment.h"
 #include "../../world/alignment/EdgeShapeGenerator.h"
+#include "../../world/alignment/TrackNode.h"
 
 namespace rs::legacy_layout {
 
@@ -21,32 +22,38 @@ namespace {
 
 Vec3 Horizontal(const Vec3& v) { return Vec3(v.x, 0.0f, v.z); }
 
-// query(水平)から poly(水平, 折れ線)への最短距離。弧長パラメータでの対応点比較だと
+// query(水平)から poly(水平, 折れ線)への最短距離が tolerance 以下か。弧長パラメータでの対応点比較だと
 // 直線+円弧+直線のように区間境界の弧長がわずかにずれるだけで直線区間の点が円弧区間の
 // 点と比較され誤差が過大評価されるため、幾何的な最近傍点距離(点-線分距離の最小)で見る。
-float MinDistToPolylineHorizontal(const std::vector<rs::world::TrackNodeSample>& poly,
-                                  const Vec3& query) {
-    if (poly.size() == 1) return (query - Horizontal(poly.front().pos)).Length();
-    float best = std::numeric_limits<float>::max();
-    for (size_t i = 0; i + 1 < poly.size(); ++i) {
+// 最短距離そのものは要らず「許容以内の線分が1本でもあるか」だけなので、見つかった時点で打ち切る。
+// hint(前回見つかった線分の番号)から順に探す。経路に沿って並んだ点列なら、次の点もほぼ同じ線分の近くにある。
+bool IsWithinPolylineHorizontal(const std::vector<rs::world::TrackNodeSample>& poly, const Vec3& query,
+                                float tolerance, size_t& hint) {
+    if (poly.size() == 1) return (query - Horizontal(poly.front().pos)).Length() <= tolerance;
+    const size_t segmentCount = poly.size() - 1;
+    for (size_t k = 0; k < segmentCount; ++k) {
+        const size_t i = (hint + k) % segmentCount;
         const Vec3 a = Horizontal(poly[i].pos);
         const Vec3 b = Horizontal(poly[i + 1].pos);
         const float t = static_cast<float>(rs::core::ClosestSegmentParameter(
             {a.x, a.y, a.z}, {b.x, b.y, b.z}, {query.x, query.y, query.z},
             rs::core::kImportedSegmentLengthSquaredEpsM2));
         const Vec3 proj(std::lerp(a.x, b.x, t), std::lerp(a.y, b.y, t), std::lerp(a.z, b.z, t));
-        best = std::min(best, (query - proj).Length());
+        if ((query - proj).Length() <= tolerance) {
+            hint = i;
+            return true;
+        }
     }
-    return best;
+    return false;
 }
 
-// a の全点から b への最近傍距離の最大値(片方向Hausdorff距離)。
-float MaxOneSidedHausdorffHorizontal(const std::vector<rs::world::TrackNodeSample>& a,
-                                     const std::vector<rs::world::TrackNodeSample>& b) {
-    float worst = 0.0f;
+// a の全点が b の折れ線から tolerance 以内にあるか(片方向Hausdorff距離が許容以下か)。
+bool IsOneSidedHausdorffWithinHorizontal(const std::vector<rs::world::TrackNodeSample>& a,
+                                         const std::vector<rs::world::TrackNodeSample>& b, float tolerance) {
+    size_t hint = 0;
     for (const rs::world::TrackNodeSample& smp : a)
-        worst = std::max(worst, MinDistToPolylineHorizontal(b, Horizontal(smp.pos)));
-    return worst;
+        if (!IsWithinPolylineHorizontal(b, Horizontal(smp.pos), tolerance, hint)) return false;
+    return true;
 }
 
 // 3D接線t0/t1と弦chordが単一平面上に収まっているか(=単一円弧として無理なく近似できるか)を
@@ -199,9 +206,9 @@ bool IsThreePointFilletRepresentable(const rs::world::TrackEdge& edge,
 
     // 弧長パラメータでの対応点比較は区間境界のわずかなずれで誤差が過大評価されるため、
     // 双方向の最近傍点距離(Hausdorff距離の近似)で経路全体の一致度を見る。
-    const float devOrigToFit = MaxOneSidedHausdorffHorizontal(edge.spline, fitted);
-    const float devFitToOrig = MaxOneSidedHausdorffHorizontal(fitted, edge.spline);
-    return std::max(devOrigToFit, devFitToOrig) <= rs::world::EditorGeometryTuning::Embedded().importedFilletFitToleranceM;
+    const float tolerance = rs::world::EditorGeometryTuning::Embedded().importedFilletFitToleranceM;
+    return IsOneSidedHausdorffWithinHorizontal(edge.spline, fitted, tolerance) &&
+           IsOneSidedHausdorffWithinHorizontal(fitted, edge.spline, tolerance);
 }
 
 } // namespace rs::legacy_layout

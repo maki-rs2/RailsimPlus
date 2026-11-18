@@ -7,9 +7,12 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <utility>
 
 #include "../workspace/DiaPanelFormat.h"
 #include "../../world/alignment/PlatformRoutine.h"
+#include "../../core/Math.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 namespace {

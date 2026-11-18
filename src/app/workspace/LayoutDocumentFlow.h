@@ -25,6 +25,8 @@ struct LayoutFlowStep {
     LayoutFlowEffect effect = LayoutFlowEffect::None;
     std::string pathUtf8;
     bool discardRecovery = false;
+    // Quit のとき、更新を適用するための終了か。RequestQuit で頼まれた終了が実際に行われるときだけ真になる。
+    bool restartForUpdate = false;
 };
 
 enum class UnsavedChoice { Save, Discard, Cancel };
@@ -35,7 +37,8 @@ public:
     LayoutFlowStep RequestSave(const std::string& savedPathUtf8);
     LayoutFlowStep RequestSaveAs();
     LayoutFlowStep RequestLoad(const std::string& pathUtf8, bool dirty, const std::string& savedPathUtf8);
-    LayoutFlowStep RequestQuit(bool dirty, const std::string& savedPathUtf8);
+    // forUpdate: 更新を適用するための終了。確認の途中で取りやめられたら、この要求も一緒に消える。
+    LayoutFlowStep RequestQuit(bool dirty, const std::string& savedPathUtf8, bool forUpdate = false);
 
     LayoutFlowStep OnUnsavedChoice(UnsavedChoice choice);
     // 名前が決まったとき。pathUtf8は解決済みの保存先、existsはそこにファイルがあるか。
@@ -62,6 +65,7 @@ private:
     std::string savedPathUtf8_;
     std::string loadPathUtf8_;
     std::string overwritePathUtf8_;
+    bool quitForUpdate_ = false;
 };
 
 } // namespace rs::app::workspace

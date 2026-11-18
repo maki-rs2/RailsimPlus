@@ -1,7 +1,9 @@
 #include "UpdateChecker.h"
 
+#include <algorithm>
 #include <array>
 #include <charconv>
+#include <cctype>
 #include <chrono>
 #include <utility>
 #include <nlohmann/json.hpp>
@@ -9,6 +11,7 @@
 
 #include "EmbeddedUpdateCheck.h"
 #include "../../core/ConfigJson.h"
+#include "../../platform/text/AsciiCase.h"
 #include "../settings/UserSettings.h"
 #ifdef _WIN32
 #include "../../platform/net/HttpGet.h"
@@ -35,6 +38,34 @@ std::optional<std::array<unsigned int, 3>> ParseVersion(std::string_view text) {
     return parts;
 }
 
+// assets[] から配布ZIPを1件探して、URL・サイズ・ハッシュを読む。1つでも不正なら何も入れない。
+void ReadReleaseAsset(const nlohmann::json& root, ReleaseInfo& info) {
+    constexpr std::string_view kDigestPrefix = "sha256:";
+    constexpr std::size_t kSha256HexLength = 64;
+    const auto assets = root.find("assets");
+    if (assets == root.end() || !assets->is_array()) return;
+    for (const nlohmann::json& asset : *assets) {
+        if (!asset.is_object()) continue;
+        const auto name = asset.find("name");
+        if (name == asset.end() || !name->is_string() || name->get<std::string>() != kReleaseAssetName) continue;
+        const auto url = asset.find("browser_download_url");
+        const auto size = asset.find("size");
+        const auto digest = asset.find("digest");
+        if (url == asset.end() || !url->is_string() || !IsAllowedDownloadUrl(url->get<std::string>())) return;
+        if (size == asset.end() || !size->is_number_unsigned() || size->get<std::uint64_t>() == 0) return;
+        if (digest == asset.end() || !digest->is_string()) return;
+        std::string hash = digest->get<std::string>();
+        if (!hash.starts_with(kDigestPrefix)) return;
+        hash.erase(0, kDigestPrefix.size());
+        const bool isHex = std::all_of(hash.begin(), hash.end(), [](unsigned char c) { return std::isxdigit(c) != 0; });
+        if (hash.size() != kSha256HexLength || !isHex) return;
+        info.assetUrl = url->get<std::string>();
+        info.assetSize = size->get<std::uint64_t>();
+        info.assetSha256 = rs::platform_text::ToAsciiLower(std::move(hash));
+        return;
+    }
+}
+
 UpdateCheckConfig ReadConfig(const nlohmann::json& root) {
     return {root.value("releaseApiUrl", std::string{}), root.value("releasePageUrl", std::string{})};
 }
@@ -48,6 +79,17 @@ const UpdateCheckConfig& UpdateCheckConfig::Embedded() {
     static const UpdateCheckConfig kConfig = rs::core::ReadEmbeddedConfig<UpdateCheckConfig>(
         rs::embedded::kUpdateCheckJson, rs::embedded::kUpdateCheckJsonSize, "UpdateCheck", ReadConfig);
     return kConfig;
+}
+
+bool IsAllowedDownloadUrl(std::string_view url) {
+    constexpr std::string_view kAllowedPrefix = "https://github.com/maki-rs2/RailsimPlus/releases/download/";
+    // 接頭辞の後ろに資産のパスがあること。空白・制御文字・バックスラッシュ・フラグメント・`..` の要素は、
+    // 接頭辞の外(別のリポジトリなど)を指せてしまうので許さない。
+    if (!url.starts_with(kAllowedPrefix) || url.size() == kAllowedPrefix.size()) return false;
+    if (url.find("/..") != std::string_view::npos) return false;
+    return std::none_of(url.begin(), url.end(), [](char c) {
+        return static_cast<unsigned char>(c) <= 0x20 || c == '\\' || c == '#';
+    });
 }
 
 bool IsNewerVersion(std::string_view current, std::string_view candidate) {
@@ -65,7 +107,9 @@ std::optional<ReleaseInfo> ParseReleaseInfo(std::string_view json) {
         url == root.end() || !url->is_string()) return std::nullopt;
     std::string version = tag->get<std::string>();
     if (version.starts_with('v')) version.erase(0, 1);
-    return ReleaseInfo{std::move(version), url->get<std::string>()};
+    ReleaseInfo info{std::move(version), url->get<std::string>(), {}, 0, {}};
+    ReadReleaseAsset(root, info);
+    return info;
 }
 
 bool IsUpdateCheckDue(std::int64_t lastCheckTime, std::int64_t now) {

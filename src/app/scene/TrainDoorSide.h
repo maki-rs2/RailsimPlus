@@ -8,8 +8,12 @@
 #pragma once
 
 #include "../../core/Math.h"
-#include "../../world/alignment/TrackGraph.h"
-#include "../../world/alignment/TrackTraversal.h"
+#include "../../world/alignment/TrackPosition.h"
+
+namespace rs::world {
+struct PlatformStopInfo;
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::app {
 

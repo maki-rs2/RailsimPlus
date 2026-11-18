@@ -8,10 +8,12 @@
 
 #include <utility>
 #include <vector>
+#include "AlignmentSegment.h"
 
-#include "TrackGraph.h"
 
 namespace rs::world {
+
+struct TrackEdge;
 
 // 間引きの許容(tan比)。軌間1067mmで約0.2mmのレール高さ差。
 constexpr float kCantThinTolerance = 2.0e-4f;

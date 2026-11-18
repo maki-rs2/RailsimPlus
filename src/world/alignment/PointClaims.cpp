@@ -1,6 +1,8 @@
 #include "PointClaims.h"
 
 #include "RailLinkOverlay.h"
+#include "TrackEdge.h"
+#include "TrackGraph.h"
 
 namespace rs::world {
 namespace {

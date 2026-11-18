@@ -8,6 +8,7 @@
 #include "../../world/scene/ScenePlacement.h"
 #include "../../world/scene/SceneEntity.h"
 #include "../../world/scene/SceneRegistry.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 std::vector<rs::world::TrackPlacement> SolveCarPlacements(const std::vector<FormationCar>& cars,

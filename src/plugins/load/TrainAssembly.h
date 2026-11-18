@@ -15,7 +15,7 @@
 #include "../../core/Math.h"
 #include "../../sim/TrainVehicle.h"
 #include "../../sim/TrainOccupiedPath.h"
-#include "../../world/alignment/TrackTraversal.h"
+#include "../../world/alignment/TrackPosition.h"
 #include "../../world/alignment/WarpTraversal.h"
 
 namespace rs::legacy_pi { struct PluginDefinition; }

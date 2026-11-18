@@ -11,6 +11,7 @@
 #include "../world/alignment/PointRoutineResolve.h"
 #include "../world/alignment/RailLinkOverlay.h"
 #include "../world/alignment/WarpTraversal.h"
+#include "../world/alignment/TrackGraph.h"
 
 namespace rs::sim {
 

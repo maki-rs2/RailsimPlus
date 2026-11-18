@@ -5,6 +5,9 @@
 
 #include "BlockSpeedLimit.h"
 #include "RailLinkOverlay.h"
+#include "TrackEdge.h"
+#include "TrackGraph.h"
+#include "TrackTraversal.h"
 
 namespace rs::world {
 

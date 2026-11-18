@@ -12,9 +12,13 @@
 
 #include "../../core/Math.h"
 #include "../../editor/tool/EditorTypes.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "../gpu/CameraMath.h"
 #include "EditorViewport.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::app {
 

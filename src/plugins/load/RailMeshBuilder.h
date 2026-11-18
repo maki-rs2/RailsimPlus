@@ -12,8 +12,9 @@
 #include <vector>
 
 #include "../../render/mesh/Mesh.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "runtime/TrackingMoveSolve.h"
+#include "../../core/Math.h"
+#include "../../world/alignment/AlignmentSegment.h"
 
 namespace rs::legacy_pi { struct PluginDefinition; struct PierDef; struct RailInterval; struct LineDef; }
 

@@ -15,14 +15,18 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <cstdint>
 
 #include "../../core/Math.h"
 #include "../../plugins/load/TrainAssembly.h"
 #include "../../render/mesh/Mesh.h"
-#include "../../world/alignment/TrackGraph.h"
-#include "../../world/alignment/TrackTraversal.h"
+#include "../../world/alignment/TrackPosition.h"
 #include "../plugin_session/PluginSelector.h"
 #include "../plugin_session/PluginSession.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::app {
 

@@ -5,6 +5,7 @@
 #include <utility>
 
 #include <spdlog/spdlog.h>
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::editor {
 

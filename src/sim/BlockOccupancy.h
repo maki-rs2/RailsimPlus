@@ -7,11 +7,15 @@
 #include <vector>
 
 #include "../world/alignment/TrackForwardScan.h"
-#include "../world/alignment/TrackGraph.h"
-#include "../world/alignment/TrackTraversal.h"
+#include "../world/alignment/TrackPosition.h"
 #include "../world/alignment/WarpForwardScan.h"
 #include "../world/scene/TrainId.h"
 #include "TrainOccupiedPath.h"
+#include "../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::sim {
 

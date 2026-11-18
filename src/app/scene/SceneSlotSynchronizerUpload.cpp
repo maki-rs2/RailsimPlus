@@ -58,6 +58,14 @@ void SceneSlotSynchronizer::DeferBatchableCarUploads(SyncContext& ctx) {
             std::chrono::duration<double, std::milli>(ProfClock::now() - tDedup0).count();
 }
 
+PreloadTextureSet SceneSlotSynchronizer::CollectPreloadTexturesCached(const Slot& slot, size_t userSwitchBudget) {
+    if (slot.isTrainCar || slot.residency.contentKey.empty()) return CollectPreloadTextures(slot.session, userSwitchBudget);
+    const std::string key = slot.residency.contentKey + "|" + std::to_string(userSwitchBudget);
+    const std::unordered_map<std::string, PreloadTextureSet>::const_iterator hit = preloadCache_.find(key);
+    if (hit != preloadCache_.end()) return hit->second;
+    return preloadCache_.emplace(key, CollectPreloadTextures(slot.session, userSwitchBudget)).first->second;
+}
+
 void SceneSlotSynchronizer::RunPendingUploads(SyncContext& ctx) {
     using ProfClock = std::chrono::steady_clock;
     std::vector<Slot>& slots = ctx.slots;
@@ -103,7 +111,6 @@ void SceneSlotSynchronizer::RunPendingUploads(SyncContext& ctx) {
         for (size_t i = begin; i < end; ++i) {
             if (!uploadOk[i]) continue;
             const size_t slotIndex = pendingUploads[i].slotIndex;
-            const PluginSession& session = slots[slotIndex].session;
             // ユーザースイッチの軸も足す(配置後のスイッチ変更でテクスチャ読込が挟まらない
             // ように)。予算はスロット再利用でプールを保持する条件(kReuseTexSlotHeadroom)と
             // 同じ値にし、超えるプラグインは軸を足さない集合へ戻す。
@@ -111,7 +118,7 @@ void SceneSlotSynchronizer::RunPendingUploads(SyncContext& ctx) {
             // 事前登録と組み合わさるため、ここでユーザースイッチ軸まで広げない。
             const size_t userSwitchBudget =
                 slots[slotIndex].isTrainCar ? 0 : kReuseTexSlotHeadroom;
-            const PreloadTextureSet preload = CollectPreloadTextures(session, userSwitchBudget);
+            const PreloadTextureSet preload = CollectPreloadTexturesCached(slots[slotIndex], userSwitchBudget);
             if (preload.animationTextures.empty() && preload.materialTextures.empty()) continue;
             spdlog::debug("[scene] テクスチャ事前ロード: アニメ{}枚 + ChangeTexture{}枚 "
                          "(仮定値{}通り{}, ユーザースイッチ軸{}{}, 枠上限{}, {})",

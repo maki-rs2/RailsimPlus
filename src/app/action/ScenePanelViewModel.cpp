@@ -5,6 +5,7 @@
 #include <format>
 #include <unordered_map>
 
+#include "../entry/SlowSectionLog.h"
 #include "../scene/SurfaceBoundsTracker.h"
 #include "../../platform/text/AsciiCase.h"
 #include "../../platform/text/Encoding.h"
@@ -78,9 +79,29 @@ std::string BuildSceneDeleteMessage(const Localization& localization, const std:
     return message;
 }
 
+ScenePanelSource::ScenePanelSource() = default;
+ScenePanelSource::~ScenePanelSource() = default;
+
 void ScenePanelSource::Rescan(const std::vector<std::string>& rootCandidatesUtf8) {
-    choices_ = ScanSceneChoices(rootCandidatesUtf8);
+    if (!worker_) {
+        worker_ = std::make_unique<ScanWorker>([](const std::vector<std::string>& roots, std::stop_token) {
+            SlowSectionLog slow("SceneChoices.Scan(ワーカー)", 300.0);
+            return ScanSceneChoices(roots);
+        });
+    }
+    // 古い頼みは捨てる(開閉を繰り返しても、走査が溜まらないように)。
+    worker_->ClearPending();
+    worker_->Post(rootCandidatesUtf8, 0);
     scanned_ = true;
+}
+
+bool ScenePanelSource::PollChoices() {
+    if (!worker_) return false;
+    std::vector<SceneChoiceCatalog> results = worker_->Drain(8);
+    if (results.empty()) return false;
+    choices_ = std::move(results.back());
+    choicesReady_ = true;
+    return true;
 }
 
 const std::vector<std::string>& ScenePanelSource::SurfaceNames(const LayoutSession& session,
@@ -111,6 +132,7 @@ const std::vector<std::string>& ScenePanelSource::SurfaceNames(const LayoutSessi
 
 bool FillScenePanelFromSession(workspace::ScenePanelPresentation& panel, const LayoutSession& session,
                                const rs::world::SceneRegistry& registry, ScenePanelSource& source) {
+    source.PollChoices();
     const std::vector<SceneContentCounts> counts = CountSceneContents(session, registry);
     const std::vector<std::string>& surfaceNames = source.SurfaceNames(session, registry);
     std::vector<workspace::ScenePanelRow> rows;
@@ -126,8 +148,11 @@ bool FillScenePanelFromSession(workspace::ScenePanelPresentation& panel, const L
             row.draft_ = panel.rows_[index].draft_;
         }
         size_t selected = 0;
-        row.envOptions_ = BuildEnvOptions(index < session.scenes.size() ? session.scenes[index].envPlugin : std::string(),
-                                          source.Choices().envs, selected);
+        const std::string currentEnv = index < session.scenes.size() ? session.scenes[index].envPlugin : std::string();
+        // 走査の結果が届くまでは、今の環境だけを選択肢にする(「選べない環境」と誤って出さないため)。
+        std::vector<SceneChoice> pendingEnvs;
+        if (!source.ChoicesReady() && !currentEnv.empty()) pendingEnvs.push_back({currentEnv, std::string()});
+        row.envOptions_ = BuildEnvOptions(currentEnv, source.ChoicesReady() ? source.Choices().envs : pendingEnvs, selected);
         row.env_ = std::to_string(selected);
         row.surface_ = index < surfaceNames.size() ? surfaceNames[index] : std::string();
         rows.push_back(std::move(row));

@@ -12,7 +12,10 @@
 #include "SceneSlotPool.h"
 #include "../plugin_session/RailSoundLookup.h"
 #include "../../sim/audio/WheelSoundVoicePool.h"
-#include "../../world/alignment/TrackGraph.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::app {
 

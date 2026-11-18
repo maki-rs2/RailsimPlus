@@ -4,6 +4,7 @@
 #include "SceneRegistry.h"
 
 #include <algorithm>
+#include <utility>
 
 namespace rs::world {
 

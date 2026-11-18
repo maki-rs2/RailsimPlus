@@ -8,6 +8,10 @@
 
 #include "DiaPanelPresentationBuilder.h"
 
+namespace rs::world {
+struct TrackNode;
+} // namespace rs::world
+
 namespace rs::app::dia_builder {
 
 // 層の見出しの名前。編成が定義に無ければ「(削除された編成)」、タグが定義に無ければ「タグ:#番号」。

@@ -8,8 +8,8 @@
 
 #include <cstdint>
 #include <string>
+#include "../../world/alignment/AlignmentSegment.h"
 
-#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 

@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <utility>
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::editor {
 AddStationCommand::AddStationCommand(rs::world::StationInfo station) : station_(std::move(station)) {}

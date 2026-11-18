@@ -38,6 +38,8 @@ private:
         size_t i = pos_ + off;
         return i < toks_.size() ? toks_[i] : toks_.back();
     }
+    // 消費済みトークンの文字列は読み返さないので、コピーせず取り出す。
+    std::string TakeText() { return std::move(toks_[pos_].text); }
     bool At(TokenKind k) const { return Cur().kind == k; }
     void Advance() {
         if (pos_ + 1 < toks_.size()) ++pos_;
@@ -73,10 +75,10 @@ private:
     // 現在トークン = ブロック名 Identifier。 Name Label? { members }
     PiBlock ParseBlock() {
         PiBlock b;
-        b.name = Cur().text;
+        b.name = TakeText();
         Advance();
         if (At(TokenKind::String)) {
-            b.label = Cur().text;
+            b.label = TakeText();
             Advance();
         }
         if (!Accept(TokenKind::LBrace)) {
@@ -172,7 +174,7 @@ private:
                     m.kind = PiMember::Kind::CaseLabel;
                     m.caseValue = caseVals.empty() ? 0 : caseVals.front();
                     m.caseValues = std::move(caseVals);
-                    b.members.push_back(m);
+                    b.members.push_back(std::move(m));
                     continue;
                 }
                 // Default:  ApplySwitch 内の既定分岐（Case の対）
@@ -233,7 +235,7 @@ private:
 
     void ParseAssignment(PiBlock& b) {
         PiAssignment a;
-        a.key = Cur().text;
+        a.key = TakeText();
         Advance();
         if (Accept(TokenKind::Semicolon)) {
             // フラグ代入
@@ -271,33 +273,33 @@ private:
     }
 
     PiValue ParseValue() {
-        const Token& t = Cur();
+        Token& t = toks_[pos_];
         PiValue v;
         switch (t.kind) {
         case TokenKind::Number:
             v.kind = PiValue::Kind::Number;
             v.number = t.number;
-            v.text = t.text;
+            v.text = std::move(t.text);
             Advance();
             return v;
         case TokenKind::String:
             v.kind = PiValue::Kind::String;
-            v.text = t.text;
+            v.text = std::move(t.text);
             Advance();
             return v;
         case TokenKind::HexAddress:
             v.kind = PiValue::Kind::HexAddr;
-            v.text = t.text;
+            v.text = std::move(t.text);
             Advance();
             return v;
         case TokenKind::HexColor:
             v.kind = PiValue::Kind::HexColor;
-            v.text = t.text; // '#'を除いた6/8桁hex
+            v.text = std::move(t.text); // '#'を除いた6/8桁hex
             Advance();
             return v;
         case TokenKind::Identifier:
             v.kind = PiValue::Kind::Ident;
-            v.text = t.text;
+            v.text = std::move(t.text);
             Advance();
             return v;
         case TokenKind::LParen:

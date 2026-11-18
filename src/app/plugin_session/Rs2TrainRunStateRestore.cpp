@@ -2,6 +2,7 @@
 
 #include "../../core/SpeedUnits.h"
 #include "../../plugins/layout/Rs2DiaImport.h"
+#include "../../world/alignment/PlatformStopInfo.h"
 
 namespace rs::app {
 

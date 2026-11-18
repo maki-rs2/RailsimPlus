@@ -18,6 +18,7 @@
 #include <spdlog/spdlog.h>
 
 #include "../../platform/file/AtomicFileWrite.h"
+#include "../../platform/file/DirectoryWritable.h"
 #include "../../platform/file/ExecutableDirectory.h"
 #include "../../platform/file/UserDataDirectory.h"
 #include "../../platform/text/Encoding.h"
@@ -38,23 +39,6 @@ Language LanguageFromName(const std::string& name) {
 
 } // namespace
 
-namespace {
-
-// フォルダに作業用ファイルを作れるか。ポータブル配置で設定を実行ファイルの隣へ置けるかの判定に使う。
-bool IsDirectoryWritable(const std::filesystem::path& directory) {
-    std::error_code error;
-    if (!std::filesystem::is_directory(directory, error)) return false;
-    const std::filesystem::path probe = directory / L".write_probe";
-    {
-        std::ofstream stream(probe, std::ios::binary);
-        if (!stream.is_open()) return false;
-    }
-    std::filesystem::remove(probe, error);
-    return true;
-}
-
-}  // namespace
-
 // 設定は、実行ファイルの隣に置いてフォルダごと持ち運べるようにする。次の場合は %LOCALAPPDATA% を使う:
 // すでにそちらに設定がある(今までの利用者の設定を引き継ぐ)/ 実行ファイルの隣に書き込めない。
 std::filesystem::path UserSettings::DefaultPath() {
@@ -64,7 +48,7 @@ std::filesystem::path UserSettings::DefaultPath() {
     std::error_code error;
     if (std::filesystem::exists(portablePath, error)) return portablePath;
     if (std::filesystem::exists(userDataPath, error)) return userDataPath;
-    if (IsDirectoryWritable(executableDirectory)) return portablePath;
+    if (rs::platform_file::IsDirectoryWritable(executableDirectory)) return portablePath;
     return userDataPath;
 }
 

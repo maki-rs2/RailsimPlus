@@ -20,11 +20,15 @@
 #pragma once
 
 #include <vector>
+#include <cstdint>
 
 #include "../../../core/Math.h"
-#include "../../schema/PluginSchema.h"
 #include "../../schema/SwitchExpr.h"
 #include "MoverRuntime.h"
+
+namespace rs::legacy_pi {
+struct PluginDefinition;
+} // namespace rs::legacy_pi
 
 namespace rs::legacy_plugin {
 

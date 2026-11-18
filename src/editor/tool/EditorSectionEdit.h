@@ -11,10 +11,14 @@
 #include <string>
 #include <vector>
 
-#include "../../world/alignment/TrackGraph.h"
 #include "../../world/scene/ManualPlacementOverlay.h"
 #include "Command.h"
 #include "EditorTypes.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackEdge;
+} // namespace rs::world
 
 namespace rs::editor {
 

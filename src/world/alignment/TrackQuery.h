@@ -9,10 +9,12 @@
 #include <optional>
 
 #include "../../core/Math.h"
-#include "TrackGraph.h"
-#include "TrackTraversal.h"
+#include "TrackPosition.h"
 
 namespace rs::world {
+
+struct TrackEdge;
+struct TrackGraph;
 
 // FindNearestTrackPosition の結果。found==false のときは position は未定義。
 struct NearestTrackHit {

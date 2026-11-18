@@ -16,6 +16,7 @@
 #include "../../world/alignment/GuidJson.h"
 #include "../../world/scene/ScenePlacement.h"
 #include <spdlog/spdlog.h>
+#include "../../world/alignment/TrackGraph.h"
 namespace rs::app {
 namespace {
 // `_CAMDIST`を参照するスロットだけ、配置のワールド位置(行列の平行移動成分)から視点距離を

@@ -8,11 +8,13 @@
 
 #include <vector>
 
-#include "TrackGraph.h"
 
 #include "../../core/Epsilon.h"
+#include "Guid.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 struct EdgeEndMismatch {
     Guid edge = NilGuid();

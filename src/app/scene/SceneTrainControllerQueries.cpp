@@ -7,6 +7,7 @@
 
 #include "ScenePickItem.h"
 #include "../../world/alignment/TrackForwardScan.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 namespace {

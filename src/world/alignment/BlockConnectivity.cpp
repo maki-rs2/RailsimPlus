@@ -1,8 +1,12 @@
 #include "BlockConnectivity.h"
 
 #include <unordered_set>
+#include <utility>
 
 #include "TravelDirectionFollow.h"
+#include "SpeedSignal.h"
+#include "TrackEdge.h"
+#include "TrackGraph.h"
 
 namespace rs::world {
 namespace {

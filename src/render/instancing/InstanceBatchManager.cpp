@@ -1,11 +1,33 @@
 #include "InstanceBatchManager.h"
 
 #include <cstring>
+#include <set>
+#include <tuple>
 
+#include "../pipeline/MeshPipelineTypes.h"
 #include "../resource/RenderTuning.h"
 #include "../resource/TextureManager.h"
 
 namespace rs::render {
+
+namespace {
+
+// 静的な建物のバッチが使うテクスチャ枠数。先頭3枠のダミー表と、(base, normal, orm)の
+// 組ごとの枠(MeshTexturePool::GetOrCreateTexGroupと同じ数え方)の合計。
+// 静的バッチは読込後にテクスチャが増えないので、この数だけ確保すれば足りる。
+UINT StaticBatchTextureSlots(const Mesh& mesh) {
+    constexpr UINT kDummyTableSlots = 3;
+    std::set<std::tuple<std::string, std::string, std::string>> groups;
+    UINT slots = kDummyTableSlots;
+    for (const Material& mat : mesh.materials) {
+        if (mat.texturePath.empty()) continue;
+        if (!groups.emplace(mat.texturePath, mat.normalPath, mat.ormPath).second) continue;
+        slots += TextureSlotCost(mat.normalPath, mat.ormPath);
+    }
+    return slots;
+}
+
+} // namespace
 
 bool InstanceBatchManager::Init(ID3D12Device* device, const MeshPipelineSharedState& shared,
                                 ID3D12DescriptorHeap* srvHeap, UINT srvSize,
@@ -21,7 +43,7 @@ bool InstanceBatchManager::EnsureBatch(ID3D12Device* device,
                                        const std::string& basePath, const Mesh& mesh) {
     if (impl_.HasBatch(basePath)) return true;
     if (failedBatchKeys_.contains(basePath)) return false;
-    if (!impl_.EnsureBatch(device, upload, basePath, mesh, 1, {})) {
+    if (!impl_.EnsureBatch(device, upload, basePath, mesh, 1, {}, StaticBatchTextureSlots(mesh))) {
         failedBatchKeys_.insert(basePath);
         return false;
     }

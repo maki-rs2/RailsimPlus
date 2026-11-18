@@ -10,6 +10,7 @@
 #include "../../core/Epsilon.h"
 #include "../geometry/GeometrySolvers.h"
 #include "AutoCant.h"
+#include "TrackGraph.h"
 
 namespace rs::world {
 

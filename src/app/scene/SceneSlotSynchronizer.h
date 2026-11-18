@@ -3,11 +3,13 @@
 #include <chrono>
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "ExternalSceneMeshes.h"
 #include "SceneSlotPool.h"
 #include "StaticMeshCache.h"
+#include "../plugin_session/PreloadTextureSet.h"
 #include "../../world/scene/SceneRegistry.h"
 
 namespace rs::app {
@@ -62,6 +64,11 @@ private:
     uint64_t pluginGeneration_ = 0;
     uint64_t lastSyncedRevision_ = UINT64_MAX;
     bool requiresInitialCarBatchTick_ = false;
+    // テクスチャの事前ロード対象(contentKey+予算ごと)。同じ内容の配置が多いレイアウトで、同じ列挙を
+    // スロットの数だけ繰り返さないため(1回が数百ミリ秒かかる)。プラグインの読込の世代が変わったら捨てる。
+    std::unordered_map<std::string, PreloadTextureSet> preloadCache_;
+    // 非Trainのスロットは内容(フォルダ+スイッチ値)だけで決まるので使い回す。Trainは車両ごとの解決が絡むので毎回求める。
+    PreloadTextureSet CollectPreloadTexturesCached(const Slot& slot, size_t userSwitchBudget);
 
     // パス2(ResolveRemaining相当)で見つかったTrainカテゴリのアップロードを
     // ジョブ完了までここへ蓄積する(バッチ化判定=DeferBatchableCarUploadsは全件が

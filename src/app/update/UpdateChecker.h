@@ -17,12 +17,24 @@ struct UpdateCheckConfig {
     static const UpdateCheckConfig& Embedded();
 };
 
+// リリースの資産(配布ZIP)の名前。
+inline constexpr std::string_view kReleaseAssetName = "RailsimPlus-win64.zip";
+
 struct ReleaseInfo {
     std::string version;
     std::string htmlUrl;
+    // 配布ZIPの情報。URL・サイズ・ハッシュが3つそろったときだけ入り、1つでも欠ければ3つとも空(0)。
+    std::string assetUrl;
+    std::uint64_t assetSize = 0;
+    std::string assetSha256; // 小文字16進64桁
+
+    // アプリ内更新に使える資産があるか。
+    bool HasInstallableAsset() const { return !assetUrl.empty() && assetSize > 0 && !assetSha256.empty(); }
 };
 
 bool IsNewerVersion(std::string_view current, std::string_view candidate);
+// アプリ内でダウンロードしてよいURLか。このリポジトリのリリース資産のURLだけを許す。
+bool IsAllowedDownloadUrl(std::string_view url);
 std::optional<ReleaseInfo> ParseReleaseInfo(std::string_view json);
 bool IsUpdateCheckDue(std::int64_t lastCheckTime, std::int64_t now);
 

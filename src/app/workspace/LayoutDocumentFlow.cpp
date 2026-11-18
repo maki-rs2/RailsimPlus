@@ -8,6 +8,7 @@ LayoutFlowStep LayoutDocumentFlow::Reset() {
     savedPathUtf8_.clear();
     loadPathUtf8_.clear();
     overwritePathUtf8_.clear();
+    quitForUpdate_ = false;
     return {};
 }
 
@@ -23,8 +24,9 @@ LayoutFlowStep LayoutDocumentFlow::BeginSaveToSavedPathOrAsk() {
 LayoutFlowStep LayoutDocumentFlow::RunGoal(bool discardRecovery) {
     const Goal goal = goal_;
     const std::string loadPathUtf8 = loadPathUtf8_;
+    const bool forUpdate = quitForUpdate_;
     Reset();
-    if (goal == Goal::Quit) return {LayoutFlowEffect::Quit, {}, discardRecovery};
+    if (goal == Goal::Quit) return {LayoutFlowEffect::Quit, {}, discardRecovery, forUpdate};
     if (goal == Goal::Load) return {LayoutFlowEffect::Load, loadPathUtf8, discardRecovery};
     return {};
 }
@@ -52,8 +54,9 @@ LayoutFlowStep LayoutDocumentFlow::RequestLoad(const std::string& pathUtf8, bool
     return {LayoutFlowEffect::ShowUnsavedWarning, {}, false};
 }
 
-LayoutFlowStep LayoutDocumentFlow::RequestQuit(bool dirty, const std::string& savedPathUtf8) {
+LayoutFlowStep LayoutDocumentFlow::RequestQuit(bool dirty, const std::string& savedPathUtf8, bool forUpdate) {
     if (stage_ != Stage::Idle) return {};
+    quitForUpdate_ = forUpdate;
     if (!dirty) {
         // 誤って押したときに戻れるよう、保存するものがなくても終了の前に一度聞く。
         stage_ = Stage::QuitConfirm;
@@ -104,9 +107,10 @@ LayoutFlowStep LayoutDocumentFlow::OnOverwriteChoice(bool overwrite) {
 
 LayoutFlowStep LayoutDocumentFlow::OnQuitChoice(bool quit) {
     if (stage_ != Stage::QuitConfirm) return {};
+    const bool forUpdate = quitForUpdate_;
     Reset();
     if (!quit) return {};
-    return {LayoutFlowEffect::Quit, {}, false};
+    return {LayoutFlowEffect::Quit, {}, false, forUpdate};
 }
 
 LayoutFlowStep LayoutDocumentFlow::OnSaveFinished(bool ok) {

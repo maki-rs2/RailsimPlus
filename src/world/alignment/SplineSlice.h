@@ -8,10 +8,12 @@
 #pragma once
 
 #include <vector>
+#include "AlignmentSegment.h"
 
-#include "TrackGraph.h"
 
 namespace rs::world {
+
+struct TrackEdge;
 
 // edge.spline の [s0, s1] 部分列を切り出す。範囲内の既存サンプルはそのまま使い、
 // 両端は EvaluateAt で補間したフレームを新規サンプルとして挿入する(境界がサンプル

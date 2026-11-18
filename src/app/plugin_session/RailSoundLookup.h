@@ -10,7 +10,10 @@
 #include <string>
 
 #include "PluginSelector.h"
-#include "../../world/alignment/TrackGraph.h"
+
+namespace rs::world {
+struct TrackEdge;
+} // namespace rs::world
 
 namespace rs::app {
 

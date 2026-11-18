@@ -1,6 +1,7 @@
 #include "SignalPanelPresentation.h"
 
 #include <unordered_map>
+#include <utility>
 
 namespace rs::app::workspace {
 

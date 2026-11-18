@@ -1,4 +1,5 @@
 #include "Command.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::editor {
 

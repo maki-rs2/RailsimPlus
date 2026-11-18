@@ -2,10 +2,13 @@
 
 #include <cstddef>
 #include <string>
+#include "Guid.h"
+#include "PlatformStopInfo.h"
 
-#include "TrackGraph.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 // idに一致する番線を返す。見つからない場合はnullptrを返す。
 const PlatformStopInfo* FindPlatformById(const TrackGraph& graph, const Guid& id);

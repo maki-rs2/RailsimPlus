@@ -5,6 +5,7 @@
 
 #include "PluginPaths.h"
 #include "../../platform/text/Encoding.h"
+#include "../schema/RailProfileSchema.h"
 
 namespace rs::legacy_plugin {
 

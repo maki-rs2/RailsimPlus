@@ -14,6 +14,8 @@
 #include "AutoCant.h"
 #include "EdgeShapeBuild.h"
 #include "../geometry/EditorGeometryTuning.h"
+#include "SpeedSignal.h"
+#include "TrackGraph.h"
 
 namespace rs::world {
 

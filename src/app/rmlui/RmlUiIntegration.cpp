@@ -12,6 +12,8 @@
 #include <utility>
 
 #include <magic_enum/magic_enum.hpp>
+#include <chrono>
+
 #include <spdlog/spdlog.h>
 
 #include "../../platform/file/AssetPath.h"
@@ -251,7 +253,10 @@ void RmlUiIntegration::NewFrame(float /*deltaSeconds*/) {
     {
         // この間に出たchangeは、データ結線による書き込みや要素の作り直しから来たもの(ユーザーの操作ではない)。
         const ContextUpdateScope updateScope;
+        const std::chrono::steady_clock::time_point tUpdate = std::chrono::steady_clock::now();
         context_->Update();
+        const double updateMs = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - tUpdate).count();
+        if (updateMs >= 100.0) spdlog::warn("[slow] RmlUi.Context.Update {:.0f}ms", updateMs);
     }
     // セグメントボタンのハイライトは区画のレイアウト結果に合わせるため、Update()の後で合わせる
     // (ここで入れた値は次フレームのUpdate()で反映される)。

@@ -3,6 +3,10 @@
 #include <algorithm>
 
 #include "RailLinkOverlay.h"
+#include "PlatformStopInfo.h"
+#include "TrackEdge.h"
+#include "TrackGraph.h"
+#include "TrackNode.h"
 
 namespace rs::world {
 namespace {

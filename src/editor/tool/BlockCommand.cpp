@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <utility>
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::editor {
 

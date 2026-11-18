@@ -122,6 +122,8 @@ body {
     --top-button-help-right: 60dp;
     /* トーストの上端。右上のボタン列の下に置く。= --pad-window(12dp) + --icon-button-size(40dp) + --gap-x(8dp) */
     --toast-top: 76dp; /* = --banner-height(64dp) + --pad-window(12dp) */
+    /* トーストの閉じるボタンの一辺。トーストのアイコン(.ui-icon)と同じ大きさ。 */
+    --toast-close-size: 16dp;
     /* 敷設エディタの幅(画面幅に対する比率)と、右下の既定位置の下端。
        下端は右下の操作説明の上に置く。= --operation-hint-bottom(54dp) + 操作説明の高さ(1行16dp + 上下の余白 --pad-widget-y(4dp) × 2
        + キーの枠 --border-width(1dp) × 2 ≒ 26dp) + --gap-y(6dp) */
@@ -1275,6 +1277,15 @@ img.layout-file-image {
     color: var(--text-accent);
 }
 
+/* 消えない通知の閉じるボタン。 */
+button.toast-close {
+    pointer-events: auto;
+    width: var(--toast-close-size);
+    height: var(--toast-close-size);
+    margin-left: var(--gap-x);
+    vertical-align: middle;
+}
+
 .toast-item.info {
     border-left-color: var(--text-accent);
 }
@@ -1297,6 +1308,19 @@ img.layout-file-image {
 
 .toast-item.error .toast-icon {
     image-color: var(--danger);
+}
+
+/* 更新の通知は重大度の色より後に書き、左線・アイコン・操作ボタンを緑にする。 */
+.toast-item.update {
+    border-left-color: var(--ok);
+}
+
+.toast-item.update .toast-icon {
+    image-color: var(--ok);
+}
+
+.toast-item.update .toast-action {
+    color: var(--ok);
 }
 
 /* ---- モーダル層(主メニュー・ゲーム設定を開いている間だけ出す、§5.1) --------------
@@ -2371,11 +2395,6 @@ button.menu-item:active {
 .rail-label.is-selected {
     background-color: var(--accent-subtle);
     border-color: var(--accent);
-}
-
-.rail-label.is-warning, .rail-label.is-warning .rail-label-name {
-    color: var(--danger);
-    border-color: var(--danger);
 }
 
 button.rail-label-name {
@@ -3750,12 +3769,6 @@ button.mode-button .ic-mode-terrain {
 }
 
 /* ---- 質感(§9) ----------------------------------------------------------- */
-
-/* 閉塞ラベルの警告の印(文字の ⚠ の代わりの素材)。 */
-.rail-label-warning {
-    margin-right: var(--pad-widget-y);
-    image-color: var(--danger);
-}
 
 /* 40dpの丸いボタンの中のアイコンは、見た目も20dpにする(素材は@2xで32px=16dpなので、箱に合わせて広げる)。
    余白 = (--icon-button-size(40dp) - 20dp) / 2 */

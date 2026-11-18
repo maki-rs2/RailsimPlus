@@ -14,10 +14,15 @@
 #include <vector>
 
 #include "../../render/effects/HeadlightFlare.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "../plugin_session/FlareTextureSlots.h"
 #include "SceneSlotPool.h"
 #include "StaticHeadlightRoster.h"
+#include "../../core/Math.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::world { struct SceneEntity; }
 

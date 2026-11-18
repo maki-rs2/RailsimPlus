@@ -2,9 +2,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <unordered_map>
 
 #include "../../core/Epsilon.h"
 #include "../geometry/EditorGeometryTuning.h"
+#include "TrackGraph.h"
+#include "TrackNode.h"
 
 namespace rs::world {
 

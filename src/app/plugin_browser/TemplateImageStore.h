@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "../../render/resource/TextureLoader.h"
+#include "../plugin_session/TrainGroupTemplateParse.h"
 #include "PluginImageWorker.h"
 
 namespace rs::app::plugin_browser {
@@ -37,6 +38,10 @@ using TemplateImageKey = std::uint64_t;
 // テンプレートのファイルと、参照するプラグインの定義ファイルの更新時刻から作る識別子。
 // ファイルを読むので、毎フレームは呼ばず、テンプレートの一覧を読み直したときだけ呼ぶこと。
 TemplateImageKey MakeTemplateImageKey(const TemplateImageSource& source);
+// 編成テンプレートのキー。読み込み済みの結果を渡すので、同じファイルを2回パースせずに済む。
+// MakeTemplateImageKey(kind=Train)と同じ値になる。
+TemplateImageKey MakeTrainTemplateImageKey(const TemplateImageSource& source,
+                                           const TrainGroupTemplateParseResult& parsed);
 
 // RmlUiのテクスチャの名前。キーと相互に変換する。名前でなければ nullopt。
 std::string MakeTemplateImageName(TemplateImageKey key);

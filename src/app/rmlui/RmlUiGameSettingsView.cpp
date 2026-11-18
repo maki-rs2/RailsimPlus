@@ -104,6 +104,10 @@ void RmlUiGameSettingsView::RegisterModel(Rml::DataModelConstructor& constructor
         handle.RegisterMember("version", &GameSettingsTexts::version);
         handle.RegisterMember("copyright", &GameSettingsTexts::copyright);
         handle.RegisterMember("openDownloadPage", &GameSettingsTexts::openDownloadPage);
+        handle.RegisterMember("updateNow", &GameSettingsTexts::updateNow);
+        handle.RegisterMember("cancelUpdate", &GameSettingsTexts::cancelUpdate);
+        handle.RegisterMember("restartForUpdate", &GameSettingsTexts::restartForUpdate);
+        handle.RegisterMember("retryUpdate", &GameSettingsTexts::retryUpdate);
         handle.RegisterMember("updateCheckEnabled", &GameSettingsTexts::updateCheckEnabled);
         handle.RegisterMember("checkNow", &GameSettingsTexts::checkNow);
     }

@@ -15,6 +15,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
 #include <utility>
@@ -53,6 +54,8 @@
 #include "../scene/SceneRenderer.h"
 #include "../settings/UserSettings.h"
 #include "../update/UpdateChecker.h"
+#include "../update/UpdateDownloader.h"
+#include "../update/UpdateStartup.h"
 #include "../ui/EditorViewport.h"
 #include "../ui/ModePanels.h"
 #include "../ui/UiPanels.h"
@@ -120,6 +123,9 @@ struct AppRuntimeState {
     Localization localization;
     UserSettingsData userSettings;
     UpdateChecker updateChecker;
+    UpdateDownloader updateDownloader;
+    // 更新のための終了(未保存の確認つき)を頼む。フレームループの間だけ入っている。
+    std::function<void()> requestRestartForUpdate;
     LayoutDocumentState layoutDocument;
     AutoRecoverySchedule autoRecoverySchedule;
     std::filesystem::path autoRecoveryRoot;
@@ -132,6 +138,11 @@ struct AppRuntimeState {
     bool deviceLostExit = false;
     // 最初のフレームを描き終えたか。これより前に例外で抜けたら「起動できませんでした」を出す。
     bool firstFrameRendered = false;
+    // 終了後に、staging へ用意した新しい版へ差し替えて再起動するか(ShutdownAppRuntime の後に main が行う)。
+    // 差し替えの入力(staging と版)は update に入れておく。
+    bool restartForUpdate = false;
+    // 更新の起動時の判定の結果(前回のロールバック・今回の成功)と、差し替えの入力。
+    UpdateSessionState update;
     // 起動時に復元の画面を出すか。
     bool recoveryChoicePending = false;
 

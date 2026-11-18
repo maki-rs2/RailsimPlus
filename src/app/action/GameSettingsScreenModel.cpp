@@ -75,6 +75,10 @@ GameSettingsTexts BuildGameSettingsTexts(const Localization& localization) {
     texts.version = localization.Text("game_settings.about.version");
     texts.copyright = localization.Text("game_settings.about.copyright");
     texts.openDownloadPage = localization.Text("game_settings.about.open_download_page");
+    texts.updateNow = localization.Text("game_settings.about.update_button");
+    texts.cancelUpdate = localization.Text("game_settings.about.cancel_button");
+    texts.restartForUpdate = localization.Text("game_settings.about.restart_button");
+    texts.retryUpdate = localization.Text("game_settings.about.retry_button");
     texts.updateCheckEnabled = localization.Text("game_settings.about.update_check_enabled");
     texts.checkNow = localization.Text("game_settings.about.check_now");
     return texts;

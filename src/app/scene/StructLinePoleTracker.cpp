@@ -1,6 +1,8 @@
 #include "StructLinePoleTracker.h"
 
 #include "../../plugins/load/PluginDefinitionLookup.h"
+#include <utility>
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 

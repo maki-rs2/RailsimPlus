@@ -2,6 +2,7 @@
 #include "TrainAssembly.h"
 
 #include <algorithm>
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::legacy_plugin {
 

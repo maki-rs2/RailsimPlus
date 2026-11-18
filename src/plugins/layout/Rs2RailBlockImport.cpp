@@ -4,9 +4,11 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "../../world/alignment/BlockRegistry.h"
 #include "Rs2NodeBuild.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::legacy_layout {
 

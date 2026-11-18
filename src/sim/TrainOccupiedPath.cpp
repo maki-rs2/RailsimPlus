@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "../world/alignment/RailLinkOverlay.h"
+#include "../world/alignment/TrackGraph.h"
 namespace rs::sim {
 namespace {
 bool IsConnected(const rs::world::TrackGraph& firstGraph, const rs::world::TrackEdge& first,

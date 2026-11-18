@@ -5,6 +5,7 @@
 #include "BlockRegistry.h"
 #include "PlatformRegistry.h"
 #include "SpeedSignalRegistry.h"
+#include "TrackGraph.h"
 
 namespace rs::world {
 namespace {

@@ -6,12 +6,15 @@
 #include <unordered_set>
 #include <vector>
 
-#include "TrackGraph.h"
-#include "TrackTraversal.h"
+#include "TrackPosition.h"
 #include "WarpForwardScan.h"
 #include "WarpLinkTable.h"
+#include "Guid.h"
+#include "SpeedSignal.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 struct BlockAheadAcrossScenes {
     size_t sceneIndex = 0;

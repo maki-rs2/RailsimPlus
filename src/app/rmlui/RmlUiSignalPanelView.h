@@ -11,10 +11,16 @@
 #include <optional>
 
 #include <RmlUi/Core/DataModelHandle.h>
+#include <utility>
+#include <vector>
 
 #include "../../core/Math.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "../workspace/SignalPanelPresentation.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace Rml {
 class ElementDocument;

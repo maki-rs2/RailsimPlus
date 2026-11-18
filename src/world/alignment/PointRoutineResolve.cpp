@@ -1,9 +1,12 @@
 #include "PointRoutineResolve.h"
 
 #include <algorithm>
+#include <utility>
 
 #include "PointRoutine.h"
 #include "RailLinkOverlay.h"
+#include "TrackEdge.h"
+#include "TrackGraph.h"
 
 namespace rs::world {
 namespace {

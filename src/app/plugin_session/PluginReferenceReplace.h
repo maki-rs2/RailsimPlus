@@ -15,10 +15,10 @@
 
 #include "PluginReferenceWalk.h"
 #include "PluginSelector.h"
-#include "../../plugins/schema/PluginSchema.h"
 #include "../../world/alignment/Guid.h"
 #include "../../world/alignment/IntervalList.h"
-#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/TrackEdge.h"
+#include "../../plugins/schema/PluginHeader.h"
 
 namespace rs::app {
 

@@ -14,37 +14,42 @@ void AppendIndent(std::string& output, int depth) {
     output.append(static_cast<size_t>(depth * kIndentWidth), ' ');
 }
 
-// 改行・インデント無しの1行表現。幅予算の判定と、実際に1行化する際の出力の両方に使う。
-std::string DumpInline(const nlohmann::json& value) {
+// 改行・インデント無しの1行表現を、文字数が limit に収まる間だけ作る。超えた時点で打ち切って false を返す
+// (大きい配列・オブジェクトで、捨てるだけの全体の1行表現を作らないため)。
+bool TryDumpInline(const nlohmann::json& value, std::string& output, std::size_t limit) {
     if (value.is_array()) {
-        std::string output = "[";
+        output.push_back('[');
         for (nlohmann::json::const_iterator it = value.cbegin(); it != value.cend(); ++it) {
             if (it != value.cbegin()) {
                 output.append(", ");
             }
-            output.append(DumpInline(*it));
+            if (output.size() > limit || !TryDumpInline(*it, output, limit)) return false;
         }
         output.push_back(']');
-        return output;
+        return output.size() <= limit;
     }
     if (value.is_object()) {
-        std::string output = "{";
+        output.push_back('{');
         for (nlohmann::json::const_iterator it = value.cbegin(); it != value.cend(); ++it) {
             if (it != value.cbegin()) {
                 output.append(", ");
             }
             output.append(nlohmann::json(it.key()).dump());
             output.append(": ");
-            output.append(DumpInline(it.value()));
+            if (output.size() > limit || !TryDumpInline(it.value(), output, limit)) return false;
         }
         output.push_back('}');
-        return output;
+        return output.size() <= limit;
     }
-    return value.dump();
+    output.append(value.dump());
+    return output.size() <= limit;
 }
 
-bool FitsWidthBudget(const std::string& inlineText, int depth) {
-    return static_cast<int>(inlineText.size()) + depth * kIndentWidth <= kMaxLineWidth;
+// 深さ depth の行へ1行で収まるなら、その1行表現を output へ作って true を返す。
+bool TryDumpInlineAtDepth(const nlohmann::json& value, int depth, std::string& output) {
+    const int limit = kMaxLineWidth - depth * kIndentWidth;
+    if (limit < 0) return false;
+    return TryDumpInline(value, output, static_cast<std::size_t>(limit));
 }
 
 void AppendJson(const nlohmann::json& value, int depth, std::string& output);
@@ -55,8 +60,8 @@ void AppendArray(const nlohmann::json& value, int depth, std::string& output) {
         return;
     }
 
-    const std::string inlineText = DumpInline(value);
-    if (FitsWidthBudget(inlineText, depth)) {
+    std::string inlineText;
+    if (TryDumpInlineAtDepth(value, depth, inlineText)) {
         output.append(inlineText);
         return;
     }
@@ -80,8 +85,8 @@ void AppendObject(const nlohmann::json& value, int depth, std::string& output) {
         return;
     }
 
-    const std::string inlineText = DumpInline(value);
-    if (FitsWidthBudget(inlineText, depth)) {
+    std::string inlineText;
+    if (TryDumpInlineAtDepth(value, depth, inlineText)) {
         output.append(inlineText);
         return;
     }

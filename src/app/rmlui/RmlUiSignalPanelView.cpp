@@ -21,6 +21,7 @@
 #include "../../world/alignment/TrackTraversal.h"
 #include "../action/SignalBlockAction.h"
 #include "../action/SignalPanelAction.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app::rmlui {
 using namespace workspace;

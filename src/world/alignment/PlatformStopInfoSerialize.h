@@ -1,8 +1,8 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
+#include "PlatformStopInfo.h"
 
-#include "TrackGraph.h"
 
 namespace rs::world {
 

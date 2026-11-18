@@ -5,6 +5,7 @@
 #include <unordered_set>
 
 #include "BlockRegistry.h"
+#include "TrackGraph.h"
 
 namespace rs::world {
 

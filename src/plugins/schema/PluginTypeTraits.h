@@ -4,8 +4,8 @@
 #include <iterator>
 
 #include <magic_enum/magic_enum.hpp>
+#include "PluginHeader.h"
 
-#include "PluginSchema.h"
 
 namespace rs::legacy_pi {
 

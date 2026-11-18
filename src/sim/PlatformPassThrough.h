@@ -10,6 +10,10 @@
 
 #include "TrainOccupiedPath.h"
 
+namespace rs::world {
+struct PlatformStopInfo;
+} // namespace rs::world
+
 namespace rs::sim {
 
 // 編成の車体が platformId の番線edge上にあるか。

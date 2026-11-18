@@ -5,6 +5,7 @@
 
 #include "../../world/alignment/BlockRegistry.h"
 #include "../../world/alignment/SpeedSignalRegistry.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::editor {
 

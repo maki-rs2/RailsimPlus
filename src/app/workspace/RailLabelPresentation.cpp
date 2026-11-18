@@ -1,6 +1,7 @@
 #include "RailLabelPresentation.h"
 
 #include <algorithm>
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app::workspace {
 
@@ -14,8 +15,7 @@ std::string BlockDisplayName(const rs::world::Block& block, std::size_t index) {
 
 std::vector<RailLabelItem> BuildRailLabelItems(const rs::world::TrackGraph& graph,
                                               std::span<const RailLabel> labels,
-                                              const rs::world::Guid& selectedBlock,
-                                              std::span<const rs::world::BlockConnectivity> connectivity) {
+                                              const rs::world::Guid& selectedBlock) {
     std::vector<RailLabelItem> items;
     for (std::size_t index = 0; index < graph.blocks.size(); ++index) {
         const rs::world::Block& block = graph.blocks[index];
@@ -23,16 +23,12 @@ std::vector<RailLabelItem> BuildRailLabelItems(const rs::world::TrackGraph& grap
             return candidate.block == block.guid;
         });
         if (label == labels.end()) continue;
-        const auto connected = std::find_if(connectivity.begin(), connectivity.end(),
-            [&block](const rs::world::BlockConnectivity& candidate) { return candidate.block == block.guid; });
-        const bool warning = connected != connectivity.end() && !connected->IsConnected();
         std::size_t verticalIndex = 0;
         for (const RailLabelItem& previous : items) {
             if (previous.anchor == label->anchor) ++verticalIndex;
         }
         items.push_back({block.guid, BlockDisplayName(block, index),
-                         block.guid == selectedBlock, warning, warning ? "danger" : "normal",
-                         label->anchor, verticalIndex});
+                         block.guid == selectedBlock, label->anchor, verticalIndex});
     }
     return items;
 }
@@ -41,7 +37,7 @@ std::vector<RailLabelItem> BuildRailLabelCandidateItems(const rs::world::TrackGr
     const RailLabelAnchor& anchor, std::span<const RailLabelCandidate> candidates) {
     std::vector<RailLabel> labels;
     for (const RailLabelCandidate& candidate : candidates) labels.push_back({candidate.block, anchor});
-    std::vector<RailLabelItem> items = BuildRailLabelItems(graph, labels, rs::world::NilGuid(), {});
+    std::vector<RailLabelItem> items = BuildRailLabelItems(graph, labels, rs::world::NilGuid());
     for (RailLabelItem& item : items) {
         const auto candidate = std::find_if(candidates.begin(), candidates.end(),
             [&item](const RailLabelCandidate& value) { return value.block == item.guid; });

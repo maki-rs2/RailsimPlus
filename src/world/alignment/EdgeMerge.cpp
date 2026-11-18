@@ -15,6 +15,7 @@
 #include "CantControlPoints.h"
 #include "TrackTraversal.h"
 #include "EdgeShapeBuild.h"
+#include "TrackGraph.h"
 
 namespace rs::world {
 

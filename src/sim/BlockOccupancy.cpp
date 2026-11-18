@@ -6,6 +6,7 @@
 
 #include "../core/SpeedUnits.h"
 #include "../world/alignment/TrackForwardScan.h"
+#include "../world/alignment/TrackGraph.h"
 
 namespace rs::sim {
 

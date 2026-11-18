@@ -757,8 +757,92 @@
     "en": "Check now"
   },
   "game_settings.about.update_toast": {
-    "ja": "新しい版 {} があります。設定の『バージョン情報』から開けます。",
-    "en": "Version {} is available. Open Settings > About to visit the download page."
+    "ja": "新しい版 {} があります。",
+    "en": "Version {} is available."
+  },
+  "game_settings.about.update_button": {
+    "ja": "更新する",
+    "en": "Update"
+  },
+  "game_settings.about.cancel_button": {
+    "ja": "キャンセル",
+    "en": "Cancel"
+  },
+  "game_settings.about.restart_button": {
+    "ja": "再起動して更新",
+    "en": "Restart to update"
+  },
+  "game_settings.about.retry_button": {
+    "ja": "もう一度試す",
+    "en": "Try again"
+  },
+  "game_settings.about.downloading": {
+    "ja": "ダウンロード中… {}%({} / {} MB)",
+    "en": "Downloading… {}% ({} / {} MB)"
+  },
+  "game_settings.about.extracting": {
+    "ja": "展開中…",
+    "en": "Extracting…"
+  },
+  "game_settings.about.prepared": {
+    "ja": "{} の更新を準備しました",
+    "en": "Update to {} is ready"
+  },
+  "game_settings.about.prepare_failed": {
+    "ja": "更新の準備に失敗しました: {}",
+    "en": "Could not prepare the update: {}"
+  },
+  "game_settings.about.not_writable_note": {
+    "ja": "このフォルダには書き込めないため、手動で更新してください",
+    "en": "This folder is not writable, so please update manually"
+  },
+  "game_settings.about.failure_download": {
+    "ja": "ダウンロードに失敗しました",
+    "en": "The download failed"
+  },
+  "game_settings.about.failure_verify": {
+    "ja": "ファイルの確認に失敗しました",
+    "en": "The file could not be verified"
+  },
+  "game_settings.about.failure_extract": {
+    "ja": "展開に失敗しました",
+    "en": "Extraction failed"
+  },
+  "game_settings.about.failure_space": {
+    "ja": "空き容量が足りません",
+    "en": "Not enough free disk space"
+  },
+  "game_settings.about.failure_not_writable": {
+    "ja": "このフォルダには書き込めません",
+    "en": "This folder is not writable"
+  },
+  "game_settings.about.download_ready_toast": {
+    "ja": "更新の準備ができました。",
+    "en": "The update is ready."
+  },
+  "game_settings.about.update_failed_toast": {
+    "ja": "更新のダウンロードに失敗しました。",
+    "en": "Could not download the update."
+  },
+  "game_settings.about.update_toast_downloading": {
+    "ja": "更新をダウンロード中… {}%({} / {} MB)",
+    "en": "Downloading the update… {}% ({} / {} MB)"
+  },
+  "game_settings.about.update_toast_checking": {
+    "ja": "更新を確認中…",
+    "en": "Verifying the update…"
+  },
+  "game_settings.about.update_toast_extracting": {
+    "ja": "更新を展開中…",
+    "en": "Extracting the update…"
+  },
+  "game_settings.about.updated_toast": {
+    "ja": "{} に更新しました。",
+    "en": "Updated to version {}."
+  },
+  "game_settings.about.rolled_back_toast": {
+    "ja": "更新に失敗したので、前の版に戻しました。",
+    "en": "The update failed, so the previous version was restored."
   },
   "scene.delete.confirm": {"ja": "「{}」を削除します。", "en": "Delete \"{}\"."},
   "scene.delete.contents": {"ja": "ワープ {} 本と列車 {} 編成も一緒に消えます。", "en": "{} warp(s) and {} train(s) in it will also be removed."},

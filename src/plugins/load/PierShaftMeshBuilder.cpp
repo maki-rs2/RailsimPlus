@@ -11,6 +11,8 @@
 #include <utility>
 
 #include "ProfileMaterial.h"
+#include "../schema/PluginSchema.h"
+#include "../schema/RailProfileSchema.h"
 
 namespace rs::legacy_plugin {
 

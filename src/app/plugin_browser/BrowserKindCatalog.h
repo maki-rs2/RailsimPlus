@@ -11,12 +11,12 @@
 #include <iterator>
 #include <optional>
 
-#include "../../plugins/schema/PluginSchema.h"
 
 #include "../../plugins/schema/PluginTypeTraits.h"
 #include "../workspace/CatalogCheck.h"
 #include "../workspace/EnumIndex.h"
 #include "BrowserTuning.h"
+#include "../../plugins/schema/PluginHeader.h"
 
 namespace rs::app::plugin_browser {
 

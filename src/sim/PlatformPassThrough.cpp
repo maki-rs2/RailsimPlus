@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <limits>
+#include "../world/alignment/TrackGraph.h"
 
 namespace rs::sim {
 namespace {

@@ -4,6 +4,7 @@
 
 #include "../../plugins/schema/PluginSchema.h"
 #include "../../world/alignment/RailLinkOverlay.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 namespace {

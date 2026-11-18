@@ -13,8 +13,12 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../../world/alignment/TrackGraph.h"
 #include "../../world/scene/ManualPlacementOverlay.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::legacy_pi { struct LinePointDef; }
 namespace rs::world { struct SceneEntity; }

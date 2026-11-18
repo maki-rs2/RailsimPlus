@@ -9,9 +9,11 @@
 #include <variant>
 
 #include "../../core/Math.h"
-#include "../alignment/TrackTraversal.h"
+#include "../alignment/TrackPosition.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 // 反転した車両は、軌道の向きに対して水平に半回転させる(個体の向きを軌道へ合わせ直さない)。
 inline constexpr float kReversedCarYawDeg = 180.0f;

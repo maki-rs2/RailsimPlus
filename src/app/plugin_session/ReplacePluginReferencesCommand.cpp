@@ -1,6 +1,7 @@
 #include "ReplacePluginReferencesCommand.h"
 
 #include <utility>
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 

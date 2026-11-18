@@ -9,6 +9,7 @@
 
 #include "../action/LayoutPersistenceAction.h"
 #include "../action/MissingPluginRefreshGate.h"
+#include "SlowSectionLog.h"
 #include "../action/PluginRootAction.h"
 #include "../action/PointRoutineAction.h"
 #include "../action/StationDiaAction.h"
@@ -36,8 +37,7 @@ namespace rs::app {
 void WorkspaceEditorBridge::Tick(rmlui::RmlUiIntegration& rmlUi, const rs::app::input::InputSource& input,
                                  rs::editor::Editor& editor, const rs::editor::PlacePreview& lastArcPreview,
                                  ViewMode& viewMode, const WorkspaceBridgeServices& services,
-                                 PluginSettingsViewportLink& pluginSettingsLink,
-                                 const SignalBlockViewportLink& signalBlockLink, double deltaSeconds,
+                                 PluginSettingsViewportLink& pluginSettingsLink, double deltaSeconds,
                                  float framesPerSecond) {
     editor.BindSceneRegistry(services.sceneRegistry);
     rmlui::RmlUiWorkspaceView* const view = rmlUi.WorkspaceView();
@@ -263,9 +263,9 @@ void WorkspaceEditorBridge::Tick(rmlui::RmlUiIntegration& rmlUi, const rs::app::
     // 前のフレームの描画で測ったカード画像の作成時間を渡す(新しく見せる枚数を決めるため)。
     const RenderInterface_DX12::ResolvedTextureLoadStats loadStats = rmlUi.TakeResolvedTextureLoadStats();
     view->PluginBrowser().ObserveTextureLoads(loadStats.totalMs, loadStats.count);
-    services.pluginBrowser.Tick(services.userSettings.pluginRoots, profile, browserVisible);
+    { SlowSectionLog slow("Bridge.pluginBrowser.Tick"); services.pluginBrowser.Tick(services.userSettings.pluginRoots, profile, browserVisible); }
     Rml::ElementDocument* const document = rmlUi.Document();
-    if (browserVisible && document != nullptr) view->PluginBrowser().Refresh(*document);
+    if (browserVisible && document != nullptr) { SlowSectionLog slow("Bridge.PluginBrowser.Refresh"); view->PluginBrowser().Refresh(*document); }
     if (browserVisible) view->SceneryYawStep().Refresh();
     const bool trainProfile = profile == plugin_browser::BrowserProfile::Train;
     const bool signalMode = GetViewModeTraits(viewMode).signalBlock;
@@ -279,56 +279,61 @@ void WorkspaceEditorBridge::Tick(rmlui::RmlUiIntegration& rmlUi, const rs::app::
         if (signalAction.BlockCreateAnchor(anchor.edge, anchor.s)) blockAnchor = anchor;
         signalCards = BuildSignalPanelSignals(editor.graph, signalAction);
     }
-    view->SignalPanel().Refresh(signalMode, editor.graph, blockAnchor, document, std::move(signalCards));
+    SlowSectionLog slowPanels("Bridge.panels");
+    { SlowSectionLog slow("Bridge.SignalPanel"); view->SignalPanel().Refresh(signalMode, editor.graph, blockAnchor, document, std::move(signalCards)); }
     // 編成リストと編成情報カードは同じ画像を使うので、画像の1フレームの囲みは列車モードの間ここで1回だけ行う。
     rmlui::RmlUiFormationImages& formationImages = view->FormationImages();
     if (trainProfile) formationImages.BeginFrame(services.pluginBrowser);
-    view->FormationList().Refresh(browserVisible && trainProfile, trainProfile, formationImages);
-    view->TrainTab().Refresh(profile, PluginRootAction(services.userSettings).Roots());
+    { SlowSectionLog slow("Bridge.FormationList"); view->FormationList().Refresh(browserVisible && trainProfile, trainProfile, formationImages); }
+    { SlowSectionLog slow("Bridge.TrainTab"); view->TrainTab().Refresh(profile, PluginRootAction(services.userSettings).Roots()); }
     view->CabinHud().Refresh();
-    view->DiaPanel().Tick();
-    view->TrainInfoCard().Refresh(trainProfile, services.layoutSession.activeIndex, deltaSeconds, document,
-                                  formationImages);
+    { SlowSectionLog slow("Bridge.DiaPanel"); view->DiaPanel().Tick(); }
+    { SlowSectionLog slow("Bridge.TrainInfoCard"); view->TrainInfoCard().Refresh(trainProfile, services.layoutSession.activeIndex, deltaSeconds, document,
+                                  formationImages); }
     SceneSignalSidecarSource signalSidecar(services.sceneRenderer);
     SceneSignalAspectSource signalAspects(services.sceneRenderer);
     const SignalBlockViewModel signalPlacement = editor.speedSignalPending
         ? SignalBlockAction(editor, signalSidecar, signalAspects).ViewModel() : SignalBlockViewModel{};
-    view->RailLabel().Refresh(GetViewModeTraits(viewMode).signalBlock, editor.graph, signalBlockLink, signalPlacement,
-                              editor.selectedBlock, services.layoutSession.activeIndex, deltaSeconds, document);
+    { SlowSectionLog slow("Bridge.RailLabel"); view->RailLabel().Refresh(GetViewModeTraits(viewMode).signalBlock, editor.graph, signalPlacement,
+                              editor.selectedBlock, services.layoutSession.activeIndex, deltaSeconds, document); }
     const bool diaMode = GetViewModeTraits(viewMode).stationDia;
-    view->DiaCard().Refresh(diaMode, editor, document);
-    if (trainProfile) {
-        formationImages.EndFrame();
-    } else {
-        formationImages.ReleaseAll();
+    { SlowSectionLog slow("Bridge.DiaCard"); view->DiaCard().Refresh(diaMode, editor, document); }
+    {
+        SlowSectionLog slow("Bridge.formationImages.End");
+        if (trainProfile) formationImages.EndFrame();
+        else formationImages.ReleaseAll();
     }
 
     // ルート管理ウィンドウ: 見えているフレームと、ダイアログが開いているフレーム(ウィンドウを閉じたあとも
     // 結果を受け取る)だけ更新する。
     if (snapshot.Overlay(workspace::OverlayKind::PluginRoots).visible || view->PluginRoots().DialogOpen()) {
+        SlowSectionLog slow("Bridge.PluginRoots");
         view->PluginRoots().Refresh();
     }
 
     // 見つからないプラグイン: 警告バッジはウィンドウの開閉に関係なく出すので、毎フレーム呼ぶ。一覧を作り直すのは
     // 状態の写しが変わったときだけ(MissingPluginRefreshGate)。差し替えのダイアログが開いているフレームも呼ぶ。
     const bool missingWindowVisible = snapshot.Overlay(workspace::OverlayKind::MissingPlugins).visible;
-    view->Tick(deltaSeconds);
-    view->MissingPlugins().Tick(
+    SlowSectionLog slowView("Bridge.viewTick+missing");
+    { SlowSectionLog slow("Bridge.view.Tick"); view->Tick(deltaSeconds); }
+    { SlowSectionLog slow("Bridge.MissingPlugins"); view->MissingPlugins().Tick(
         MakeMissingPluginSignature(editor, services.sceneRegistry, services.layoutSession, services.pluginSelector,
                                    services.userSettings.pluginRoots),
-        deltaSeconds);
+        deltaSeconds); }
     // 全部解決したら閉じる。
     if (missingWindowVisible && view->MissingPlugins().NothingMissing()) {
+        SlowSectionLog slow("Bridge.CloseMissing");
         view->CloseOverlay(workspace::OverlayKind::MissingPlugins);
     }
 
     // ゲーム設定: ダイアログの結果を受け取るため毎フレーム呼ぶ。画面の値は見えているフレームだけ更新される。
     const bool gameSettingsVisible = snapshot.Overlay(workspace::OverlayKind::GameSettings).visible;
-    view->GameSettings().Tick(gameSettingsVisible, framesPerSecond);
-    view->RenderSettings().Tick(); // 言語の切り替えは、窓が閉じていても文言へ反映する
+    { SlowSectionLog slow("Bridge.GameSettings"); view->GameSettings().Tick(gameSettingsVisible, framesPerSecond); }
+    { SlowSectionLog slow("Bridge.RenderSettings"); view->RenderSettings().Tick(); } // 言語の切り替えは、窓が閉じていても文言へ反映する
 
     // プラグイン設定パネル: 見えているフレームだけスイッチ一覧を更新する(対象が消えて閉じた場合は見えない)。
     if (snapshot.Overlay(workspace::OverlayKind::PluginSettingsPanel).visible) {
+        SlowSectionLog slow("Bridge.PluginSettings");
         view->PluginSettings().Refresh(view->PluginSettingsTarget());
     }
 

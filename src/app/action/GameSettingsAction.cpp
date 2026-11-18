@@ -1,6 +1,7 @@
 #include "GameSettingsAction.h"
 
 #include "PluginRootAction.h"
+#include "UpdateAction.h"
 #include "../plugin_session/LayoutDocumentState.h"
 #include "../camera/CameraControl.h"
 #include "../entry/MainWindow.h"
@@ -39,6 +40,18 @@ void GameSettingsAction::CheckForUpdates() {
 
 void GameSettingsAction::OpenUpdateDownloadPage() {
     if (refs_.updateChecker != nullptr) refs_.updateChecker->OpenDownloadPage();
+}
+
+void GameSettingsAction::DownloadUpdate() {
+    UpdateAction(refs_.updateChecker, refs_.updateDownloader, refs_.requestRestartForUpdate).Download();
+}
+
+void GameSettingsAction::CancelUpdateDownload() {
+    UpdateAction(refs_.updateChecker, refs_.updateDownloader, refs_.requestRestartForUpdate).Cancel();
+}
+
+void GameSettingsAction::RestartForUpdate() {
+    UpdateAction(refs_.updateChecker, refs_.updateDownloader, refs_.requestRestartForUpdate).Restart();
 }
 
 void GameSettingsAction::ResetCamera() {

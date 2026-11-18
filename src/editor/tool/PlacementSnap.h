@@ -11,7 +11,12 @@
 #include <vector>
 
 #include "../../core/Math.h"
-#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackEdge;
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::editor {
 

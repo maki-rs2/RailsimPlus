@@ -192,6 +192,10 @@ bool AudioDeviceContext::Update() {
     return Init();
 }
 
+void AudioDeviceContext::Mute() {
+    if (IsValid()) alListenerf(AL_GAIN, 0.0f);
+}
+
 bool AudioDeviceContext::IsValid() const { return device_ != nullptr && context_ != nullptr; }
 
 bool AudioDeviceContext::ConsumeReinitFlag() {

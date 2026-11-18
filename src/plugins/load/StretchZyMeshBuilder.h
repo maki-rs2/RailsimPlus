@@ -5,7 +5,11 @@
 
 #include "../../core/Math.h"
 #include "../../render/mesh/Mesh.h"
-#include "../schema/PluginSchema.h"
+#include "../schema/LineSchema.h"
+
+namespace rs::legacy_pi {
+struct RailProfile;
+} // namespace rs::legacy_pi
 
 namespace rs::legacy_plugin {
 

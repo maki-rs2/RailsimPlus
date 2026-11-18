@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <utility>
+#include <unordered_map>
+#include "TrackGraph.h"
 
 namespace rs::world {
 

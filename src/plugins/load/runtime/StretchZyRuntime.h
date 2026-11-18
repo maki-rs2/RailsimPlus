@@ -5,6 +5,11 @@
 #include <vector>
 
 #include "../StretchZyMeshBuilder.h"
+#include "../../schema/PluginSchema.h"
+
+namespace rs::legacy_pi {
+struct StretchZyDef;
+} // namespace rs::legacy_pi
 
 namespace rs::legacy_plugin {
 

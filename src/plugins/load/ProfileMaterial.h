@@ -10,8 +10,12 @@
 #include <string>
 #include <vector>
 
-#include "../schema/PluginSchema.h"
 #include "../../render/mesh/Mesh.h"
+
+namespace rs::legacy_pi {
+struct ProfileMaterialExtra;
+struct RailProfileVertex;
+} // namespace rs::legacy_pi
 
 namespace rs::legacy_plugin {
 

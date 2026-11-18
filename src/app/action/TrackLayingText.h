@@ -14,7 +14,7 @@
 #include <magic_enum/magic_enum.hpp>
 
 #include "TrackLayingAction.h"
-#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/AlignmentSegment.h"
 
 namespace rs::app {
 

@@ -18,9 +18,15 @@
 #include <vector>
 
 #include "../../plugins/schema/sidecar/StationSidecar.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "../../world/scene/SceneEntity.h"
 #include "../../world/scene/SceneRegistry.h"
+#include "../../world/alignment/Guid.h"
+#include "../../world/alignment/PlatformRoutine.h"
+#include "../../world/alignment/SpeedSignal.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::legacy_pi { struct SwitchDef; }
 

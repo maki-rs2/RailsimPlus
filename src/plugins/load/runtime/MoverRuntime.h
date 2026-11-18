@@ -18,9 +18,15 @@
 
 #include "EaseTable.h"
 #include "TrackingMoveSolve.h"
-#include "../../schema/PluginSchema.h"
 #include "../../schema/SwitchExpr.h"
 #include "../../../core/Math.h"
+#include "../../schema/PartCustomizerSchema.h"
+#include "../../schema/TrackingCustomizerSchema.h"
+#include "../../schema/TriggerInfo.h"
+
+namespace rs::legacy_pi {
+struct ModelPart;
+} // namespace rs::legacy_pi
 
 namespace rs::legacy_plugin {
 

@@ -35,6 +35,10 @@ struct GameSettingsTexts {
     std::string version;
     std::string copyright;
     std::string openDownloadPage;
+    std::string updateNow;
+    std::string cancelUpdate;
+    std::string restartForUpdate;
+    std::string retryUpdate;
     std::string updateCheckEnabled;
     std::string checkNow;
     bool operator==(const GameSettingsTexts&) const = default;
@@ -46,7 +50,9 @@ struct GameSettingsModel {
     std::string tab = "general";
     std::string appVersion;
     std::string updateStatus;
-    bool updateAvailable = false;
+    // 更新のボタン(UpdateButtonName。出さないときは空)と、状態の下の補足。
+    std::string updateButton;
+    std::string updateNote;
     bool updateCheckEnabled = true;
     bool canCheckUpdate = false;
     std::vector<GameSettingsChoice> tabs;

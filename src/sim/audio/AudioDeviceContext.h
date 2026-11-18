@@ -14,6 +14,8 @@ public:
     void Shutdown();
     bool Update();
     bool IsValid() const;
+    // 開いていれば、リスナーの音量を0にして鳴っている音をすぐ止める(音源の削除やデバイスを閉じる処理は待たされることがあるため、先に無音にする)。
+    void Mute();
     bool ConsumeReinitFlag();
 
     // 現在のOpenAL Softが列挙できる再生デバイス名一覧(UTF-8)を返す。

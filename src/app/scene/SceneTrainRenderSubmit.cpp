@@ -18,6 +18,7 @@
 #include "../plugin_session/PluginRuntimeApplier.h"
 #include "../plugin_session/SessionFrameStep.h"
 #include "SceneTrainWheelSound.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 namespace {

@@ -26,9 +26,15 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <cstdint>
 
-#include "../../schema/PluginSchema.h"
 #include "../../schema/SwitchExpr.h"
+#include "../../schema/PartCustomizerSchema.h"
+#include "../../schema/TriggerInfo.h"
+
+namespace rs::legacy_pi {
+struct ModelPart;
+} // namespace rs::legacy_pi
 
 namespace rs::legacy_plugin {
 

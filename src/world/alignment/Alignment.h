@@ -8,10 +8,18 @@
 
 #include <string>
 #include <vector>
+#include <utility>
+#include "../../core/Math.h"
+#include "AlignmentSegment.h"
+#include "Guid.h"
+#include "IntervalList.h"
+#include "TrackEdge.h"
 
-#include "TrackGraph.h"
 
 namespace rs::world {
+
+struct TrackGraph;
+struct TrackNode;
 
 // サンプリングオプション。
 struct AlignmentSampleOptions {

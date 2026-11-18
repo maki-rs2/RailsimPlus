@@ -16,6 +16,7 @@
 #include "../../world/geometry/EditorGeometryTuning.h"
 #include "../../world/geometry/GeometrySolvers.h"
 #include "NodeDragCenterline.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::editor {
 

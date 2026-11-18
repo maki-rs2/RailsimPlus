@@ -233,6 +233,7 @@ void SceneSlotSynchronizer::Sync(App& app, const rs::world::SceneRegistry& regis
         for (size_t index = 0; index < slotPool_.Slots().size(); ++index)
             app.ClearSceneSlot(static_cast<UINT>(index));
         slotPool_.InvalidatePlugins();
+        preloadCache_.clear();
         loadJob_ = LoadJobState{};
         lastSyncedRevision_ = UINT64_MAX;
         pluginGeneration_ = generation;

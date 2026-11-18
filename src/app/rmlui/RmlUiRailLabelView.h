@@ -20,7 +20,6 @@ class Event;
 }
 
 namespace rs::app {
-struct SignalBlockViewportLink;
 struct SignalBlockViewModel;
 }
 
@@ -43,7 +42,7 @@ public:
     bool CancelPendingPlacement() { return cancelPending_ && cancelPending_(); }
     void RegisterModel(Rml::DataModelConstructor& constructor);
     // 3Dホバーは前フレームの結果。ラベル上のポインタはContextの現在の要素から毎フレーム引く。
-    void Refresh(bool active, const rs::world::TrackGraph& graph, const SignalBlockViewportLink& link,
+    void Refresh(bool active, const rs::world::TrackGraph& graph,
                  const SignalBlockViewModel& placement,
                  const rs::world::Guid& selectedBlock, std::size_t sceneIndex, double deltaSeconds,
                  Rml::ElementDocument* document);

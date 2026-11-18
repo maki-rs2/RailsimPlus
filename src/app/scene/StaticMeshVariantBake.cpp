@@ -7,6 +7,7 @@
 #include <cstring>
 #include <memory>
 #include <optional>
+#include <utility>
 
 #include "../../plugins/load/ModelMeshHelpers.h"
 #include "../../plugins/load/runtime/DynamicJointPlacement.h"

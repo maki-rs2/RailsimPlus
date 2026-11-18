@@ -67,7 +67,8 @@ void LayoutDocumentController::Tick(const LayoutDocumentServices& services) {
 
     if (closeRequested_) {
         closeRequested_ = false;
-        Apply(flow_.RequestQuit(services.action.DocumentViewModel().dirty, services.action.DocumentSavedPath()),
+        const bool forUpdate = std::exchange(closeForUpdate_, false);
+        Apply(flow_.RequestQuit(services.action.DocumentViewModel().dirty, services.action.DocumentSavedPath(), forUpdate),
               services);
     }
     if (std::optional<UnsavedChoice> answer = std::exchange(unsavedAnswer_, std::nullopt)) {
@@ -209,6 +210,7 @@ void LayoutDocumentController::Apply(const workspace::LayoutFlowStep& step, cons
         break;
     case LayoutFlowEffect::Quit:
         if (step.discardRecovery) services.action.DiscardCurrentRecovery();
+        if (step.restartForUpdate && services.prepareUpdateRestart) services.prepareUpdateRestart();
         services.mainWindow.CloseNow();
         break;
     }

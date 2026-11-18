@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include "../alignment/TrackGraph.h"
+#include "../alignment/TrackTraversal.h"
 
 namespace rs::world {
 

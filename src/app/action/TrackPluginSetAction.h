@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "ActionError.h"
-#include "../../plugins/schema/PluginSchema.h"
+#include "../../plugins/schema/PluginHeader.h"
 
 namespace rs::editor { class Editor; }
 

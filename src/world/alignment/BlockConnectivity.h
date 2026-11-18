@@ -3,10 +3,13 @@
 #include <cstddef>
 #include <vector>
 
-#include "TrackGraph.h"
 #include "WarpLinkTable.h"
+#include "Guid.h"
 
 namespace rs::world {
+
+struct Block;
+struct TrackGraph;
 
 // 閉塞の範囲の途切れ目。componentのedgeの端(end: 0=nodeA、1=nodeB)で、その先に続くedgeが
 // あるのに閉塞のedgeが1本も無い場所。

@@ -12,6 +12,7 @@
 #include "../../world/alignment/GuidJson.h"
 #include "TrackPluginPlacement.h"
 #include "TrackPluginPlacementTuning.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 

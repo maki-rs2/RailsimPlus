@@ -18,9 +18,13 @@
 
 #include "SimTuning.h"
 #include "TrainLeadingEnd.h"
-#include "../world/alignment/TrackGraph.h"
-#include "../world/alignment/TrackTraversal.h"
+#include "../world/alignment/TrackPosition.h"
 #include "../world/alignment/WarpForwardScan.h"
+#include "../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::sim {
 

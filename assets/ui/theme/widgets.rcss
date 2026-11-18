@@ -286,6 +286,10 @@
     decorator: image(help none scale-none center center);
 }
 
+.ic-check {
+    decorator: image(check none scale-none center center);
+}
+
 .ic-gear {
     decorator: image(gear none scale-none center center);
 }

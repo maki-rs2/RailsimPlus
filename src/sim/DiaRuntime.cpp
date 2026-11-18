@@ -3,8 +3,10 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <utility>
 
 #include "../world/time/GameClock.h"
+#include "../world/alignment/PlatformStopInfo.h"
 
 namespace rs::sim {
 

@@ -280,6 +280,13 @@ void MainWindow::SetCloseRequestHandler(std::function<void()> handler) {
     closeRequestHandler_ = std::move(handler);
 }
 
+void MainWindow::ClearFrameLoopHandlers() {
+    closeRequestHandler_ = nullptr;
+    ctrlWheelHandler_ = nullptr;
+    fovWheelHandler_ = nullptr;
+    modalFrameCallback_ = nullptr;
+}
+
 void MainWindow::CloseNow() {
     closeRequestHandler_ = nullptr;
     PostMessageW(hwnd_, WM_CLOSE, 0, 0);

@@ -14,10 +14,15 @@
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 #include "../../core/Math.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "EditorTypes.h" // PlacePreview
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::editor {
 

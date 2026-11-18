@@ -16,9 +16,15 @@
 
 #include "Alignment.h"
 #include "EdgeShapeGenerator.h"
-#include "TrackGraph.h"
+#include "../../core/Math.h"
+#include "AlignmentSegment.h"
+#include "Guid.h"
+#include "TrackNode.h"
 
 namespace rs::world {
+
+struct TrackEdge;
+struct TrackGraph;
 
 struct EdgeShapeInput {
     EdgeEndPose start;  // dir はピッチ込みの3D単位ベクトル(ノード接線 × 符号)

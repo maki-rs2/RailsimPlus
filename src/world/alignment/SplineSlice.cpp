@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include "TrackTraversal.h"
+#include "TrackEdge.h"
 
 namespace rs::world {
 

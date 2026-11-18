@@ -12,10 +12,12 @@
 #pragma once
 
 #include <vector>
+#include "Guid.h"
 
-#include "TrackGraph.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 // チェーン内の1edge。direction: +1=nodeA→nodeB方向, -1=nodeB→nodeA方向。
 struct EdgeChainStep {

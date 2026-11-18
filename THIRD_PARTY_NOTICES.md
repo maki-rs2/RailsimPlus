@@ -26,6 +26,7 @@ Railsim Plus(仮称)は GNU Lesser General Public License v2.1 のもとで配�
 | CLI11 | コマンドライン | BSD-3-Clause | ヘッダのみ |
 | magic_enum | 列挙の文字列化 | MIT | ヘッダのみ |
 | miniaudio | 音声デコード | MIT-0 / Public Domain | 静的リンク |
+| miniz | 更新用 ZIP の読み込み | MIT | 静的リンク |
 | WinPixEventRuntime | GPU 計測(PIX) | MIT | DLL |
 | Catch2 | テスト(配布物に含めない) | BSL-1.0 | - |
 

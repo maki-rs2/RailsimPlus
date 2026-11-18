@@ -28,6 +28,7 @@
 #include "RmlUiInputSettingsView.h"
 #include "../workspace/GameSettingsPresentation.h"
 #include "../action/GameSettingsAction.h"
+#include "../action/UpdateScreenModel.h"
 #include "../../platform/file/ShellPickerDialog.h"
 
 namespace rs::app::rmlui {
@@ -59,7 +60,7 @@ private:
     void UpdateAboutModel();
     void OnUpdateCheckEnabled(Rml::Event& event);
     void OnCheckUpdate();
-    void OnOpenDownloadPage();
+    void OnUpdateButton();
     void OnSelectTab(const Rml::VariantList& arguments);
     void OnSetLanguage(const Rml::String& key);
     void OnSetUiTheme(const Rml::VariantList& arguments);
@@ -92,6 +93,8 @@ private:
     // 音量を反映してから保存していない間true。
     bool volumeUncommitted_ = false;
     bool timeScaleFocused_ = false;
+    // 画面に出している更新のボタン(押されたときに何をするかの元)。
+    UpdateButton updateButton_ = UpdateButton::None;
     bool suppressTimeScaleBlurCommit_ = false;
     ToastQueue& queue_;
     workspace::GameSettingsPresentation presentation_;

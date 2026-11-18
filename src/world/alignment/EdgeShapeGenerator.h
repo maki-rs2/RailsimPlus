@@ -11,9 +11,10 @@
 #include <string>
 #include <vector>
 
-#include "TrackGraph.h"
 
 #include "../../core/Epsilon.h"
+#include "../../core/Math.h"
+#include "AlignmentSegment.h"
 
 namespace rs::world {
 

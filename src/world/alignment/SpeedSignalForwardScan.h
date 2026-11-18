@@ -5,11 +5,13 @@
 #include <optional>
 #include <vector>
 
-#include "TrackGraph.h"
-#include "TrackTraversal.h"
+#include "TrackPosition.h"
 #include "WarpForwardScan.h"
+#include "Guid.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 // 前方の信号を探す距離[m]。信号の現示は次の信号の現示を見て決めるので、これより離れた
 // 信号は連鎖に入れない。信号が疎な区間でも次の信号まで届く長さにしてある。

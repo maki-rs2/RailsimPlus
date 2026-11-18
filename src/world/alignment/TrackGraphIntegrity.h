@@ -1,10 +1,14 @@
 #pragma once
 
 #include <unordered_set>
+#include <string>
+#include <vector>
+#include "Guid.h"
 
-#include "TrackGraph.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 // 接続点と形の端点の比較には、取り込み時の丸め誤差の余裕を設ける。
 inline constexpr double kLinkEndpointToleranceM = 1.0;

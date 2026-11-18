@@ -5,6 +5,7 @@
 
 #include "TrackPluginPlacement.h"
 #include "../plugin_session/RailTieHeights.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 namespace {

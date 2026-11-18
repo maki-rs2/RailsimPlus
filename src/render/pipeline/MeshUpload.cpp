@@ -169,7 +169,7 @@ void MeshPipeline::ComputeSubmeshCentersAndTransparentTris(const Mesh& mesh) {
 // 全マテリアルの MatData(CPU配列)を構築する。半透明三角形の描画(WBOIT)だけでなく、
 // TrainInstanceBatch::MaterialData()経由でコンシスト個体差(ドア開閉等の
 // per-instanceオーバーライド)のベース値としても参照される(SceneMaterialOverrides.cpp
-// ResolveSceneStaticMaterialOverrides/RestoreBaseTextureIndices)。後者は半透明
+// ResolveSceneMaterialOverrides/RestoreBaseTextureIndices)。後者は半透明
 // submeshの有無と無関係にmaterialIndexで引くため、半透明が0件のジオメトリでも
 // 必ず構築しておく必要がある(半透明三角形が無いバッチだけ
 // このCPU配列が未構築のまま空になると、動的マテリアルのオーバーライドが全滅して

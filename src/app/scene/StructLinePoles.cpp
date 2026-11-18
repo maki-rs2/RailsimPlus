@@ -6,12 +6,14 @@
 #include <cmath>
 #include <numbers>
 #include <unordered_map>
+#include <utility>
 
 #include "../../core/Math.h"
 #include "../../world/alignment/GuidJson.h"
 #include "../../world/scene/ScenePlacement.h"
 #include "../../plugins/schema/PluginSchema.h"
 #include "../../world/scene/SceneEntity.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 

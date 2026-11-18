@@ -6,6 +6,8 @@
 #include "BlockRegistry.h"
 #include "SpeedSignalRegistry.h"
 #include "TravelDirectionFollow.h"
+#include "TrackEdge.h"
+#include "TrackGraph.h"
 
 namespace rs::world {
 namespace {

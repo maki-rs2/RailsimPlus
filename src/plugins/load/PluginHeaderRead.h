@@ -10,8 +10,8 @@
 #pragma once
 
 #include <string>
+#include "../schema/PluginHeader.h"
 
-#include "../schema/PluginSchema.h"
 
 namespace rs::legacy_plugin {
 

@@ -4,6 +4,8 @@
 
 #include <array>
 #include <filesystem>
+#include <mutex>
+#include <unordered_map>
 #include <utility>
 
 #include <nlohmann/json.hpp>
@@ -25,6 +27,7 @@
 #include "../../world/time/GameClockSerialize.h"
 #include "../../world/time/SolarModeNames.h"
 #include "../camera/FlyCameraSerialize.h"
+#include "../scene/ParsedPluginCache.h"
 #include "../scene/SceneRenderer.h"
 #include "LayoutSession.h"
 #include "PluginRootResolver.h"
@@ -135,10 +138,27 @@ const std::vector<std::string>& EmptyPluginRoots() {
 }
 
 rs::legacy_pi::PluginType DefaultClassifyPluginType(const std::string& folderUtf8) {
+    // 定義ファイルの読み直しは保存のたびに数十ミリ秒かかる(自動復元の書き込みで毎回止まる)。
+    // プラグインの読込の世代が変わるまでは、同じフォルダの種別は変わらないので覚えておく。
+    static std::mutex cacheMutex;
+    static std::uint64_t cacheGeneration = 0;
+    static std::unordered_map<std::string, rs::legacy_pi::PluginType> cache;
+    const std::uint64_t generation = GetParsedPluginCache().Generation();
+    {
+        const std::lock_guard<std::mutex> lock(cacheMutex);
+        if (cacheGeneration != generation) {
+            cache.clear();
+            cacheGeneration = generation;
+        }
+        const std::unordered_map<std::string, rs::legacy_pi::PluginType>::const_iterator hit = cache.find(folderUtf8);
+        if (hit != cache.end()) return hit->second;
+    }
     try {
         const rs::legacy_pi::ParsedDefinitionResult result =
             rs::legacy_plugin::LoadPluginDefinition(folderUtf8);
         if (result.ok) {
+            const std::lock_guard<std::mutex> lock(cacheMutex);
+            if (cacheGeneration == generation) cache[folderUtf8] = result.def.header.type;
             return result.def.header.type;
         }
     } catch (const std::exception& exception) {

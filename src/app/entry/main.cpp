@@ -14,6 +14,7 @@
 //
 #include <windows.h>
 
+#include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/spdlog.h>
 
 #include <cstdlib>
@@ -23,6 +24,7 @@
 
 #include "../../platform/text/Encoding.h"
 #include "../../platform/EnvironmentVariable.h"
+#include "../../platform/file/ExecutableDirectory.h"
 #include "../../world/scene/SceneRegistry.h"
 #include "AppCommandLine.h"
 #include "AppRuntime.h"
@@ -39,6 +41,8 @@
 #include "../gpu/App.h"
 #include "../plugin_session/Rs2SceneApplier.h"
 #include "../scene/TrackPluginPlacement.h"
+#include "../update/UpdateRestart.h"
+#include "../update/UpdateStartup.h"
 #include "../ui/EditorViewport.h"
 #include "../../editor/tool/Editor.h"
 
@@ -155,6 +159,16 @@ int main(int argc, char** argv) {
         }
         spdlog::set_level(effectiveLevel);
         spdlog::flush_on(effectiveLevel);
+        // RS_LOG_FILEにパスがあれば、同じ内容をそのファイルへも書く(調査でログを渡すとき用。起動のたび作り直す)。
+        if (const char* logFile = rs::platform::ReadEnvironmentVariable("RS_LOG_FILE")) {
+            try {
+                std::shared_ptr<spdlog::sinks::basic_file_sink_mt> fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, true);
+                fileSink->set_pattern("[%l] %v");
+                spdlog::default_logger()->sinks().push_back(std::move(fileSink));
+            } catch (const spdlog::spdlog_ex& e) {
+                spdlog::warn("[startup] RS_LOG_FILEを開けません: {}", e.what());
+            }
+        }
     }
 #ifdef RS_TUNING_HOT_RELOAD
     // 調整値はログの設定の後(警告を出すため)、描画の初期化の前(起動時に1回だけ読む項目にも届けるため)に読む。
@@ -210,6 +224,15 @@ int main(int argc, char** argv) {
         forceDefFile = rs::platform_text::WideToUtf8(defPath.wstring());
     }
 
+    // 実行ファイルのパスは最初に1回だけ取る(更新で自分をリネームしたあとも、このパスを使う)。
+    // 更新のマーカーの判定は、人が使うGUI起動のときだけ行う(ヘッドレス・無人実行は触らない)。
+    const std::filesystem::path executablePath = rs::platform_file::ExecutablePath();
+    rs::app::StartupMarkerOutcome updateStartup;
+    if (!rs::app::IsUnattendedRun(cli) && !executablePath.empty()) {
+        updateStartup = rs::app::RunStartupMarkerCheck(executablePath, RS_APP_VERSION);
+        if (updateStartup.exitProcess) return 0;
+    }
+
     // 初期化/フレームループ/終了処理はAppRuntimeが受け持つ。
     // main()はCLI解析とヘッドレス早期終了分岐だけを持つ。
     rs::app::AppRuntimeGlobals globals{
@@ -220,12 +243,20 @@ int main(int argc, char** argv) {
         g_lastArcPreview, g_fontRanges,
     };
     rs::app::AppRuntimeState state(forceDefFile);
+    state.update.executablePath = executablePath;
+    state.update.rolledBackNotice = updateStartup.rolledBackNotice;
     try {
         // 失敗の理由のダイアログは InitializeAppRuntime の中で出す。
         if (!rs::app::InitializeAppRuntime(globals, cli, viewerMode, openPluginPath, state))
             return 1;
         rs::app::RunFrameLoop(globals, state);
         rs::app::ShutdownAppRuntime(globals, state);
+        if (state.restartForUpdate && !state.deviceLostExit) {
+            // 差し替えに成功して新しい版を起動したら、そのまま終わる。失敗したときは、戻した状態で通常どおり終了する。
+            const rs::app::UpdateRestartRequest request{executablePath, state.update.stagingDirectory,
+                                                        RS_APP_VERSION, state.update.toVersion};
+            if (rs::app::ApplyUpdateAndRelaunch(request)) return 0;
+        }
         // 起動時に指定したレイアウトを読めなかったら、呼び出し側のスクリプトが気づけるよう失敗で返す。
         if (state.deviceLostExit) return 3;
         return state.startupLayoutFailed ? 2 : 0;

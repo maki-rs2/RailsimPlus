@@ -15,6 +15,7 @@
 #include "../../world/alignment/TrackChain.h"
 #include "../../world/scene/ScenePlacement.h"
 #include "../plugin_session/RailTieHeights.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 

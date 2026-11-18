@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 

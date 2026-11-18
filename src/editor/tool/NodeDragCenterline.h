@@ -15,8 +15,13 @@
 #include <vector>
 
 #include "../../core/Epsilon.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "NodeDragPlan.h"
+#include "../../core/Math.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::editor {
 

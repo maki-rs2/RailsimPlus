@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 #include <spdlog/spdlog.h>
+#include "../../schema/PluginSchema.h"
 
 namespace rs::legacy_plugin {
 

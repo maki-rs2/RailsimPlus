@@ -5,10 +5,13 @@
 
 #include <algorithm>
 #include <limits>
+#include <utility>
 
 #include "../workspace/DiaPanelFormat.h"
 #include "../workspace/RailLabelPresentation.h"
 #include "../../world/alignment/PointHandLinks.h"
+#include "../../world/alignment/PointRoutine.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app::dia_builder {
 namespace {

@@ -10,8 +10,16 @@
 
 #include <string>
 #include <vector>
+#include <optional>
+#include "CustomizerTiming.h"
+#include "EffectorSchema.h"
+#include "LensFlareSchema.h"
+#include "PartCustomizerSchema.h"
+#include "TrackingCustomizerSchema.h"
+#include "TriggerInfo.h"
+#include "WindCustomizerSchema.h"
+#include "parser/Ast.h"
 
-#include "PluginSchema.h"
 
 namespace rs::legacy_pi {
 

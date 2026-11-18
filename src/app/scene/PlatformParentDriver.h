@@ -7,8 +7,15 @@
 #include <vector>
 
 #include "../../core/Math.h"
-#include "../../plugins/schema/PluginSchema.h"
-#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::legacy_pi {
+struct PluginDefinition;
+} // namespace rs::legacy_pi
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::app {
 

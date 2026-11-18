@@ -11,8 +11,8 @@
 #include <vector>
 
 #include "../../core/Math.h"
-#include "../../world/alignment/TrackGraph.h" // rs::world::Guid/NilGuid
 #include "NodeDragPlan.h" // rs::editor::EdgeShapePreview
+#include "../../world/alignment/Guid.h"
 
 namespace rs::editor {
 

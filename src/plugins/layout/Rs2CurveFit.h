@@ -11,7 +11,12 @@
 #include <vector>
 
 #include "Rs2Types.h"
-#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/AlignmentSegment.h"
+
+namespace rs::world {
+struct TrackEdge;
+struct TrackNode;
+} // namespace rs::world
 
 namespace rs::legacy_layout {
 

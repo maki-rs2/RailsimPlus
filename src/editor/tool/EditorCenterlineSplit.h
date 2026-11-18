@@ -5,8 +5,12 @@
 // 中心線edgeへ対応する位置で同期させ、1つのUndo単位(CompositeCommand)にまとめる。
 //
 #pragma once
+#include "../../world/alignment/Guid.h"
 
-#include "../../world/alignment/TrackGraph.h"
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
+
 
 namespace rs::editor {
 

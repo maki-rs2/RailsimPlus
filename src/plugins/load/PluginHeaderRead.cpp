@@ -9,6 +9,7 @@
 #include "../schema/parser/Parser.h"
 #include "../schema/sidecar/StationSidecar.h"
 #include "PluginPaths.h"
+#include "../schema/PluginSchema.h"
 
 namespace rs::legacy_plugin {
 

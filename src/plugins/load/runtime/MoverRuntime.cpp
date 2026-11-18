@@ -4,7 +4,13 @@
 
 #include <cmath>
 #include <cstring>
+#include <map>
+#include <mutex>
 #include <numbers>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include "../../schema/PluginSchema.h"
 
 namespace rs::legacy_plugin {
 
@@ -50,9 +56,16 @@ rs::core::Mat4 Translation(float x, float y, float z) {
 }
 
 // 緩急の指定が無い(両端とも0)ときは直線なので表を持たない。
+// 表は(始点, 終点)の緩急だけで決まり、作るのに数百マイクロ秒かかる(1000分割×二分探索)。
+// カスタマイザが数万個あるプラグインでは同じ値の表を何度も作ることになるので、値ごとに1つを共有する。
 std::shared_ptr<const EaseTable> BuildEaseTable(float start, float end) {
     if (start == 0.0f && end == 0.0f) return nullptr;
-    return std::make_shared<const EaseTable>(start, end);
+    static std::mutex cacheMutex;
+    static std::map<std::pair<float, float>, std::shared_ptr<const EaseTable>> cache;
+    const std::lock_guard<std::mutex> lock(cacheMutex);
+    std::shared_ptr<const EaseTable>& table = cache[{start, end}];
+    if (!table) table = std::make_shared<const EaseTable>(start, end);
+    return table;
 }
 
 MoverItemEase BuildItemEase(const rs::legacy_pi::CustomizerTiming& t) {
@@ -61,6 +74,28 @@ MoverItemEase BuildItemEase(const rs::legacy_pi::CustomizerTiming& t) {
     if (t.RevEaseStart() == t.easeStart && t.RevEaseEnd() == t.easeEnd) e.reverse = e.forward;
     else e.reverse = BuildEaseTable(t.RevEaseStart(), t.RevEaseEnd());
     return e;
+}
+
+// 発動条件(TriggerInfo)の全フィールドを並べた文字列。同じ条件のグループを表で引くためのキー
+// (TriggerInfo::operator== が比べるフィールドを全部含める。区切りは値に現れない制御文字)。
+std::string TriggerGroupKey(const rs::legacy_pi::TriggerInfo& trig) {
+    std::string key;
+    for (const rs::legacy_pi::TriggerStep& step : trig.chain) {
+        key += static_cast<char>('0' + static_cast<int>(step.trigger));
+        key += step.switchIsExpression ? 'E' : 'e';
+        key += step.isDefaultCase ? 'D' : 'd';
+        key += step.negateCondition ? 'N' : 'n';
+        key += '\x1f';
+        key += step.switchName;
+        key += '\x1f';
+        for (const int value : step.caseValues) key += std::to_string(value) + ',';
+        key += '\x1f';
+        for (const int value : step.declaredCaseValues) key += std::to_string(value) + ',';
+        key += '\x1f';
+        key += step.condition;
+        key += '\x1e';
+    }
+    return key;
 }
 
 } // namespace
@@ -109,23 +144,20 @@ void PartMoverRuntime::Build(const rs::legacy_pi::ModelPart& part) {
     if (part.kind != "Object3D" && part.kind != "Object" && part.kind != "Model") return;
     trackingMoves_ = part.trackingMoves;
 
+    // 既存グループに同一トリガ(chain構造が完全一致)があれば追加、無ければ新規グループ。
+    // カスタマイザが数万個あるプラグイン(駅のドアなど)で、グループを先頭から探すと二乗の時間がかかるため、
+    // トリガのキーで表を引く。
+    std::unordered_map<std::string, size_t> groupByTrigger;
+    groupByTrigger.reserve(part.customizers.size());
     for (const auto& c : part.customizers) {
-        // 既存グループに同一トリガ(chain構造が完全一致)があれば追加、
-        // 無ければ新規グループ。
-        int found = -1;
-        for (size_t i = 0; i < groups_.size(); ++i) {
-            if (groups_[i].trig == c.trig) {
-                found = static_cast<int>(i);
-                break;
-            }
-        }
-        if (found < 0) {
+        const std::pair<std::unordered_map<std::string, size_t>::iterator, bool> inserted =
+            groupByTrigger.emplace(TriggerGroupKey(c.trig), groups_.size());
+        if (inserted.second) {
             MoverGroup g;
             g.trig = c.trig;
             groups_.push_back(std::move(g));
-            found = static_cast<int>(groups_.size()) - 1;
         }
-        groups_[found].items.push_back(c);
+        groups_[inserted.first->second].items.push_back(c);
     }
 
     active_.assign(groups_.size(), false);

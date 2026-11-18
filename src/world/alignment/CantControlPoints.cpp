@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include "TrackEdge.h"
 
 namespace rs::world {
 

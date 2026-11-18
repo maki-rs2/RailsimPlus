@@ -1,7 +1,12 @@
 #include "RmlUiTrainTabView.h"
 
+#include <algorithm>
+#include <chrono>
 #include <optional>
 #include <string>
+#include <unordered_map>
+
+#include <spdlog/spdlog.h>
 
 #include <RmlUi/Core/DataStructHandle.h>
 #include <RmlUi/Core/DataStructHandle.h>
@@ -13,6 +18,8 @@
 #include "RmlUiUpdateVariable.h"
 #include "../action/FormationAction.h"
 #include "../plugin_browser/PluginBrowserService.h"
+#include "../plugin_browser/TemplateCardInfoWorker.h"
+#include "../scene/ParsedPluginCache.h"
 #include "../plugin_session/TemplateSaver.h"
 #include "../plugin_session/TrainGroupTemplateParse.h"
 #include "../../platform/text/Encoding.h"
@@ -27,6 +34,10 @@ constexpr const char* kTemplatesKey = "browserTemplates";
 constexpr const char* kTemplateTabVisibleKey = "templateTabVisible";
 constexpr const char* kPageList = "list";
 constexpr const char* kPageBrowser = "browser";
+
+double ElapsedMs(std::chrono::steady_clock::time_point from) {
+    return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - from).count();
+}
 } // namespace
 
 // テンプレートのカード1枚(データモデルの `browserTemplates` の要素)。
@@ -43,7 +54,21 @@ struct TrainTabModel {
     bool templatesOpen = false;
     // テンプレートの分類のタブを出すか(レール・情景・列車のプロファイル)。
     bool templateTabVisible = false;
+    // 画面に出す行。分類のタブが開いている間だけ入れる(閉じている間も要素を作ると、列車モードの出入りのたびに
+    // 数百枚のカードを作って壊すので止まる)。
     Rml::Vector<TemplateCardRow> templates;
+    // 両数・警告・画像を埋めていく作業用の行。画面には出さない。
+    Rml::Vector<TemplateCardRow> cards;
+};
+
+struct RmlUiTrainTabView::ListRequest {
+    std::uint64_t round = 0;
+    std::string root;
+    std::vector<TemplateKind> kinds;
+};
+struct RmlUiTrainTabView::ListResult {
+    std::uint64_t round = 0;
+    std::vector<std::pair<TemplateKind, std::vector<std::string>>> lists;
 };
 
 RmlUiTrainTabView::RmlUiTrainTabView(ToastQueue& queue) : queue_(queue), model_(std::make_unique<TrainTabModel>()) {}
@@ -81,8 +106,13 @@ void RmlUiTrainTabView::Refresh(plugin_browser::BrowserProfile profile, const st
     const std::string root = pluginRoots.empty() ? std::string() : pluginRoots.front();
     const bool visible = !TemplateKindsFor(profile).empty();
     UpdateVariable(modelHandle_, kTemplateTabVisibleKey, model_->templateTabVisible, visible);
-    if (profile == profile_ && root == pluginRoot_) {
+    // プラグインの読込の世代が変わると、求めた画像のキーが古くなるので、一覧を読み直して頼み直す。
+    if (profile == profile_ && root == pluginRoot_ &&
+        (listPending_ || GetParsedPluginCache().Generation() == infoGeneration_)) {
+        PollTemplateList();
+        PollTemplateCardInfo();
         UpdateTemplateImages();
+        SyncShownTemplates();
         return;
     }
     // プロファイルが変わったら、開いていた分類は閉じる(別の種類のテンプレートを見せない)。
@@ -90,49 +120,136 @@ void RmlUiTrainTabView::Refresh(plugin_browser::BrowserProfile profile, const st
         SetTemplatesOpen(false);
         // 列車モードに入るたびに、編成一覧のページから始める。
         if (profile == plugin_browser::BrowserProfile::Train) SetPage(kPageList);
+        model_->cards.clear(); // 別の種類の行の両数・画像を、同じ名前へ引き継がない
+        cardsChanged_ = true;
     }
     profile_ = profile;
     pluginRoot_ = root;
     ReloadTemplates();
+    PollTemplateList();
     UpdateTemplateImages();
+    SyncShownTemplates();
 }
 
 void RmlUiTrainTabView::ReloadTemplates() {
+    if (!listWorker_) {
+        listWorker_ = std::make_unique<rs::platform_thread::WorkerThread<ListRequest, ListResult>>(
+            [](const ListRequest& request, std::stop_token) {
+                ListResult result;
+                result.round = request.round;
+                for (const TemplateKind kind : request.kinds) {
+                    result.lists.emplace_back(kind, ListTemplateNames(request.root, kind));
+                }
+                return result;
+            });
+    }
+    listWorker_->ClearPending(); // 古い頼みは捨てる(プロファイルの切り替えを繰り返しても溜めない)
+    ListRequest request;
+    request.round = ++listRound_;
+    request.root = pluginRoot_;
+    request.kinds = TemplateKindsFor(profile_);
+    listWorker_->Post(std::move(request), 0);
+    listPending_ = true;
+}
+
+void RmlUiTrainTabView::PollTemplateList() {
+    if (!listWorker_ || !listPending_) return;
+    std::vector<ListResult> results = listWorker_->Drain(8);
+    // 今の回の結果だけ使う(古い回の結果は捨てる)。
+    const std::vector<ListResult>::iterator current =
+        std::find_if(results.begin(), results.end(), [this](const ListResult& r) { return r.round == listRound_; });
+    if (current == results.end()) return;
+    listPending_ = false;
+    const ListResult& listed = *current;
+    using Clock = std::chrono::steady_clock;
+    const Clock::time_point tStart = Clock::now();
+    std::size_t templateCount = 0;
+    // 同じ名前の行は、新しい結果が届くまで前の両数・警告・画像を出しておく(開くたびに空白にならないように)。
+    std::unordered_map<std::string, std::size_t> previousRows;
+    for (std::size_t i = 0; i < model_->cards.size(); ++i) previousRows[model_->cards[i].name] = i;
+    const Rml::Vector<TemplateCardRow> previous = model_->cards;
+
     Rml::Vector<TemplateCardRow> rows;
-    std::vector<plugin_browser::WantedTemplateImage> requests;
-    std::vector<std::size_t> requestRows;
-    for (const TemplateKind kind : TemplateKindsFor(profile_)) {
-        for (const std::string& name : ListTemplateNames(pluginRoot_, kind)) {
-            TemplateCardRow row;
+    std::vector<std::optional<plugin_browser::TemplateImageSource>> sources;
+    for (const std::pair<TemplateKind, std::vector<std::string>>& list : listed.lists) {
+        const TemplateKind kind = list.first;
+        const std::vector<std::string>& names = list.second;
+        templateCount += names.size();
+        for (const std::string& name : names) {
+            const std::unordered_map<std::string, std::size_t>::const_iterator old = previousRows.find(name);
+            TemplateCardRow row = old != previousRows.end() ? previous[old->second] : TemplateCardRow();
             row.name = name;
             // 編成・敷設は画像を撮る。両数と見つからない車両の警告は編成だけ(情景は名前だけ)。
-            // path::string() はANSIコードページで返すので、日本語の名前がUTF-8として読めなくなる。
-            const std::string path = rs::platform_text::WideToUtf8(TemplateSavePath(pluginRoot_, kind, name).wstring());
             if (kind == TemplateKind::TrainGroupTemplate || kind == TemplateKind::RailwayPluginSet) {
-                plugin_browser::WantedTemplateImage wanted;
-                wanted.source.kind = kind == TemplateKind::TrainGroupTemplate ? plugin_browser::TemplateImageKind::Train
-                                                                              : plugin_browser::TemplateImageKind::Rail;
-                wanted.source.pathUtf8 = path;
-                wanted.source.rootUtf8 = pluginRoot_;
-                wanted.key = plugin_browser::MakeTemplateImageKey(wanted.source);
-                requests.push_back(std::move(wanted));
-                requestRows.push_back(rows.size());
-            }
-            if (kind == TemplateKind::TrainGroupTemplate) {
-                const TrainGroupTemplateSummary summary =
-                    SummarizeTrainGroupTemplate(ParseTrainGroupTemplateFile(path, pluginRoot_));
-                row.count = std::to_string(summary.carCount) + "両";
-                row.missing = summary.missingCount > 0;
+                plugin_browser::TemplateImageSource source;
+                source.kind = kind == TemplateKind::TrainGroupTemplate ? plugin_browser::TemplateImageKind::Train
+                                                                       : plugin_browser::TemplateImageKind::Rail;
+                // path::string() はANSIコードページで返すので、日本語の名前がUTF-8として読めなくなる。
+                source.pathUtf8 = rs::platform_text::WideToUtf8(TemplateSavePath(pluginRoot_, kind, name).wstring());
+                source.rootUtf8 = pluginRoot_;
+                sources.push_back(std::move(source));
+            } else {
+                sources.push_back(std::nullopt);
             }
             rows.push_back(std::move(row));
         }
     }
-    imageRequests_ = std::move(requests);
-    imageRequestRows_ = std::move(requestRows);
-    // 名前・両数・警告が前と同じ一覧でも、中身が書き換わるとキーが変わるので、毎回作り直して、撮れている画像を入れ直す。
-    model_->templates = std::move(rows);
+    // 前の回の結果は捨て、画像の要求は、キーが届いた行から作る。
+    rowSources_ = std::move(sources);
+    rowWanted_.assign(rowSources_.size(), std::nullopt);
+    imageRequests_.clear();
+    imageRequestRows_.clear();
+    model_->cards = std::move(rows);
+    cardsChanged_ = true;
+
+    const Clock::time_point tPost = Clock::now();
+    if (!infoWorker_) infoWorker_ = std::make_unique<plugin_browser::TemplateCardInfoWorker>();
+    infoGeneration_ = GetParsedPluginCache().Generation();
+    const std::uint64_t round = infoWorker_->Begin();
+    for (std::size_t row = 0; row < rowSources_.size(); ++row) {
+        if (rowSources_[row].has_value()) infoWorker_->Post(round, row, *rowSources_[row], infoGeneration_);
+    }
+    const double postMs = ElapsedMs(tPost);
+    const double totalMs = ElapsedMs(tStart);
+    if (totalMs >= 100.0) {
+        spdlog::warn("[slow] PollTemplateList(描画スレッド) {:.0f}ms 件数={} ワーカーへの依頼={:.0f}ms",
+                     totalMs, templateCount, postMs);
+    }
+}
+
+bool RmlUiTrainTabView::PollTemplateCardInfo() {
+    if (!infoWorker_) return false;
+    const std::chrono::steady_clock::time_point tStart = std::chrono::steady_clock::now();
+    const std::vector<plugin_browser::TemplateCardInfoResult> results = infoWorker_->Drain(infoGeneration_);
+    if (results.empty()) return false;
+    for (const plugin_browser::TemplateCardInfoResult& result : results) {
+        if (result.row >= model_->cards.size() || !rowSources_[result.row].has_value()) continue;
+        TemplateCardRow& card = model_->cards[result.row];
+        if (result.info.hasSummary) {
+            card.count = std::to_string(result.info.carCount) + "両";
+            card.missing = result.info.missingCount > 0;
+        }
+        plugin_browser::WantedTemplateImage wanted;
+        wanted.key = result.info.imageKey;
+        wanted.source = *rowSources_[result.row];
+        rowWanted_[result.row] = std::move(wanted);
+    }
+    RebuildImageRequests();
     ApplyTemplateImages();
-    if (modelHandle_) modelHandle_.DirtyVariable(kTemplatesKey);
+    cardsChanged_ = true;
+    const double ms = ElapsedMs(tStart);
+    if (ms >= 50.0) spdlog::warn("[slow] PollTemplateCardInfo(描画スレッド) {:.0f}ms 結果={}件", ms, results.size());
+    return true;
+}
+
+void RmlUiTrainTabView::RebuildImageRequests() {
+    imageRequests_.clear();
+    imageRequestRows_.clear();
+    for (std::size_t row = 0; row < rowWanted_.size(); ++row) {
+        if (!rowWanted_[row].has_value()) continue;
+        imageRequests_.push_back(*rowWanted_[row]);
+        imageRequestRows_.push_back(row);
+    }
 }
 
 bool RmlUiTrainTabView::ApplyTemplateImages() {
@@ -141,12 +258,12 @@ bool RmlUiTrainTabView::ApplyTemplateImages() {
     bool changed = false;
     for (std::size_t i = 0; i < imageRequests_.size(); ++i) {
         const std::size_t row = imageRequestRows_[i];
-        if (row >= model_->templates.size()) continue;
+        if (row >= model_->cards.size()) continue;
         const plugin_browser::TemplateImageKey key = imageRequests_[i].key;
         const Rml::String image =
             store.Find(key) != nullptr ? plugin_browser::MakeTemplateImageName(key) : Rml::String();
-        if (model_->templates[row].image == image) continue;
-        model_->templates[row].image = image;
+        if (model_->cards[row].image == image) continue;
+        model_->cards[row].image = image;
         changed = true;
     }
     return changed;
@@ -155,7 +272,21 @@ bool RmlUiTrainTabView::ApplyTemplateImages() {
 void RmlUiTrainTabView::UpdateTemplateImages() {
     if (browser_ == nullptr || !model_->templateTabVisible || !model_->templatesOpen) return;
     browser_->TemplateImages().Request(imageRequests_, browser_->ImageWorker());
-    if (ApplyTemplateImages() && modelHandle_) modelHandle_.DirtyVariable(kTemplatesKey);
+    if (ApplyTemplateImages()) cardsChanged_ = true;
+}
+
+void RmlUiTrainTabView::SyncShownTemplates() {
+    const bool shown = model_->templateTabVisible && model_->templatesOpen;
+    if (!shown) {
+        if (model_->templates.empty()) return;
+        model_->templates.clear();
+    } else {
+        // 開いた直後は、作業用の行が変わっていなくても行数が違うので写す。
+        if (!cardsChanged_ && model_->templates.size() == model_->cards.size()) return;
+        model_->templates = model_->cards;
+    }
+    cardsChanged_ = false;
+    if (modelHandle_) modelHandle_.DirtyVariable(kTemplatesKey);
 }
 
 void RmlUiTrainTabView::SetPage(const char* page) {

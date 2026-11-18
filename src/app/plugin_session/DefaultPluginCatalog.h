@@ -14,10 +14,10 @@
 #include <string>
 #include <vector>
 
-#include "../../plugins/schema/PluginSchema.h"
 
 #include "../../plugins/schema/PluginTypeTraits.h"
 #include "../../world/scene/SceneEntity.h"
+#include "../../plugins/schema/PluginHeader.h"
 
 namespace rs::world { class SceneRegistry; }
 

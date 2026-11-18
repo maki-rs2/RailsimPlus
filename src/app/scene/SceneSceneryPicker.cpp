@@ -4,6 +4,7 @@
 #include "../../world/scene/ScenePlacement.h"
 #include <cstring>
 #include <functional>
+#include "../../world/alignment/TrackGraph.h"
 namespace rs::app {
 namespace {
 ScenePickItem BuildItem(const rs::world::SceneEntity& entity, const rs::world::TrackGraph& graph, StaticMeshCache& staticMeshCache, std::vector<SceneSlotPool::Slot>& slots, const std::function<int(const rs::world::Guid&)>& findSlotByEntityId, std::vector<std::string>& log) {

@@ -17,10 +17,10 @@
 #include "StaticInstanceKey.h"
 #include "StaticMeshVariantSet.h"
 #include "../plugin_session/PluginSession.h"
-#include "../../plugins/schema/PluginSchema.h"
 #include "../../plugins/schema/sidecar/StationSidecar.h"
 #include "../../plugins/schema/sidecar/TrainSidecar.h"
 #include "../../render/mesh/Mesh.h"
+#include "../../plugins/schema/SwitchDef.h"
 
 namespace rs::app {
 

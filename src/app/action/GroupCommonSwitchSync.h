@@ -12,8 +12,8 @@
 #include <string>
 #include <vector>
 
-#include "../../plugins/schema/PluginSchema.h"
 #include "../../world/alignment/Guid.h"
+#include "../../plugins/schema/SwitchDef.h"
 
 namespace rs::world {
 class SceneRegistry;

@@ -6,6 +6,13 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <unordered_map>
+#include <utility>
+#include "../../core/Math.h"
+#include "AlignmentSegment.h"
+#include "TrackEdge.h"
+#include "TrackGraph.h"
+#include "TrackNode.h"
 
 namespace rs::world {
 

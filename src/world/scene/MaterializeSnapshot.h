@@ -6,10 +6,14 @@
 #include <string>
 #include <vector>
 
-#include "../alignment/TrackGraph.h"
 #include "ManualPlacementOverlay.h"
+#include "../alignment/Guid.h"
+#include "../alignment/IntervalList.h"
+#include "../alignment/TrackEdge.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 // 区間構成（分割位置）を変えず、全spanから指定folderを一つ取り除く。
 // 実体化はfolder不在で表現するため、その自動生成入力を除外する。

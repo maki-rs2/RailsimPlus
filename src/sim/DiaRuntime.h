@@ -29,11 +29,16 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../world/alignment/TrackGraph.h"
 #include "../world/scene/TrainRunInfoRegistry.h"
 #include "../world/scene/TrainTagRegistry.h"
 #include "../world/scene/TrainId.h"
 #include "SimTuning.h"
+#include "../world/alignment/Guid.h"
+#include "../world/alignment/PlatformRoutine.h"
+
+namespace rs::world {
+struct PlatformStopInfo;
+} // namespace rs::world
 
 namespace rs::sim {
 

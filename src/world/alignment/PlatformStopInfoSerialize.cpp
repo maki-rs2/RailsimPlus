@@ -1,6 +1,7 @@
 #include "PlatformStopInfoSerialize.h"
 
 #include <spdlog/spdlog.h>
+#include <utility>
 
 #include "GuidJson.h"
 #include "JsonReadValue.h"

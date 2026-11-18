@@ -12,7 +12,11 @@
 
 #include "Rs2NodeBuild.h"
 #include "Rs2Types.h"
-#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/TrackEdge.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::legacy_layout {
 

@@ -15,7 +15,10 @@
 #include "../../plugins/layout/Rs2Types.h"
 #include "../../sim/DiaRuntime.h"
 #include "../../sim/TrainRuntime.h"
-#include "../../world/alignment/TrackGraph.h"
+
+namespace rs::world {
+struct PlatformStopInfo;
+} // namespace rs::world
 
 namespace rs::app {
 

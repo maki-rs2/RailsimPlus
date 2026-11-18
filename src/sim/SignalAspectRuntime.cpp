@@ -5,6 +5,7 @@
 #include "SimTuning.h"
 #include "../world/alignment/SpeedSignalForwardScan.h"
 #include "../world/alignment/SpeedSignalRegistry.h"
+#include "../world/alignment/TrackGraph.h"
 
 namespace rs::sim {
 

@@ -12,9 +12,13 @@
 #include <vector>
 
 #include "Alignment.h"
-#include "TrackGraph.h"
+#include "AlignmentSegment.h"
+#include "Guid.h"
 
 namespace rs::world {
+
+struct TrackEdge;
+struct TrackGraph;
 
 //自動モードで形を作るときに使うカント一式(TrackEdge の同名フィールドと同じ単位)。
 struct AutoCantValues {

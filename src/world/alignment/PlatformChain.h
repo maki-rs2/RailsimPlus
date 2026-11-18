@@ -6,8 +6,11 @@
 #include <vector>
 
 #include "TrackForwardScan.h"
+#include "PlatformStopInfo.h"
 
 namespace rs::world {
+
+struct PlatformStopInfo;
 
 // 番線チェーンは「進行方向で見た番線」であり、番線そのものの内在的な属性ではない。
 // 同じ番線でも反対側から進入すれば orderedEdges は逆順になり、始端は反対の端になる。

@@ -13,11 +13,21 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <array>
 
 #include "../../world/alignment/Alignment.h"
 #include "../../world/alignment/EdgeSplitMerge.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "../../world/alignment/WarpLinkTable.h"
+#include "../../core/Math.h"
+#include "../../world/alignment/AlignmentSegment.h"
+#include "../../world/alignment/Guid.h"
+#include "../../world/alignment/IntervalList.h"
+#include "../../world/alignment/TrackEdge.h"
+#include "../../world/alignment/TrackNode.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::world { class SceneRegistry; }
 

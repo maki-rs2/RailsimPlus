@@ -10,6 +10,7 @@
 
 #include "../../world/alignment/GuidJson.h"
 #include "../../world/alignment/TrackTraversal.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 namespace {

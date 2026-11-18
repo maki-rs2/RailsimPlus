@@ -10,11 +10,15 @@
 //
 #pragma once
 
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include <RmlUi/Core/DataModelHandle.h>
+
+#include "../../platform/thread/WorkerThread.h"
 
 #include "../plugin_browser/BrowserProfileCatalog.h"
 #include "../plugin_browser/TemplateImageStore.h"
@@ -24,6 +28,7 @@ class Editor;
 }
 namespace rs::app::plugin_browser {
 class PluginBrowserService;
+class TemplateCardInfoWorker;
 }
 namespace rs::app {
 struct FormationRefs;
@@ -56,11 +61,20 @@ public:
 private:
     void SetPage(const char* page);
     void SetTemplatesOpen(bool open);
+    // テンプレートの名前の一覧(保存先のフォルダの列挙)をワーカーへ頼む。ディスクが冷えていると秒単位でかかるので、描画スレッドでは読まない。
     void ReloadTemplates();
+    // 一覧が届いていれば、名前だけで行を作り直し、両数・警告・画像のキーはワーカーへ頼む。
+    void PollTemplateList();
+    // ワーカーが求め終えた両数・警告・画像のキーを、毎フレーム行へ反映する。変わった行があれば true。
+    bool PollTemplateCardInfo();
+    // rowWanted_ から、画像を撮る要求を行の順に作り直す。
+    void RebuildImageRequests();
     // 分類を開いている間、カードの画像を要求し、撮れたものをカードへ出す。
     void UpdateTemplateImages();
     // 撮れている画像を、カードの行へ入れる。変わった行があれば true(再描画の合図は呼び出し側が出す)。
     bool ApplyTemplateImages();
+    // 画面に出す行を、分類のタブが開いているときだけ作業用の行から写す(閉じたら空にする)。
+    void SyncShownTemplates();
 
     ToastQueue& queue_;
     std::unique_ptr<FormationRefs> refs_;
@@ -75,6 +89,19 @@ private:
     // 画像を撮るカードの要求(編成・敷設のテンプレートだけ)と、そのカードの行の番号。一覧を読み直すたびに作り直す。
     std::vector<plugin_browser::WantedTemplateImage> imageRequests_;
     std::vector<std::size_t> imageRequestRows_;
+    // 行ごとの、画像を撮るテンプレート(編成・敷設だけ。情景は nullopt)と、ワーカーが画像のキーを返した行の要求。
+    std::vector<std::optional<plugin_browser::TemplateImageSource>> rowSources_;
+    std::vector<std::optional<plugin_browser::WantedTemplateImage>> rowWanted_;
+    bool cardsChanged_ = false; // 作業用の行が、画面に出した行から変わった
+    // 両数・警告・画像のキーを求めるワーカー(初めて一覧を読むときに作る)と、いま待っている結果の世代。
+    std::unique_ptr<plugin_browser::TemplateCardInfoWorker> infoWorker_;
+    std::uint64_t infoGeneration_ = 0;
+    // 名前の一覧を列挙するワーカー(初めて頼むときに作る)。頼んだ回と、結果待ちかどうか。
+    struct ListRequest;
+    struct ListResult;
+    std::unique_ptr<rs::platform_thread::WorkerThread<ListRequest, ListResult>> listWorker_;
+    std::uint64_t listRound_ = 0;
+    bool listPending_ = false;
 };
 
 } // namespace rs::app::rmlui

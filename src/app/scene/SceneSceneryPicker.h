@@ -9,7 +9,11 @@
 #include "SceneSlotPool.h"
 #include "SignalModelSet.h"
 #include "../../world/scene/SceneRegistry.h"
-#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::app {
 

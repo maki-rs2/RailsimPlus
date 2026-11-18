@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <vector>
+#include "../../world/alignment/Guid.h"
 
-#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::editor {
 

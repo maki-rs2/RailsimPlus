@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "../../world/alignment/TrackTraversal.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app::workspace {
 namespace {

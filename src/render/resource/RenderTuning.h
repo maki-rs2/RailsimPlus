@@ -33,7 +33,7 @@ struct RenderTuning {
     float nightAmbientIntensity = 0.10f;
     // 標準の空(暗順応が有効)の環境光の下限。拡散の環境光を max(環境光, この値 × 青みの色) へ切り上げる(albedoを掛ける前、暗順応を掛けた後の値)。
     // 月のない真夜中だけが下限に届き、月夜・薄明・昼は環境光のほうが明るいので変わらない。0なら切り上げなし。
-    float nightAmbientFloor = 0.03f;
+    float nightAmbientFloor = 0.022f;
     // 直射光の鏡面ハイライトのスペキュラAA(画面上の法線の変化量に応じて roughness を広げる)の強さ。
     // 0で無効、1で標準(Kaplanyan 2016 / Tokuyoshi の方式。分散の係数0.25・上限0.18)。大きいほど、遠くの曲面や
     // 法線マップのちらつきが強くぼける。近くの平らな面のハイライトはほとんど変わらない。
@@ -52,7 +52,7 @@ struct RenderTuning {
     float nightAdaptationMaxGain = 1000000.0f;
     // 深夜の上乗せ。上の倍率に、太陽高度-10度から-13度にかけて1からこの値まで増える係数を掛ける
     // (render/sky/AtmosphereMath の NightAdaptationBoost)。月の有無によらず、深夜の画面全体を一律に明るくする。1なら上乗せなし。
-    float nightAdaptationBoost = 1.2f;
+    float nightAdaptationBoost = 1.0f;
     // 昼の曲線。太陽が低い昼から薄明にかけて、画面が暗く沈まないよう倍率を上げる。
     // dayAdaptationStart: この照度より暗いと上げ始める(太陽がほぼ真上の空の照度に置く)。
     float dayAdaptationStart = 0.17f;

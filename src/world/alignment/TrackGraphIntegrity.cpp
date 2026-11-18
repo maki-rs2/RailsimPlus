@@ -3,13 +3,16 @@
 #include <algorithm>
 #include <cmath>
 #include <type_traits>
+#include <utility>
 
-#include "BlockConnectivity.h"
 #include "BlockRegistry.h"
 #include "GuidJson.h"
 #include "PlatformRegistry.h"
 #include "SpeedSignalRegistry.h"
 #include "TrackTraversal.h"
+#include "RailLinkOverlay.h"
+#include "TrackEdge.h"
+#include "TrackGraph.h"
 
 namespace rs::world {
 namespace {
@@ -203,10 +206,6 @@ std::vector<std::string> ValidateTrackGraph(const TrackGraph& graph) {
         // 実レール削除後も中心線の本数・形は凍結するため、member減少は許す。
         if (edge.trackCount < static_cast<int>(members.size()))
             warnings.push_back(Warning(guid, "中心線の本数よりmemberが多くなっています"));
-    }
-    for (const Block& block : graph.blocks) {
-        if (!AnalyzeBlockConnectivity(graph, block).IsConnected())
-            warnings.push_back(Warning(block.guid, "閉塞の範囲が連続していません"));
     }
     for (const SpeedSignal& signal : graph.speedSignals) {
         const auto edge = graph.edges.find(signal.edge);

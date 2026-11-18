@@ -19,7 +19,8 @@ public:
               UINT batchInitialInstances);
     bool EnsureBatch(ID3D12Device* device, DirectX::ResourceUploadBatch& upload,
                      const std::string& contentKey, const Mesh& mesh, UINT partsPerInstance,
-                     const std::vector<uint32_t>& dynamicMaterialIndices);
+                     const std::vector<uint32_t>& dynamicMaterialIndices,
+                     UINT maxTexturesOverride = 0);
     bool AddInstance(const std::string& contentKey, const std::vector<PartXform>& partWorlds,
                      std::span<const InstanceMatOverride> materialOverrides, uint64_t instanceKey);
     bool ApplyPreloadedTextureOverride(const std::string& contentKey, const std::string& basePath,

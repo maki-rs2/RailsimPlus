@@ -15,6 +15,7 @@
 #include "../../world/alignment/TrackForwardScan.h"
 #include "../../world/scene/ScenePlacement.h"
 #include "../../sim/SimTuning.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 namespace {

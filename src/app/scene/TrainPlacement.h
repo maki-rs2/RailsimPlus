@@ -10,12 +10,13 @@
 
 #include <vector>
 
-#include "../../world/alignment/TrackGraph.h"
-#include "../../world/alignment/TrackTraversal.h"
+#include "../../world/alignment/TrackPosition.h"
 #include "../../world/scene/SceneEntity.h"
 #include "../plugin_session/PluginSelector.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 class SceneRegistry;
 }
 

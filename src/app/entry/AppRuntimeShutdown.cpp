@@ -17,7 +17,6 @@ void ShutdownAppRuntime(AppRuntimeGlobals& globals, AppRuntimeState& state) {
     if (state.tracksCrashMarker && !state.deviceLostExit && !ClearCrashMarker(state.autoRecoveryRoot)) {
         spdlog::warn("[autorecover] could not clear crash marker");
     }
-    state.audioEngine.Shutdown();
     if (UsesRmlUi(state.cli)) {
         // RmlUiIntegration::Shutdown()はGPUがアイドルなことが前提なので、解放の前に完了を待つ。
         globals.app.WaitForGpu();

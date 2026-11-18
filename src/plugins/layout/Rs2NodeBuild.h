@@ -10,7 +10,9 @@
 #include <vector>
 
 #include "Rs2Types.h"
-#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/Guid.h"
+#include "../../world/alignment/PointRoutine.h"
+#include "../../world/alignment/TrackNode.h"
 
 namespace rs::legacy_layout {
 

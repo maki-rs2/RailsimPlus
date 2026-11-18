@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <utility>
 
 #include "../../core/Epsilon.h"
 #include "ProfileMaterial.h"

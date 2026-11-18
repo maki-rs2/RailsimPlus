@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cstddef>
+#include <functional>
 #include <optional>
 #include <string>
 #include <vector>
@@ -37,6 +38,8 @@ struct LayoutDocumentServices {
     MainWindow& mainWindow;
     const Localization& localization;
     App& app;
+    // 更新のための終了が実際に行われる直前に呼ぶ(終了後の差し替えの入力を決める)。空なら何もしない。
+    std::function<void()> prepareUpdateRestart;
 };
 
 class LayoutDocumentController {
@@ -45,6 +48,12 @@ public:
 
     // ウィンドウの×(WM_CLOSE)。次のTickで終了の流れを始める。
     void RequestClose() { closeRequested_ = true; }
+    // 更新を適用するための終了。未保存の確認などを通常の終了と同じように通し、終了が行われるときだけ
+    // prepareUpdateRestart が呼ばれる。確認で取りやめられたら要求も消える。
+    void RequestCloseForUpdate() {
+        closeRequested_ = true;
+        closeForUpdate_ = true;
+    }
     // 起動時に、復元の画面を出す。選ぶまでレイアウトを開かない。startupLayoutPathは通常起動で開くレイアウト(無ければ空)。
     void BeginRecoveryChoice(std::vector<AutoRecoveryCandidate> candidates, std::string startupLayoutPath);
     // 読込・新規が終わったとき。失敗は出どころによらず知らせる。最近使ったファイルへの追加と復元の後始末は、
@@ -83,6 +92,7 @@ private:
 
     workspace::LayoutDocumentFlow flow_;
     bool closeRequested_ = false;
+    bool closeForUpdate_ = false;
     bool loadFromFilesScreen_ = false;
     // 一覧の画面を閉じてから読み込むため、次のTickまで待たせる読込。読込は数秒メインのスレッドを止め、
     // その間は画面が更新されないので、閉じる前に始めると一覧が残ったままクリックも受けてしまう。

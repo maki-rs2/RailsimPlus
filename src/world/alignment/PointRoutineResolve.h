@@ -7,14 +7,19 @@
 #include <random>
 #include <unordered_map>
 #include <unordered_set>
+#include <optional>
+#include <vector>
 
-#include "TrackGraph.h"
 #include "TrackTraversal.h"
 #include "WarpForwardScan.h"
 #include "WarpLinkTable.h"
 #include "../scene/TrainId.h"
+#include "Guid.h"
 
 namespace rs::world {
+
+struct TrackGraph;
+struct TrackNode;
 
 // ポイント在線ガード判定。nodeにつながるedgeのどれかがoccupiedBlocks(他編成が
 // 在線している閉塞)に属していれば真。ガードの判定はこの関数1か所に集める。

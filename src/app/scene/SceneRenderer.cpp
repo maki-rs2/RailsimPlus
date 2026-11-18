@@ -3,6 +3,7 @@
 #include "SceneRenderer.h"
 
 #include "../camera/CameraControl.h"
+#include "../entry/SlowSectionLog.h"
 
 #include <algorithm>
 #include <chrono>
@@ -14,6 +15,7 @@
 #include "../../sim/OccupiedNodes.h"
 #include "StaticMeshVariantBake.h"
 #include "StationRailEffects.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 
@@ -36,6 +38,7 @@ void SceneRenderer::SetPlacementPreview(App& app,
 
     const std::string key = MakePluginMeshKey("S|" + MakePluginSourceKey(preview->folderUtf8, ""));
     if (placementPreviewKey_ != key) {
+        SlowSectionLog slow("PlacementPreview(プラグインの切り替え)", 30.0);
         std::vector<std::string> loadLog;
         rs::app::GetParsedPluginCache().LoadInto(placementPreviewSession_, preview->folderUtf8, loadLog);
         log.insert(log.end(), loadLog.begin(), loadLog.end());
@@ -109,6 +112,7 @@ void SceneRenderer::SetTrainPlacementPreview(App& app, const std::optional<Train
     const bool changed = trainPreviewModel_.Update(*preview->cars, kSceneEntityMaxParts, log);
     const std::string key = "T|" + trainPreviewModel_.ContentKey();
     if (changed || placementPreviewKey_ != key) {
+        SlowSectionLog slow("PlacementPreview(編成の切り替え)", 30.0);
         placementPreviewKey_.clear();
         trainPreviewShown_ = false;
         if (trainPreviewModel_.DrawnCarCount() == 0) {

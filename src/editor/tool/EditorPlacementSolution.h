@@ -11,9 +11,10 @@
 
 #include "../../core/Math.h"
 #include "../../world/alignment/Alignment.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "../../world/geometry/GeometrySolvers.h"
 #include "TrackLayingSettings.h"
+#include "../../world/alignment/AlignmentSegment.h"
+#include "../../world/alignment/TrackEdge.h"
 
 namespace rs::editor {
 

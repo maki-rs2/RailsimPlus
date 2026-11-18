@@ -4,6 +4,7 @@
 
 #include "../../core/DebugDraw.h"
 #include "../../editor/tool/Editor.h"
+#include "../entry/SlowSectionLog.h"
 #include "../gpu/App.h"
 #include "../scene/ScenePicking.h"
 #include "../scene/SceneRenderer.h"
@@ -75,6 +76,7 @@ void DrawSceneEntityOverlay(const EditorViewportContext& ctx, const ViewProjResu
                 editor.highlightUploadedKey[slot].clear();
                 return false;
             }
+            SlowSectionLog slow("HighlightUpload(配置物の輪郭の切り替え)", 30.0);
             ctx.app.UploadHighlightMesh(slot, *mesh);
             editor.highlightUploadedKey[slot] = key;
         }

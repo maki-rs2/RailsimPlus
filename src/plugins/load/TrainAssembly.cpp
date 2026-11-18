@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstring>
 #include <numbers>
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::legacy_plugin {
 

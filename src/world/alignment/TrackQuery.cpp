@@ -3,6 +3,11 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <utility>
+#include "AlignmentSegment.h"
+#include "TrackEdge.h"
+#include "TrackGraph.h"
+#include "TrackTraversal.h"
 
 namespace rs::world {
 

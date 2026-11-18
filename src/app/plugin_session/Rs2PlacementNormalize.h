@@ -6,8 +6,11 @@
 #include <string>
 #include <vector>
 
-#include "../../world/alignment/TrackGraph.h"
 #include "../../world/scene/ManualPlacementOverlay.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::app {
 

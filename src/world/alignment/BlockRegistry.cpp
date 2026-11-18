@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "WarpForwardScan.h"
+#include "TrackGraph.h"
 
 namespace rs::world {
 

@@ -8,8 +8,8 @@
 
 #include <cstddef>
 #include <string>
+#include "../../world/alignment/Guid.h"
 
-#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::world {
 class WarpLinkTable;

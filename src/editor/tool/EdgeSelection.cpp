@@ -2,6 +2,7 @@
 // EdgeSelection.cpp - 選択中のレール(edge)の集合
 //
 #include "EdgeSelection.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::editor {
 

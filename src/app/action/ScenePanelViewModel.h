@@ -1,9 +1,11 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "../../platform/thread/WorkerThread.h"
 #include "../locale/Localization.h"
 #include "../workspace/ScenePanelPresentation.h"
 #include "../plugin_session/LayoutSession.h"
@@ -24,9 +26,20 @@ std::vector<SceneContentCounts> CountSceneContents(const LayoutSession& session,
 // どちらも毎フレームは求めない(フォルダを読む・配置物を全件見るため)。
 class ScenePanelSource {
 public:
-    // 選べる地形・環境をプラグインルートから走査し直す(パネルを開いたときに呼ぶ)。
+    ScenePanelSource();
+    ~ScenePanelSource();
+    ScenePanelSource(const ScenePanelSource&) = delete;
+    ScenePanelSource& operator=(const ScenePanelSource&) = delete;
+
+    // 選べる地形・環境の走査をワーカーへ頼む(パネルを開いたときに呼ぶ)。プラグインのフォルダを全部開くので、
+    // 描画スレッドでは走らせない。結果は PollChoices が受け取る。
     void Rescan(const std::vector<std::string>& rootCandidatesUtf8);
+    // 走査の結果が届いていれば取り込む。取り込んだらtrue。
+    bool PollChoices();
+    // 頼んだことがあるか(結果が届いていなくてもtrue)。
     bool Scanned() const { return scanned_; }
+    // 結果が1回でも届いているか。届くまでの Choices() は空で、「選べない」の意味ではない。
+    bool ChoicesReady() const { return choicesReady_; }
     const SceneChoiceCatalog& Choices() const { return choices_; }
     // シーンごとの地形の名前(無ければ空。要素数はシーン数。シーンが空のセッションは1つ)。今のシーンはライブの
     // 配置物から、ほかのシーンはキャッシュから求める。地形は追加後に変わらないので、シーンの並び・配置物の数が
@@ -34,8 +47,11 @@ public:
     const std::vector<std::string>& SurfaceNames(const LayoutSession& session, const rs::world::SceneRegistry& registry);
 
 private:
+    using ScanWorker = rs::platform_thread::WorkerThread<std::vector<std::string>, SceneChoiceCatalog>;
     SceneChoiceCatalog choices_;
     bool scanned_ = false;
+    bool choicesReady_ = false;
+    std::unique_ptr<ScanWorker> worker_; // 初めて頼むときに起動する
     // 求め直す必要があるかを見るための、前回の状態(今のシーン番号・ライブの配置物の数・シーンごとの配置物の入れ物)。
     struct Signature {
         size_t active = 0;

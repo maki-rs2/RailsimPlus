@@ -9,6 +9,7 @@
 
 #include "../../world/alignment/Alignment.h"
 #include "../../world/geometry/GeometrySolvers.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::editor {
 

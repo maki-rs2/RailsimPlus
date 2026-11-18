@@ -6,8 +6,12 @@
 
 #include "../../sim/BlockOccupancy.h"
 #include "../../sim/SignalAspectRuntime.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "../../world/alignment/WarpLinkTable.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::app {
 // ポイント在線ガードは編成ごとに自分を除いた集合が要るので、ここには持たず

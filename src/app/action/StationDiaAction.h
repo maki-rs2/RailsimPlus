@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "../../world/alignment/Guid.h"
-#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/PlatformStopInfo.h"
 
 namespace rs::editor { class Editor; }
 

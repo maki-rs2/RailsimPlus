@@ -6,9 +6,11 @@
 #include <unordered_set>
 #include <vector>
 
-#include "TrackTraversal.h"
+#include "TrackPosition.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 // 前方走査が終端した理由。exceededMax で終わった場合は None。
 enum class ScanEndReason { None, DeadEnd, SceneBoundary };

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "EdgeSplitMerge.h"
+#include "PlatformStopInfo.h"
+#include "SpeedSignal.h"
 
 namespace rs::world {
 

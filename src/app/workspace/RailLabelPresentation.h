@@ -6,7 +6,12 @@
 #include <vector>
 
 #include "RailLabelHover.h"
-#include "../../world/alignment/BlockConnectivity.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct Block;
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::app::workspace {
 
@@ -19,8 +24,6 @@ struct RailLabelItem {
     rs::world::Guid guid = rs::world::NilGuid();
     std::string name;
     bool selected = false;
-    bool warning = false;
-    std::string colorClass;
     RailLabelAnchor anchor;
     std::size_t verticalIndex = 0;
     bool candidate = false;
@@ -36,11 +39,10 @@ struct RailLabelCandidate {
 std::vector<RailLabelItem> BuildRailLabelCandidateItems(const rs::world::TrackGraph& graph,
     const RailLabelAnchor& anchor, std::span<const RailLabelCandidate> candidates);
 
-// 名前の既定値と順序はgraph.blocksから決める。接続性は描画側と共有する計算済みの結果を受ける。
+// 名前の既定値と順序はgraph.blocksから決める。
 std::vector<RailLabelItem> BuildRailLabelItems(const rs::world::TrackGraph& graph,
                                               std::span<const RailLabel> labels,
-                                              const rs::world::Guid& selectedBlock,
-                                              std::span<const rs::world::BlockConnectivity> connectivity);
+                                              const rs::world::Guid& selectedBlock);
 
 struct RailLabelSize {
     double width = 0.0;

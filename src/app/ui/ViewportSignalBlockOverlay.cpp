@@ -8,7 +8,6 @@
 #include "../../sim/SignalAspectRuntime.h"
 #include "../../world/alignment/Alignment.h"
 #include "../../world/alignment/BlockSpeedLimit.h"
-#include "../../world/alignment/BlockConnectivity.h"
 #include "../../world/alignment/SignalSpeedColor.h"
 #include "../../world/alignment/SpeedSignalRegistry.h"
 #include "OverlayColorTuning.h"
@@ -225,58 +224,15 @@ void DrawSpeedSignalPreview(const EditorViewportContext& ctx) {
 } // namespace
 
 // 閉塞のビューポート目視確認オーバーレイ。
-// 信号・閉塞編集モードだけで描く(ほかのモードでは何も描かない)。閉塞ごとの色の線と切れ目の警告、
+// 信号・閉塞編集モードだけで描く(ほかのモードでは何も描かない)。閉塞ごとの色の線、
 // 選択中の閉塞の強調の上に、信号のマーカーと影響する範囲(担当閉塞の範囲)を信号の色で重ねる。
 void DrawSignalBlockOverlay(const EditorViewportContext& ctx, const rs::app::ViewProjResult&, rs::app::input::PointerPos mouse) {
-    std::vector<rs::world::BlockConnectivity> localConnectivity;
-    std::vector<rs::world::BlockConnectivity>& sharedConnectivity =
-        ctx.signalBlockLink != nullptr ? ctx.signalBlockLink->connectivity : localConnectivity;
-    sharedConnectivity.clear();
     if (!GetViewModeTraits(ctx.viewMode).signalBlock) return;
 
     for (size_t index = 0; index < ctx.editor.graph.blocks.size(); ++index) {
-        const rs::world::Block& block = ctx.editor.graph.blocks[index];
         const ImU32 color = BlockColorFromIndex(index);
-        sharedConnectivity.push_back(rs::world::AnalyzeBlockConnectivity(
-            ctx.editor.graph, block, &ctx.layoutSession.warpLinks, ctx.layoutSession.activeIndex));
-        const rs::world::BlockConnectivity& connectivity = sharedConnectivity.back();
-        for (const rs::world::Guid& blockEdge : block.edges) {
-            bool disconnected = false;
-            for (size_t componentIndex = 1; componentIndex < connectivity.components.size(); ++componentIndex) {
-                const std::vector<rs::world::Guid>& componentEdges = connectivity.components[componentIndex].edges;
-                if (std::find(componentEdges.begin(), componentEdges.end(), blockEdge) != componentEdges.end()) {
-                    disconnected = true;
-                    break;
-                }
-            }
-            if (disconnected) {
-                const rs::world::TrackEdge* edge = FindEdge(ctx, blockEdge);
-                if (edge != nullptr) {
-                    rs::core::DebugStyle warning;
-                    warning.color = rs::core::PackRgba(255, 70, 45, 255);
-                    warning.widthPx = OverlayLineTuning::Embedded().minWidthPx + 1.0f;
-                    warning.dash = rs::core::DebugDashStyle::Dashed;
-                    std::vector<rs::core::Vec3> points;
-                    for (const rs::world::TrackNodeSample& sample : edge->spline) points.push_back(sample.pos);
-                    ctx.app.DebugDrawList().AddPolyline(points.data(), points.size(), false, warning);
-                }
-            } else {
-                DrawEdge(ctx, blockEdge, color, OverlayLineTuning::Embedded().minWidthPx);
-            }
-        }
-        const bool hasWarning = !connectivity.IsConnected();
-        if (hasWarning) {
-            for (const rs::world::BlockComponent& component : connectivity.components) {
-                for (const rs::world::BlockCutPoint& cut : component.cutPoints) {
-                    const rs::world::TrackEdge* edge = FindEdge(ctx, cut.edge);
-                    if (edge == nullptr || edge->spline.empty()) continue;
-                    const rs::core::Vec3 point = cut.end == 0 ? edge->spline.front().pos : edge->spline.back().pos;
-                    rs::core::DebugStyle warning;
-                    warning.color = rs::core::PackRgba(255, 70, 45, 255);
-                    warning.widthPx = 0.0f;
-                    ctx.app.DebugDrawList().AddText(point, rs::core::Vec2(7.0f, 7.0f), "⚠", warning);
-                }
-            }
+        for (const rs::world::Guid& blockEdge : ctx.editor.graph.blocks[index].edges) {
+            DrawEdge(ctx, blockEdge, color, OverlayLineTuning::Embedded().minWidthPx);
         }
     }
     for (const rs::world::Block& block : ctx.editor.graph.blocks) {

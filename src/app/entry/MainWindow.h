@@ -60,6 +60,8 @@ public:
     void SetFovWheelHandler(std::function<bool(float)> handler) { fovWheelHandler_ = std::move(handler); }
     // WM_CLOSE(ウィンドウの×やAlt+F4)を受けたときに呼ぶ関数を登録する。登録があるとウィンドウは閉じない。
     void SetCloseRequestHandler(std::function<void()> handler);
+    // RunFrameLoopが登録した受け取り先(ホイール・×・モーダル中のフレーム)をすべて外す。
+    void ClearFrameLoopHandlers();
     // 登録を外してウィンドウを閉じる。
     void CloseNow();
 

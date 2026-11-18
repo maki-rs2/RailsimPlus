@@ -8,8 +8,12 @@
 
 #include <vector>
 
-#include "../schema/PluginSchema.h"
 #include "../../core/Math.h"
+#include "../schema/RailProfileSchema.h"
+
+namespace rs::legacy_pi {
+struct LineDef;
+} // namespace rs::legacy_pi
 
 namespace rs::legacy_plugin {
 

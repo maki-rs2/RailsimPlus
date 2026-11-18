@@ -7,6 +7,7 @@
 
 #include "../../core/DebugDraw.h"
 #include "../../editor/tool/Editor.h"
+#include "../entry/SlowSectionLog.h"
 #include "../gpu/App.h"
 #include "../plugin_session/LayoutSession.h"
 #include "../scene/SceneRenderer.h"
@@ -65,6 +66,7 @@ void UpdatePlacementHighlightSlots(const EditorViewportContext& ctx) {
             }
             if (!meshFound || mesh == nullptr || mesh->vertices.empty()) return deactivate();
             if (editor.highlightUploadedKey[slot] != uploadKey) {
+                SlowSectionLog slow("HighlightUpload(輪郭の切り替え)", 30.0);
                 ctx.app.UploadHighlightMesh(slot, *mesh);
                 editor.highlightUploadedKey[slot] = uploadKey;
             }

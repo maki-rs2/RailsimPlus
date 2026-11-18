@@ -4,11 +4,13 @@
 #include <optional>
 #include <unordered_set>
 
-#include "TrackGraph.h"
 #include "TravelDirectionFollow.h"
 #include "WarpLinkTable.h"
+#include "Guid.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 // 上下どちらにも信号がある閉塞のつながり(単線区間)。分岐しないノードでつながる閉塞を1つの区間とみなす。
 // 反対向きの列車が同時に入ってはならない範囲で、向きを予約の単位にする。

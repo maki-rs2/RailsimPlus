@@ -2,6 +2,7 @@
 
 #include <cctype>
 #include <cstdlib>
+#include <string_view>
 
 namespace rs::legacy_pi {
 
@@ -29,6 +30,11 @@ struct Cursor {
         }
         return c;
     }
+    // 改行を含まない n 文字を一度に進める(識別子・16進など、改行にならない区間用)。
+    void SkipNoNewline(size_t n) {
+        pos += n;
+        col += static_cast<int>(n);
+    }
 };
 
 bool IsIdentStart(unsigned char c) { return std::isalpha(c) || c == '_'; }
@@ -36,7 +42,7 @@ bool IsIdentChar(unsigned char c) { return std::isalnum(c) || c == '_'; }
 bool IsHexDigit(unsigned char c) { return std::isxdigit(c); }
 
 //数字列 [e|E 数字列] の形で最後まで読めるか(指数表記の数値として全体を消費できるか)
-bool IsWholeExponentNumber(const std::string& run) {
+bool IsWholeExponentNumber(std::string_view run) {
     size_t i = 0;
     while (i < run.size() && std::isdigit(static_cast<unsigned char>(run[i]))) ++i;
     if (i < run.size() && (run[i] == 'e' || run[i] == 'E')) ++i;
@@ -214,20 +220,20 @@ bool TryLexBinarySign(Cursor& c, std::vector<Token>& out, char ch, int tl, int t
 bool TryLexHexAddress(Cursor& c, std::vector<Token>& out, int tl, int tc) {
     size_t k = 0;
     bool hasUnambiguousHexLetter = false;
-    std::string run;
     while (IsHexDigit(static_cast<unsigned char>(c.Peek(k)))) {
         unsigned char hc = static_cast<unsigned char>(c.Peek(k));
         if (!std::isdigit(hc) && hc != 'e' && hc != 'E') hasUnambiguousHexLetter = true;
-        run.push_back(static_cast<char>(hc));
         ++k;
     }
     bool boundaryOk = k >= 1 && k <= 16 && !IsIdentChar(static_cast<unsigned char>(c.Peek(k))) &&
                       c.Peek(k) != '.';
+    // 16進の並びは入力文字列上で連続しているので、コピーせず範囲のまま見る。
+    const std::string_view run(c.s.data() + c.pos, k);
     if (!boundaryOk || !(k == 16 || hasUnambiguousHexLetter || !IsWholeExponentNumber(run))) {
         return false;
     }
-    std::string hex;
-    for (size_t i = 0; i < k; ++i) hex.push_back(c.Get());
+    std::string hex(run);
+    c.SkipNoNewline(k);
     Push(out, TokenKind::HexAddress, std::move(hex), tl, tc);
     return true;
 }
@@ -271,6 +277,8 @@ void LexNumber(Cursor& c, Diagnostics& diag, std::vector<Token>& out, int tl, in
 
 std::vector<Token> Tokenize(const std::string& utf8, Diagnostics& diag) {
     std::vector<Token> out;
+    // 実データでは1トークンあたり約6バイト。再確保のたびに全トークンをコピーしないよう先に確保する。
+    out.reserve(utf8.size() / 5 + 16);
     Cursor c(utf8);
 
     for (;;) {
@@ -288,9 +296,10 @@ std::vector<Token> Tokenize(const std::string& utf8, Diagnostics& diag) {
         }
 
         if (IsIdentStart(static_cast<unsigned char>(ch))) {
-            std::string id;
-            while (!c.Eof() && IsIdentChar(static_cast<unsigned char>(c.Peek())))
-                id.push_back(c.Get());
+            size_t n = 0;
+            while (IsIdentChar(static_cast<unsigned char>(c.Peek(n)))) ++n;
+            std::string id(c.s, c.pos, n);
+            c.SkipNoNewline(n);
             Push(out, TokenKind::Identifier, std::move(id), tl, tc);
             continue;
         }

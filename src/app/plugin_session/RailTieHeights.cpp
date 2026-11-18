@@ -3,6 +3,7 @@
 #include "../../plugins/schema/PluginTypeTraits.h"
 
 #include <algorithm>
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 

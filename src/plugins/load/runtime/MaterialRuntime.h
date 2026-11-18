@@ -19,9 +19,14 @@
 #include <string>
 #include <vector>
 
-#include "../../schema/PluginSchema.h"
 #include "../../schema/SwitchExpr.h"
 #include "../../../render/mesh/Mesh.h"
+#include "../../schema/PartCustomizerSchema.h"
+#include "../../schema/TriggerInfo.h"
+
+namespace rs::legacy_pi {
+struct ModelPart;
+} // namespace rs::legacy_pi
 
 namespace rs::legacy_plugin {
 

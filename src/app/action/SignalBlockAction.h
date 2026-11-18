@@ -10,12 +10,17 @@
 #include <vector>
 
 #include "../../editor/tool/SpeedSignalOwnerCandidate.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "../../world/alignment/WarpLinkTable.h"
 #include "SignalAspectSource.h"
 #include "SignalPluginRules.h"
 #include "SwitchList.h"
 #include "../workspace/RailLabelPresentation.h"
+#include "../../world/alignment/Guid.h"
+#include "../../world/alignment/SpeedSignal.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::editor { class Editor; }
 

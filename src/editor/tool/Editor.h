@@ -24,7 +24,6 @@
 #include "../../world/alignment/Alignment.h"
 #include "../../world/scene/SceneEntity.h"
 #include "../../world/scene/SurfaceBounds.h"
-#include "../../plugins/schema/PluginSchema.h"
 #include "../../world/alignment/EdgeSplitMerge.h"
 #include "../../world/alignment/TrackGraph.h"
 #include "../../world/scene/ManualPlacementOverlay.h"
@@ -49,6 +48,10 @@
 #include "TrackLayingCommit.h"
 #include "TrackLayingSession.h"
 #include "TrackLayingSettings.h"
+
+namespace rs::legacy_pi {
+struct PluginDefinition;
+} // namespace rs::legacy_pi
 
 namespace rs::world { class WarpLinkTable; }  // MergeEdgeAtのポインタ引数用の前方宣言
 

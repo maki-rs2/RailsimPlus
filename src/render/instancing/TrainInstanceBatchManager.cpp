@@ -33,14 +33,23 @@ bool TrainInstanceBatchManager::Init(ID3D12Device* device, const MeshPipelineSha
 bool TrainInstanceBatchManager::EnsureBatch(ID3D12Device* device, DirectX::ResourceUploadBatch& upload,
                                               const std::string& contentKey, const Mesh& mesh,
                                               UINT partsPerInstance,
-                                              const std::vector<uint32_t>& dynamicMaterialIndices) {
+                                              const std::vector<uint32_t>& dynamicMaterialIndices,
+                                              UINT maxTexturesOverride) {
     if (batches_.contains(contentKey)) return true;
-    const SrvRangeAllocator::Range range = allocator_->Allocate(batchMaxTextures_ + kBatchExtraSrvs);
-    if (!range.ok) return false;
+    // 上書きが無ければ全バッチ共通の最大枠(列車は実行中にテクスチャが増えるため)。
+    // 静的な建物は読込後にテクスチャが増えないので、呼び出し側が必要数だけを渡す。
+    const UINT maxTextures = (maxTexturesOverride != 0 && maxTexturesOverride < batchMaxTextures_)
+                                 ? maxTexturesOverride : batchMaxTextures_;
+    const SrvRangeAllocator::Range range = allocator_->Allocate(maxTextures + kBatchExtraSrvs);
+    if (!range.ok) {
+        spdlog::warn("[instance_batch] SRV pool exhausted: {} (need={} used={})", contentKey,
+                     maxTextures + kBatchExtraSrvs, allocator_->UsedSlots());
+        return false;
+    }
     std::unique_ptr<TrainInstanceBatch> batch = std::make_unique<TrainInstanceBatch>();
-    const UINT firstTransBuf = range.baseIndex + batchMaxTextures_;
+    const UINT firstTransBuf = range.baseIndex + maxTextures;
     const UINT firstPartWorld = firstTransBuf + 4;
-    if (!batch->Init(device, *shared_, srvHeap_, srvSize_, range.baseIndex, batchMaxTextures_, firstTransBuf, firstPartWorld, batchInitialInstances_) ||
+    if (!batch->Init(device, *shared_, srvHeap_, srvSize_, range.baseIndex, maxTextures, firstTransBuf, firstPartWorld, batchInitialInstances_) ||
         !batch->UploadModel(device, upload, contentKey, mesh, partsPerInstance)) { allocator_->Free(range); return false; }
     batch->ConfigureDynamicMaterialSlots(dynamicMaterialIndices);
     batches_.emplace(contentKey, Entry{std::move(batch), range}); return true;

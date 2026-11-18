@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -25,6 +26,7 @@ class CameraController;
 class MainWindow;
 struct LayoutDocumentState;
 class UpdateChecker;
+class UpdateDownloader;
 
 struct GameSettingsRefs {
     App& app;
@@ -39,6 +41,10 @@ struct GameSettingsRefs {
     MainWindow* mainWindow = nullptr;
     // キー再割当の反映先。nullptrなら設定の保存だけ行う。
     input::InputSource* inputSource = nullptr;
+    // アプリ内更新のダウンロード。nullptrなら「更新する」はダウンロードページを開く。
+    UpdateDownloader* updateDownloader = nullptr;
+    // 更新のための終了(未保存の確認つき)を頼む関数の置き場。空なら「再起動して更新」は何もしない。
+    const std::function<void()>* requestRestartForUpdate = nullptr;
 };
 
 struct GameSettingsViewModel {
@@ -75,6 +81,11 @@ public:
     void SetUpdateCheckEnabled(bool enabled);
     void CheckForUpdates();
     void OpenUpdateDownloadPage();
+    // 新しい版をダウンロードして展開する。アプリ内更新が使えないときは、ダウンロードページを開く。
+    void DownloadUpdate();
+    void CancelUpdateDownload();
+    // 準備ができているときだけ、終了の流れを始める。
+    void RestartForUpdate();
     void ResetCamera();
     void SetTimeScale(float scale);
     // 日付と時刻(時・分。秒は0)を設定する。日付が存在するかは呼び出し側が確かめておくこと。

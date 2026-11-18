@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "SwitchList.h"
-#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/Guid.h"
 
 namespace rs::editor {
 class Editor;

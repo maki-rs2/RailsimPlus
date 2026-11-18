@@ -10,10 +10,12 @@
 #include <functional>
 #include <optional>
 #include <string>
+#include "Guid.h"
 
-#include "TrackGraph.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 // edgeの1端(end: 0=nodeA側 / 1=nodeB側)。
 struct EdgeEnd {

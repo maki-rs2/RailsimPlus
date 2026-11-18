@@ -7,7 +7,11 @@
 #include <vector>
 
 #include "../workspace/DiaPanelPresentation.h"
-#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::app {
 

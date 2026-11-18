@@ -10,6 +10,10 @@
 
 #include "OrderedGuidSelection.h"
 
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
+
 namespace rs::editor {
 
 class EdgeSelection : public OrderedGuidSelection {

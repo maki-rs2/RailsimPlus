@@ -7,6 +7,7 @@
 #include <unordered_set>
 
 #include "../../world/scene/MaterializeSnapshot.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 namespace {

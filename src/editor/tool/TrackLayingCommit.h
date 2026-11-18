@@ -15,7 +15,14 @@
 
 #include "../../core/Math.h"
 #include "../../world/alignment/EdgeShapeBuild.h"
-#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/AlignmentSegment.h"
+#include "../../world/alignment/Guid.h"
+#include "../../world/alignment/TrackEdge.h"
+#include "../../world/alignment/TrackNode.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::editor {
 

@@ -4,6 +4,7 @@
 
 #include "SignalBlockAction.h"
 #include "../../world/alignment/GuidJson.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 std::vector<workspace::SignalPanelSignal> BuildSignalPanelSignals(const rs::world::TrackGraph& graph,

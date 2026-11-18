@@ -8,6 +8,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::editor {
 

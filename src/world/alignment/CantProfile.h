@@ -7,8 +7,8 @@
 #pragma once
 
 #include <vector>
+#include "AlignmentSegment.h"
 
-#include "TrackGraph.h"
 
 namespace rs::world {
 

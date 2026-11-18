@@ -7,6 +7,10 @@
 #include <algorithm>
 #include <optional>
 #include <unordered_set>
+#include <utility>
+#include "TrackEdge.h"
+#include "TrackGraph.h"
+#include "TrackNode.h"
 
 namespace rs::world {
 

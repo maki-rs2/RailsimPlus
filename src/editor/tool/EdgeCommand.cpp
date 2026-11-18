@@ -12,6 +12,7 @@
 #include "../../world/alignment/EdgeShapeBuild.h"
 #include "../../world/alignment/PointName.h"
 #include "EdgeCommandLinks.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::editor {
 

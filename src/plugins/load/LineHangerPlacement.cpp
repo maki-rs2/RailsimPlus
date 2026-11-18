@@ -6,6 +6,7 @@
 #include "../../core/Epsilon.h"
 
 #include <cmath>
+#include "../schema/LineSchema.h"
 
 namespace rs::legacy_plugin {
 

@@ -7,6 +7,7 @@
 #include "../../world/scene/SceneRegistry.h"
 
 #include <spdlog/spdlog.h>
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::editor {
 

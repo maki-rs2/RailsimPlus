@@ -792,12 +792,11 @@
 <!-- 閉塞ラベルは信号モードだけ。同じアンカーの閉塞は一覧の順で縦に並べる。 -->
 <div data-for="label : railLabels">
     <div class="rail-label" data-if="label.shown" data-attr-data-block-id="label.id"
-         data-class-is-selected="label.selected" data-class-is-warning="label.colorClass == 'danger'"
-         data-class-is-editing="label.id == railLabelEditingId"
+         data-class-is-selected="label.selected"         data-class-is-editing="label.id == railLabelEditingId"
          data-style-left="label.left" data-style-top="label.top">
         <button class="flat rail-label-name" data-class-is-disabled="label.disabled" data-attr-title="label.title"
                 data-event-click="select_rail_label(label.id)"
-                data-event-dblclick="begin_rename_rail_label(label.id)"><span class="ui-icon rail-label-warning ic-status-warning" data-if="label.warning"></span><span>{{ label.name }}</span></button>
+                data-event-dblclick="begin_rename_rail_label(label.id)"><span>{{ label.name }}</span></button>
         <button class="icon row-action rail-label-rename ic-pencil" title="名前を変える" data-event-click="begin_rename_rail_label(label.id)"></button>
         <input type="text" class="rail-label-name-input" data-event-change="commit_rail_label_name"
                data-event-blur="commit_rail_label_name" data-event-keydown="key_rail_label_name" />
@@ -1549,8 +1548,21 @@
                 </div>
                 <div class="about-copyright">{{ gsText.copyright }}</div>
                 <div class="form-row">{{ gsUpdateStatus }}</div>
-                <div class="form-row" data-if="gsUpdateAvailable">
-                    <button data-event-click="gs_open_download_page">{{ gsText.openDownloadPage }}</button>
+                <div class="form-row" data-if="gsUpdateNote != ''">{{ gsUpdateNote }}</div>
+                <div class="form-row" data-if="gsUpdateButton == 'update'">
+                    <button data-event-click="gs_update_button">{{ gsText.updateNow }}</button>
+                </div>
+                <div class="form-row" data-if="gsUpdateButton == 'cancel'">
+                    <button data-event-click="gs_update_button">{{ gsText.cancelUpdate }}</button>
+                </div>
+                <div class="form-row" data-if="gsUpdateButton == 'restart'">
+                    <button data-event-click="gs_update_button">{{ gsText.restartForUpdate }}</button>
+                </div>
+                <div class="form-row" data-if="gsUpdateButton == 'retry'">
+                    <button data-event-click="gs_update_button">{{ gsText.retryUpdate }}</button>
+                </div>
+                <div class="form-row" data-if="gsUpdateButton == 'page'">
+                    <button data-event-click="gs_update_button">{{ gsText.openDownloadPage }}</button>
                 </div>
                 <label class="form-row">
                     <span class="form-field-fill">{{ gsText.updateCheckEnabled }}</span>
@@ -1582,12 +1594,16 @@
 <div class="toast-stack">
     <div class="toast-row" data-for="toast, i : toasts">
         <div class="toast-item" data-class-info="toast.severity == 'info'"
-             data-class-warning="toast.severity == 'warning'" data-class-error="toast.severity == 'error'">
-            <!-- 種類は左の帯とアイコンで表し、文字は通常の色にする。 -->
-            <span class="ui-icon toast-icon ic-help" data-if="toast.severity == 'info'"></span>
-            <span class="ui-icon toast-icon ic-status-warning" data-if="toast.severity != 'info'"></span>
+             data-class-warning="toast.severity == 'warning'" data-class-error="toast.severity == 'error'"
+             data-class-update="toast.style == 'update'">
+            <!-- 種類は左の帯とアイコンで表し、文字は通常の色にする。更新の通知(style)は緑の帯とチェックマーク。
+                 閉じられる通知(closable)には、右に閉じるボタンを出す。 -->
+            <span class="ui-icon toast-icon ic-check" data-if="toast.style == 'update'"></span>
+            <span class="ui-icon toast-icon ic-help" data-if="toast.style != 'update' && toast.severity == 'info'"></span>
+            <span class="ui-icon toast-icon ic-status-warning" data-if="toast.style != 'update' && toast.severity != 'info'"></span>
             {{ toast.text }}
             <button class="flat toast-action" data-if="toast.action != ''" data-event-click="toast_action(i)">{{ toast.action }}</button>
+            <button class="flat toast-close ic-close" data-if="toast.closable" data-event-click="toast_dismiss(i)"></button>
         </div>
     </div>
 </div>

@@ -16,6 +16,7 @@
 #include "../world/alignment/PlatformChain.h"
 #include "../world/alignment/PlatformRegistry.h"
 #include "../world/alignment/WarpTraversal.h"
+#include "../world/alignment/TrackGraph.h"
 
 namespace {
 }

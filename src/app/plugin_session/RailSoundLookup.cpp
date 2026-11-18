@@ -4,6 +4,7 @@
 
 #include "../../platform/text/Encoding.h"
 #include "../../plugins/load/PluginPaths.h"
+#include "../../world/alignment/TrackEdge.h"
 
 namespace rs::app {
 

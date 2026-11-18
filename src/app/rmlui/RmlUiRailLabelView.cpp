@@ -16,8 +16,8 @@
 #include "../../world/alignment/TrackTraversal.h"
 #include "../../world/alignment/GuidJson.h"
 #include "../../world/alignment/BlockRegistry.h"
-#include "../ui/SignalBlockViewportLink.h"
 #include "../action/SignalBlockAction.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app::rmlui {
 
@@ -25,8 +25,6 @@ struct RailLabelModel {
     Rml::String id;
     Rml::String name;
     bool selected = false;
-    bool warning = false;
-    Rml::String colorClass;
     int verticalIndex = 0;
     bool shown = false;
     Rml::String left = "0px";
@@ -79,8 +77,6 @@ void RmlUiRailLabelView::RegisterModel(Rml::DataModelConstructor& constructor) {
         handle.RegisterMember("id", &RailLabelModel::id);
         handle.RegisterMember("name", &RailLabelModel::name);
         handle.RegisterMember("selected", &RailLabelModel::selected);
-        handle.RegisterMember("warning", &RailLabelModel::warning);
-        handle.RegisterMember("colorClass", &RailLabelModel::colorClass);
         handle.RegisterMember("verticalIndex", &RailLabelModel::verticalIndex);
         handle.RegisterMember("shown", &RailLabelModel::shown);
         handle.RegisterMember("left", &RailLabelModel::left);
@@ -145,7 +141,7 @@ void RmlUiRailLabelView::OnCommitName(Rml::Event& event) {
 }
 
 void RmlUiRailLabelView::Refresh(bool active, const rs::world::TrackGraph& graph,
-                                const SignalBlockViewportLink& link, const SignalBlockViewModel& placement,
+                                const SignalBlockViewModel& placement,
                                 const rs::world::Guid& selectedBlock,
                                 std::size_t sceneIndex, double /*deltaSeconds*/, Rml::ElementDocument* document) {
     if (!modelHandle_) return;
@@ -168,7 +164,7 @@ void RmlUiRailLabelView::Refresh(bool active, const rs::world::TrackGraph& graph
             const std::optional<workspace::RailLabelAnchor> anchor = workspace::BlockMidpointAnchor(graph, block);
             if (anchor.has_value()) labels.push_back({block.guid, *anchor});
         }
-        items_ = workspace::BuildRailLabelItems(graph, labels, selectedBlock, link.connectivity);
+        items_ = workspace::BuildRailLabelItems(graph, labels, selectedBlock);
     }
     Rml::Vector<RailLabelModel> labels;
     for (const workspace::RailLabelItem& item : items_) {
@@ -176,8 +172,6 @@ void RmlUiRailLabelView::Refresh(bool active, const rs::world::TrackGraph& graph
         label.id = rs::world::GuidToHex(item.guid);
         label.name = item.name;
         label.selected = item.selected;
-        label.warning = item.warning;
-        label.colorClass = item.colorClass;
         label.disabled = item.disabled;
         label.title = item.title;
         label.verticalIndex = static_cast<int>(item.verticalIndex);

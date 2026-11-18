@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <unordered_map>
+#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/TrackTraversal.h"
 
 namespace rs::app {
 namespace {

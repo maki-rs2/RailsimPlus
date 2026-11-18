@@ -17,6 +17,8 @@ bool AudioEngine::Init() {
 }
 
 void AudioEngine::Shutdown() {
+    // 音源の削除とデバイスのクローズは数秒かかることがあり、その間も残りの音は鳴り続けるので、先に無音にする。
+    deviceContext_.Mute();
     if (deviceContext_.IsValid()) {
         sourceManager_.ReleaseOpenAlResources();
         // バッファを使っている音源を先に削除してから、共有キャッシュのバッファを削除する。

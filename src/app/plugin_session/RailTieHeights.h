@@ -12,7 +12,10 @@
 
 #include "PluginSelector.h"
 #include "../../plugins/schema/PluginTypeTraits.h"
-#include "../../world/alignment/TrackGraph.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::app {
 

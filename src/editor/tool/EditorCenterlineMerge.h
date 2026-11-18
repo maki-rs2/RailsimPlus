@@ -9,8 +9,12 @@
 #include <optional>
 
 #include "../../world/alignment/EdgeSplitMerge.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "../../world/alignment/WarpLinkTable.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::editor {
 

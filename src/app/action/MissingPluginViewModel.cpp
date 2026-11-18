@@ -6,6 +6,7 @@
 #include <string_view>
 
 #include <magic_enum/magic_enum.hpp>
+#include <utility>
 
 #include "../plugin_session/DefaultPluginCatalog.h"
 #include "../workspace/CatalogCheck.h"

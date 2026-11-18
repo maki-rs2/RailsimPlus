@@ -1,4 +1,5 @@
 #include "SceneSignalPhase.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 SignalPhaseOutputs RunSignalBlockPhase(

@@ -11,10 +11,14 @@
 #include <utility>
 #include <vector>
 
-#include "TrackGraph.h"
 #include "WarpLinkTable.h"
+#include "Guid.h"
+#include "TrackEdge.h"
+#include "TrackNode.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 // CheckEdgeSplit の拒否理由。
 enum class EdgeSplitRefusal {

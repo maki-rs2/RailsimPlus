@@ -12,12 +12,15 @@
 
 #include "../../core/Math.h"
 #include "../../editor/tool/WarpLinkAuthoring.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "../../world/time/WorldRefs.h"
 #include "UiPanels.h"
 #include "EditorViewportState.h"
 #include "StationDiaPanel.h"
 #include "SignalBlockPanel.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::editor { class Editor; }
 

@@ -7,6 +7,7 @@
 #include "../../world/alignment/Alignment.h"
 #include "../../world/scene/ScenePlacement.h"
 #include "../scene/TrackPluginPlacement.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 

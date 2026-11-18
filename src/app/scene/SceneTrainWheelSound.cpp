@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "../../sim/WheelJointTrigger.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 

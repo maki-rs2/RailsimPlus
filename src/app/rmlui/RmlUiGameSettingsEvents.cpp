@@ -77,8 +77,17 @@ void RmlUiGameSettingsView::OnCheckUpdate() {
     if (refs_) GameSettingsAction(*refs_).CheckForUpdates();
 }
 
-void RmlUiGameSettingsView::OnOpenDownloadPage() {
-    if (refs_) GameSettingsAction(*refs_).OpenUpdateDownloadPage();
+void RmlUiGameSettingsView::OnUpdateButton() {
+    if (!refs_) return;
+    GameSettingsAction action(*refs_);
+    switch (updateButton_) {
+    case UpdateButton::Update:
+    case UpdateButton::Retry:
+    case UpdateButton::OpenDownloadPage: action.DownloadUpdate(); break;
+    case UpdateButton::Cancel: action.CancelUpdateDownload(); break;
+    case UpdateButton::Restart: action.RestartForUpdate(); break;
+    case UpdateButton::None: break;
+    }
 }
 
 } // namespace rs::app::rmlui

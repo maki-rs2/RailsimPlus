@@ -3,6 +3,8 @@
 #include <cstring>
 
 #include "../../world/alignment/RigidPose.h"
+#include "../../world/alignment/TrackGraph.h"
+#include "../../plugins/schema/PluginSchema.h"
 
 namespace rs::app {
 

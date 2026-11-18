@@ -100,7 +100,7 @@ constexpr uint32_t kInvalidDynamicMaterialSlot = 0xffffffffu;
 // (uvTransform1[2]。AlphaZeroTest)も書く(条件ごとに実行時に変わるため色と一緒に運ぶ)。
 // 法線/ORMの使用(flags[0]/[1])とテクスチャ・UV変換フィールド(uvTransform1[2]を除く)は対象外(呼び出し側が別途書き込む)。フォールバック
 // 経路(MeshMaterialRuntime.cpp::UpdateMaterialColor)とバッチ経路
-// (SceneMaterialOverrides.cpp::ResolveSceneStaticMaterialOverrides)の両方が
+// (SceneMaterialOverrides.cpp::ResolveSceneMaterialOverrides)の両方が
 // 同じ変換を別々に書いていたため、共通ヘルパーへ集約した。
 inline void ApplyMaterialColorToMatData(const Material& src, MatData& dst) {
     dst.diffuse[0] = src.diffuse[0];

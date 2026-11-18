@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "../../plugins/schema/sidecar/StationSidecar.h"
-#include "../../world/alignment/TrackGraph.h"
+#include "../../world/alignment/SpeedSignal.h"
 
 namespace rs::legacy_pi { struct SwitchDef; }
 

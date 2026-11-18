@@ -10,7 +10,7 @@
 #include <functional>
 #include <vector>
 
-#include "../world/alignment/TrackTraversal.h"
+#include "../world/alignment/TrackPosition.h"
 #include "../world/alignment/WarpForwardScan.h"
 #include "../world/alignment/WarpTraversal.h"
 

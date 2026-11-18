@@ -10,6 +10,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 #include "imgui.h"
 
@@ -34,10 +35,14 @@
 #include "../plugin_browser/PluginBrowserService.h"
 #include "../../render/postprocess/OutputRect.h"
 #include "../../render/postprocess/PostProcessPlan.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "../../world/time/MoonPosition.h"
 #include "../../world/time/SolarPosition.h"
 #include "../../editor/tool/Editor.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::app {
 

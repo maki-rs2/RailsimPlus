@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 
-project(RailsimPlus VERSION 0.1.0 LANGUAGES CXX RC)
+project(RailsimPlus VERSION 0.1.1 LANGUAGES CXX RC)
 
 option(RAILSIM_DEV_ENV "Enable development-only environment variable overrides" ON)
 
@@ -71,6 +71,15 @@ add_library(miniaudio INTERFACE)
 target_include_directories(miniaudio INTERFACE
     $<BUILD_INTERFACE:${miniaudio_SOURCE_DIR}>
 )
+
+# --- 更新用ZIPの読み込み(miniz。展開は src/platform/file/ZipArchive が包む) ---
+FetchContent_Declare(
+    miniz
+    GIT_REPOSITORY https://github.com/richgel999/miniz.git
+    GIT_TAG        3.1.2
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(miniz)
 
 # --- RmlUi のフォントエンジン(FreeType)。RmlUi自身はfind_packageするだけで
 #     取得はしないため、ここでFetchContentし、find_packageが見るターゲット名
@@ -423,7 +432,17 @@ rs_embed_config_json(
 # M1 で追加した共通コード（パーサ/エンコーディング/描画）を静的ライブラリに
 add_library(RailsimPlusCore STATIC
     src/app/update/UpdateChecker.cpp
+    src/app/update/UpdateMarker.cpp
+    src/app/update/UpdatePlan.cpp
+    src/app/update/UpdateApplier.cpp
+    src/app/update/UpdateStartup.cpp
+    src/app/update/UpdateRestart.cpp
+    src/app/update/UpdateDownloader.cpp
+    src/platform/file/DiskSpace.cpp
     src/platform/net/HttpGet.cpp
+    src/platform/process/ProcessLaunch.cpp
+    src/platform/net/HttpDownload.cpp
+    src/platform/net/HttpsRequest.cpp
     src/core/DebugDraw.cpp
     src/render/overlay2d/OverlayGeometryBuilder.cpp
     src/render/overlay2d/OverlayUtf8.cpp
@@ -433,7 +452,10 @@ add_library(RailsimPlusCore STATIC
     src/platform/file/AssetPath.cpp
     src/platform/file/ExecutableDirectory.cpp
     src/platform/file/AtomicFileWrite.cpp
+    src/platform/file/DirectoryWritable.cpp
     src/platform/file/FileRead.cpp
+    src/platform/file/Sha256.cpp
+    src/platform/file/ZipArchive.cpp
     src/platform/file/StableFileWatcher.cpp
     src/platform/file/UserDataDirectory.cpp
     src/platform/file/ShellPickerDialog.cpp
@@ -906,6 +928,8 @@ add_library(RailsimPlusCore STATIC
     src/app/action/TimeControlViewModel.cpp
     src/app/action/RenderQualityPreset.cpp
     src/app/action/GameSettingsScreenModel.cpp
+    src/app/action/UpdateAction.cpp
+    src/app/action/UpdateScreenModel.cpp
     src/app/action/GameSettingsScreenModelPlaceholder.cpp
     src/app/action/InputBindingAction.cpp
     src/app/action/InputSettingsRows.cpp
@@ -925,6 +949,8 @@ add_library(RailsimPlusCore STATIC
     # アプリ層のうちテストからも使うもの。アプリとテストで二重にコンパイルしないよう、ここに置く
     src/app/plugin_browser/LayingSetPreviewStore.cpp
     src/app/plugin_browser/TemplateImageStore.cpp
+    src/app/plugin_browser/TemplateCardInfo.cpp
+    src/app/plugin_browser/TemplateCardInfoWorker.cpp
     src/app/plugin_browser/PluginThumbnailRecipe.cpp
     src/app/plugin_browser/TemplateThumbnailRecipe.cpp
     src/app/entry/DeviceLostShutdown.cpp
@@ -996,10 +1022,11 @@ add_library(RailsimPlusCore STATIC
 )
 target_include_directories(RailsimPlusCore PUBLIC ${RS_EMBEDDED_CONFIG_DIR})
 target_sources(RailsimPlusCore PRIVATE ${RS_EMBEDDED_HEADERS})
-target_link_libraries(RailsimPlusCore PUBLIC d3d12 dxgi d3dcompiler windowscodecs dxcompiler ole32 uuid version winhttp shell32
+target_link_libraries(RailsimPlusCore PUBLIC d3d12 dxgi d3dcompiler windowscodecs dxcompiler ole32 uuid version winhttp bcrypt shell32
     nlohmann_json::nlohmann_json
     spdlog::spdlog
     magic_enum::magic_enum
+    miniz
     DirectXTK12
     DirectXTex
     DirectXMesh
@@ -1324,6 +1351,10 @@ add_test(NAME RailsimPlusDepsSmokeTest COMMAND RailsimPlusDepsSmokeTest)
 # 線形カーネル/メッシュ生成/敷設エディタの数値検証(Catch2、旧--testalign/meshspline/pickから移植)
 add_executable(RailsimPlusTests
     tests/UpdateCheckerTests.cpp
+    tests/UpdateMarkerTests.cpp
+    tests/UpdateApplierTests.cpp
+    tests/UpdateDownloaderTests.cpp
+    tests/PlatformFileTests.cpp
     tests/RuntimeSettingOverridesTests.cpp
     tests/OverlayGeometryTests.cpp
     tests/ShaderCacheTests.cpp

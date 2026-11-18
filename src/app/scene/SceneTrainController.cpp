@@ -15,6 +15,7 @@
 #include "SceneTrainFade.h"
 #include "../../world/alignment/TrackForwardScan.h"
 #include "../../sim/SimTuning.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 namespace {

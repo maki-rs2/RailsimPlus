@@ -14,6 +14,7 @@
 #include "../../world/alignment/EdgeSplitMerge.h"
 #include "../../world/alignment/PlatformRegistry.h"
 #include "../../world/alignment/SpeedSignalRegistry.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::editor {
 

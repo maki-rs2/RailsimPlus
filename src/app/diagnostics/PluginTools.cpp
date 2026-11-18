@@ -13,6 +13,7 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+#include <utility>
 
 #include "../../render/resource/TextureLoader.h"
 #include "../../plugins/schema/parser/Parser.h"

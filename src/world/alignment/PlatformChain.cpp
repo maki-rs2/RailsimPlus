@@ -6,6 +6,10 @@
 #include <unordered_set>
 
 #include <spdlog/spdlog.h>
+#include "PlatformStopInfo.h"
+#include "TrackEdge.h"
+#include "TrackGraph.h"
+#include "TrackTraversal.h"
 
 namespace rs::world {
 

@@ -3,10 +3,13 @@
 #include <optional>
 #include <vector>
 
-#include "TrackGraph.h"
 #include "TravelDirectionFollow.h"
+#include "Guid.h"
+#include "SpeedSignal.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 // 信号を置くときの検証結果。None以外は置けない(または置いたままにできない)理由。
 enum class SpeedSignalPlacementError {

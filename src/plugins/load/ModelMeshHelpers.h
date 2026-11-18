@@ -13,9 +13,13 @@
 #include <vector>
 
 #include "PluginLoader.h"
-#include "../schema/PluginSchema.h"
 #include "../../core/Math.h"
 #include "../../render/mesh/Mesh.h"
+#include "../schema/PartCustomizerSchema.h"
+
+namespace rs::legacy_pi {
+struct ModelPart;
+} // namespace rs::legacy_pi
 
 namespace rs::legacy_plugin {
 

@@ -2,6 +2,7 @@
 #include "../world/alignment/RailLinkOverlay.h"
 
 #include <utility>
+#include "../world/alignment/TrackGraph.h"
 
 namespace rs::sim {
 

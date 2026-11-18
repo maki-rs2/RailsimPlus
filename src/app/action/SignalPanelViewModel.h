@@ -6,7 +6,10 @@
 #include <vector>
 
 #include "../workspace/SignalPanelPresentation.h"
-#include "../../world/alignment/TrackGraph.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::app {
 

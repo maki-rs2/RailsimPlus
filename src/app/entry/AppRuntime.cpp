@@ -9,6 +9,7 @@
 #include "GpuInitFailureDialog.h"
 #include "LayoutResultReporter.h"
 #include "RenderTuningHotReload.h"
+#include "SlowSectionLog.h"
 #include "StartupFailureDialog.h"
 #include "UpdateNotification.h"
 #include "ViewerMode.h"
@@ -193,6 +194,7 @@ void RunOneFrame(AppRuntimeGlobals& globals, AppRuntimeState& state, FrameLoopSt
     if (state.deviceLostExit) return; // 終了の手順は済んでいる。ウィンドウが閉じるまで何も描かない
     FrameScratch scratch;
     PollUpdateCheck(state);
+    PollUpdateDownload(state);
     // フレームループ1イテレーション全体の所要時間(ms)。Present/GPU待ちの
     // ブロック時間も含む(断続的なvblank落ちの切り分け用、常時計測)。
     scratch.tCpuFrame0 = std::chrono::steady_clock::now();
@@ -203,11 +205,10 @@ void RunOneFrame(AppRuntimeGlobals& globals, AppRuntimeState& state, FrameLoopSt
                               std::chrono::duration<double>(scratch.tCpuFrame0.time_since_epoch()).count());
 #endif
 
-    RunDeferredStartupLoadIfDue(loopState);
-    TickPendingLayoutLoad(loopState);
+    { SlowSectionLog slow("StartupLoadAndLayoutLoad"); RunDeferredStartupLoadIfDue(loopState); TickPendingLayoutLoad(loopState); }
     // プラグイン読込直後: 稀な漢字も含めてフォントアトラスを再構築する。
     // NewFrame群より前(フレーム外)でのみ Fonts->Clear/Build を行うこと。
-    RunPluginTickAndFontRebuild(loopState);
+    { SlowSectionLog slow("PluginTickAndFontRebuild"); RunPluginTickAndFontRebuild(loopState); }
 
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -216,7 +217,7 @@ void RunOneFrame(AppRuntimeGlobals& globals, AppRuntimeState& state, FrameLoopSt
 
     if (UsesRmlUi(state.cli)) {
         if (state.input.Triggered(rs::app::input::InputAction::ToggleUi)) state.rmlUiIntegration.ToggleUiHidden();
-        state.rmlUiIntegration.NewFrame(ImGui::GetIO().DeltaTime);
+        { SlowSectionLog slow("RmlUiNewFrame"); state.rmlUiIntegration.NewFrame(ImGui::GetIO().DeltaTime); }
         // 捕捉フラグは、PumpImGuiInputの上書きの後でOR合成する(先だとRmlUi側の捕捉が消える)
         state.input.SetUiCapture(state.input.PointerCapturedByUi() || state.rmlUiIntegration.IsPointerOverUi(),
                                  state.input.KeyboardCapturedByUi() || state.rmlUiIntegration.HasTextInputFocus() ||
@@ -239,7 +240,7 @@ void RunOneFrame(AppRuntimeGlobals& globals, AppRuntimeState& state, FrameLoopSt
                                                     state.userSettings,
                                                     state.audioEngine,
                                                     state.layoutDocument,
-                                                    &state.updateChecker, &state.mainWindow, &state.input};
+                                                    &state.updateChecker, &state.mainWindow, &state.input, &state.updateDownloader, &state.requestRestartForUpdate};
             const RenderSettingsRefs renderSettingsRefs{globals.app, globals.camera, state.userSettings};
             const WorkspaceBridgeServices bridgeServices{state.pluginSelector, state.userSettings,
                                                          *loopState.pluginBrowser,
@@ -253,13 +254,14 @@ void RunOneFrame(AppRuntimeGlobals& globals, AppRuntimeState& state, FrameLoopSt
                                                          state.modePanels.WarpAuthoring(),
                                                          globals.importedWireSpans, state.localization,
                                                          gameSettingsRefs, renderSettingsRefs, state.LayoutAction()};
+            SlowSectionLog slowBridge("WorkspaceBridgeTick");
             loopState.workspaceBridge.Tick(state.rmlUiIntegration, state.input, globals.editor,
                                            globals.lastArcPreview, loopState.viewMode, bridgeServices,
-                                           loopState.pluginSettingsLink, loopState.signalBlockLink,
+                                           loopState.pluginSettingsLink,
                                            ImGui::GetIO().DeltaTime,
                                            ImGui::GetIO().Framerate);
             loopState.layoutDocument.Tick({state.rmlUiIntegration, state.LayoutAction(), state.userSettings,
-                                           state.mainWindow, state.localization, globals.app});
+                                           state.mainWindow, state.localization, globals.app, [&state] { PrepareUpdateRestart(state); }});
         }
     }
 
@@ -282,7 +284,7 @@ void RunOneFrame(AppRuntimeGlobals& globals, AppRuntimeState& state, FrameLoopSt
 
     // GameClockの固定tick進行・太陽位置再計算・システムスイッチ更新・
     // ChangeTexture/ChangeMaterial/SetAnimation等の実行時反映。
-    AdvanceSimulation(loopState, scratch);
+    { SlowSectionLog slow("AdvanceSimulation"); AdvanceSimulation(loopState, scratch); }
 
     // 実効の視野角。SyncAndTickScene(LOD・_CAMDIST等)と描画が同じ値を読むよう、その前に1回だけ決める。
     ResolveFrameFieldOfView(loopState, scratch);
@@ -290,7 +292,7 @@ void RunOneFrame(AppRuntimeGlobals& globals, AppRuntimeState& state, FrameLoopSt
     // SceneRegistryとの差分反映(Sync)・switch-flip-smokeの計測/切替・
     // sceneTickループ(列車物理+可動部アニメ)・時間駆動アニメ反映・
     // SubmitTrainRenderSnapshot。
-    SyncAndTickScene(loopState, scratch);
+    { SlowSectionLog slow("SyncAndTickScene"); SyncAndTickScene(loopState, scratch); }
 
     // 読込ジョブ進捗オーバーレイ。
     // 上のSync()呼び出し直後、このフレームの最新のJobActive()状態を見て描く
@@ -304,7 +306,7 @@ void RunOneFrame(AppRuntimeGlobals& globals, AppRuntimeState& state, FrameLoopSt
     }
 
     // WASD移動・カメラビュー構築・敷設エディタのTick(ビューワーモードでは無効)。
-    UpdateCameraAndEditor(loopState, scratch);
+    { SlowSectionLog slow("UpdateCameraAndEditor"); UpdateCameraAndEditor(loopState, scratch); }
     loopState.syncJobActiveLastFrame = state.sceneRenderer.SyncJobActive();
 
     // スモーク/PNGキャプチャ判定・App::Render・キャプチャ結果評価・PNG保存・
@@ -315,6 +317,7 @@ void RunOneFrame(AppRuntimeGlobals& globals, AppRuntimeState& state, FrameLoopSt
 
     ++loopState.frame;
     state.firstFrameRendered = true;
+    ConfirmUpdateOnFirstFrame(state.update, IsUnattendedRun(state.cli));
     if (state.cli.smokeFrames > 0 && loopState.frame >= state.cli.smokeFrames) {
         if (!smokeArtifactsWritten) {
             smokeArtifactsWritten = true;
@@ -373,6 +376,7 @@ void RunFrameLoop(AppRuntimeGlobals& globals, AppRuntimeState& state) {
     // ウィンドウの×は、ワークスペースでは未保存の警告を通す(ImGui版の画面にはその画面が無い)。
     if (state.cli.rmluiWorkspace) {
         state.mainWindow.SetCloseRequestHandler([&]() { loopState.layoutDocument.RequestClose(); });
+        state.requestRestartForUpdate = [&]() { loopState.layoutDocument.RequestCloseForUpdate(); };
     }
     if (state.recoveryChoicePending) {
         loopState.layoutDocument.BeginRecoveryChoice(state.autoRecoveryCandidates, state.cli.openLayoutPath);
@@ -385,10 +389,10 @@ void RunFrameLoop(AppRuntimeGlobals& globals, AppRuntimeState& state) {
         framePacer.WaitForNextFrame(globals.app.VSyncEnabled() ? 0 : globals.app.FpsLimit());
     }
 
-    state.mainWindow.SetCloseRequestHandler(nullptr);
-    state.mainWindow.SetCtrlWheelHandler(nullptr);
-    state.mainWindow.SetFovWheelHandler(nullptr);
-    state.mainWindow.SetModalFrameCallback(nullptr);
+    state.mainWindow.ClearFrameLoopHandlers();
+    state.requestRestartForUpdate = nullptr;
+    // ウィンドウはすでに消えている。以降の終了処理(先読みの待ち・loopStateの破棄など)で音が鳴り続けないよう、ここで止める。
+    state.audioEngine.Shutdown();
     loopState.frameProfiler.Flush();
 }
 

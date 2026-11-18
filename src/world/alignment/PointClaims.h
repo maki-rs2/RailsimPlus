@@ -4,10 +4,12 @@
 #include <functional>
 #include <vector>
 
-#include "TrackGraph.h"
 #include "WarpForwardScan.h"
+#include "Guid.h"
 
 namespace rs::world {
+
+struct TrackGraph;
 
 // 前方の進路が通るポイント1か所の要求。faceはポイントの分岐している面で、slotはその面で
 // 進路が通る線(面の中で何本目か)。分岐で入るとき(分岐していない面から入る)は進路が選ぶ線、

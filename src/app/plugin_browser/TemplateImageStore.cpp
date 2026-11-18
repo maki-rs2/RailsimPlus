@@ -20,13 +20,9 @@ void Mix(std::uint64_t& seed, std::uint64_t value) {
     seed ^= value + 0x9e3779b97f4a7c15ull + (seed << 6) + (seed >> 2);
 }
 
-// テンプレートが参照するプラグインのフォルダ(更新時刻を調べる対象)。
-std::vector<std::string> DependencyFolders(const TemplateImageSource& source) {
+// 編成テンプレートが参照する車両のフォルダ(更新時刻を調べる対象)。
+std::vector<std::string> TrainDependencyFolders(const TrainGroupTemplateParseResult& parsed) {
     std::vector<std::string> folders;
-    if (source.kind == TemplateImageKind::Rail) {
-        return ResolveRailwayPluginSetFile(source.pathUtf8, source.rootUtf8).folders;
-    }
-    const TrainGroupTemplateParseResult parsed = ParseTrainGroupTemplateFile(source.pathUtf8, source.rootUtf8);
     for (const FormationCarSpec& spec : parsed.cars) {
         std::string folder = ResolveTrainCarFolder(parsed.installRootUtf8, spec);
         if (!folder.empty()) folders.push_back(std::move(folder));
@@ -34,11 +30,9 @@ std::vector<std::string> DependencyFolders(const TemplateImageSource& source) {
     return folders;
 }
 
-} // namespace
-
-TemplateImageKey MakeTemplateImageKey(const TemplateImageSource& source) {
+TemplateImageKey MakeKeyFromFolders(const TemplateImageSource& source, const std::vector<std::string>& folders) {
     // プラグインの定義ファイルの更新時刻・読込結果の世代は、敷設セットの合成と同じ作り方を共用する。
-    std::uint64_t key = MakeLayingPreviewKey(DependencyFolders(source));
+    std::uint64_t key = MakeLayingPreviewKey(folders);
     Mix(key, static_cast<std::uint64_t>(source.kind));
     Mix(key, std::hash<std::string>()(source.pathUtf8));
     std::error_code error;
@@ -46,6 +40,20 @@ TemplateImageKey MakeTemplateImageKey(const TemplateImageSource& source) {
         std::filesystem::last_write_time(rs::platform_text::Utf8ToWide(source.pathUtf8), error);
     Mix(key, error ? 0u : static_cast<std::uint64_t>(writeTime.time_since_epoch().count()));
     return key;
+}
+
+} // namespace
+
+TemplateImageKey MakeTemplateImageKey(const TemplateImageSource& source) {
+    if (source.kind == TemplateImageKind::Rail) {
+        return MakeKeyFromFolders(source, ResolveRailwayPluginSetFile(source.pathUtf8, source.rootUtf8).folders);
+    }
+    return MakeTrainTemplateImageKey(source, ParseTrainGroupTemplateFile(source.pathUtf8, source.rootUtf8));
+}
+
+TemplateImageKey MakeTrainTemplateImageKey(const TemplateImageSource& source,
+                                           const TrainGroupTemplateParseResult& parsed) {
+    return MakeKeyFromFolders(source, TrainDependencyFolders(parsed));
 }
 
 std::string MakeTemplateImageName(TemplateImageKey key) {

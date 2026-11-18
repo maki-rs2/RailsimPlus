@@ -2,8 +2,12 @@
 // EdgeCommandLinks.h - edge追加/削除コマンドが共有するnodeのlinks操作(editor/tool内部用)
 //
 #pragma once
+#include "../../world/alignment/Guid.h"
 
-#include "../../world/alignment/TrackGraph.h"
+namespace rs::world {
+struct TrackNode;
+} // namespace rs::world
+
 
 namespace rs::editor {
 

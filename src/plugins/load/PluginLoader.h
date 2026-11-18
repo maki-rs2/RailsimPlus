@@ -20,7 +20,6 @@
 #include "StretchZyMeshAssembly.h"
 #include "../schema/PluginSchema.h"
 #include "../../render/mesh/Mesh.h"
-#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::legacy_plugin {
 

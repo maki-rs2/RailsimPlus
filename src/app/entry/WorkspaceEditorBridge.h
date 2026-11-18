@@ -111,7 +111,7 @@ public:
     void Tick(rmlui::RmlUiIntegration& rmlUi, const rs::app::input::InputSource& input,
               rs::editor::Editor& editor, const rs::editor::PlacePreview& lastArcPreview,
               ViewMode& viewMode, const WorkspaceBridgeServices& services,
-              PluginSettingsViewportLink& pluginSettingsLink, const SignalBlockViewportLink& signalBlockLink,
+              PluginSettingsViewportLink& pluginSettingsLink,
               double deltaSeconds, float framesPerSecond);
 
     // カメラ確定後に呼ぶ。編成情報カードと閉塞ラベルの位置、カードの距離による省略を次のRmlUiの更新へ渡す。

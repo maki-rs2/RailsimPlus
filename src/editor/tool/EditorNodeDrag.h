@@ -10,10 +10,14 @@
 #pragma once
 
 #include "../../core/Math.h"
-#include "../../world/alignment/TrackGraph.h"
 #include "../../world/scene/ManualPlacementOverlay.h"
 #include "Command.h"
 #include "NodeDragPlan.h"
+#include "../../world/alignment/Guid.h"
+
+namespace rs::world {
+struct TrackGraph;
+} // namespace rs::world
 
 namespace rs::editor {
 

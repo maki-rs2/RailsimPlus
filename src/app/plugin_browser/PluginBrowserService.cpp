@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "PluginImageSource.h"
+#include "../entry/SlowSectionLog.h"
 #include "PluginTreeConfigSource.h"
 #include "../scene/ParsedPluginCache.h"
 
@@ -24,6 +25,7 @@ std::vector<BrowserKind> PriorityKindsOf(BrowserProfile profile) {
 } // namespace
 
 void PluginBrowserService::StartScan(bool resetCatalog) {
+    SlowSectionLog slow("PluginBrowser.StartScan", 30.0);
     if (resetCatalog) {
         GetParsedPluginCache().Invalidate();
         catalog_.Reset();

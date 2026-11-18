@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "../../world/alignment/PointRoutineResolve.h"
+#include "../../world/alignment/TrackGraph.h"
 
 namespace rs::app {
 

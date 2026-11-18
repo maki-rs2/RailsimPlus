@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../../world/alignment/TrackTraversal.h"
+#include "../../world/alignment/TrackPosition.h"
 #include "../../world/scene/TrainId.h"
 #include "ImGuiPathPicker.h"
 

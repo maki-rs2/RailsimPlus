@@ -8,6 +8,7 @@
 #include "TrainKinematics.h"
 #include "../world/alignment/TrackForwardScan.h"
 #include "../world/alignment/PlatformRegistry.h"
+#include "../world/alignment/TrackGraph.h"
 
 namespace rs::sim {
 

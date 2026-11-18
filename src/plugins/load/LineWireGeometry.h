@@ -1,6 +1,10 @@
 #pragma once
+#include <string>
+#include <vector>
+#include "../../core/Math.h"
+#include "../schema/LineSchema.h"
+#include "../schema/RailProfileSchema.h"
 
-#include "../schema/PluginSchema.h"
 
 namespace rs::legacy_plugin {
 
